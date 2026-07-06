@@ -1,15 +1,15 @@
-import { useEffect, useRef } from 'react'
-import { EditorState } from '@codemirror/state'
-import { EditorView, keymap } from '@codemirror/view'
-import { defaultKeymap, history, historyKeymap, undo, redo } from '@codemirror/commands'
-import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
-import { useAppStore } from '../../store/useAppStore'
-import { saveNote } from '../../lib/fs'
+import { defaultKeymap, history, historyKeymap, redo, undo } from '@codemirror/commands';
+import { markdown, markdownLanguage } from '@codemirror/lang-markdown';
+import { EditorState } from '@codemirror/state';
+import { EditorView, keymap } from '@codemirror/view';
+import { useEffect, useRef } from 'react';
+import { saveNote } from '../../lib/fs';
+import { useAppStore } from '../../store/useAppStore';
 
-import { markdownHighlighting, slashCommandCompletion, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin } from '../../lib/editorExtensions'
-import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
-import { useEditorViewRef } from './EditorViewContext'
-import { deleteAttachmentFile } from '../../lib/attachments'
+import { deleteAttachmentFile } from '../../lib/attachments';
+import { createFileEmbedPlugin, highlightMarkPlugin, markdownHighlighting, markdownKeymap, slashCommandCompletion, tablePlugin } from '../../lib/editorExtensions';
+import { searchHighlightExtension } from '../../lib/searchHighlightExtension';
+import { useEditorViewRef } from './EditorViewContext';
 
 interface MarkdownEditorProps {
   noteId: string
@@ -145,7 +145,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
       doc: content,
       extensions: [
         history(),
-        keymap.of([...defaultKeymap, ...historyKeymap]),
+        keymap.of([...defaultKeymap, ...historyKeymap, ...markdownKeymap]),
         // Chromium's contenteditable fires its own native undo/redo (beforeinput
         // historyUndo/historyRedo) which bypasses CodeMirror's managed history and
         // corrupts editor state. This only surfaces on Chromium-based WebViews

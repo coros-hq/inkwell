@@ -5,6 +5,7 @@ import type { CompletionContext, CompletionResult } from '@codemirror/autocomple
 import { ViewPlugin, Decoration, WidgetType, EditorView } from '@codemirror/view'
 import type { DecorationSet, ViewUpdate } from '@codemirror/view'
 import type { Range } from '@codemirror/state'
+import { applyBlockFormat, applyInlineFormat } from './editorFormatting';
 
 // ─── Syntax Highlight Style ──────────────────────────────────────────────────
 
@@ -101,6 +102,44 @@ export const slashCommandCompletion = autocompletion({
   activateOnTyping: true,
   closeOnBlur: true,
 })
+
+
+const MOD = "Ctrl-Shift";
+const MAC_MOD = "Cmd-Shift";
+
+export const markdownKeymap = [
+  // Headings
+  { key: `${MOD}-1`, mac: `${MAC_MOD}-1`, run: (view: EditorView) => { applyBlockFormat(view, "# "); return true } },
+  { key: `${MOD}-2`, mac: `${MAC_MOD}-2`, run: (view: EditorView) => { applyBlockFormat(view, "## "); return true } },
+  { key: `${MOD}-3`, mac: `${MAC_MOD}-3`, run: (view: EditorView) => { applyBlockFormat(view, "### "); return true } },
+  { key: `${MOD}-4`, mac: `${MAC_MOD}-4`, run: (view: EditorView) => { applyBlockFormat(view, "#### "); return true } },
+  { key: `${MOD}-5`, mac: `${MAC_MOD}-5`, run: (view: EditorView) => { applyBlockFormat(view, "##### "); return true } },
+  { key: `${MOD}-6`, mac: `${MAC_MOD}-6`, run: (view: EditorView) => { applyBlockFormat(view, "###### "); return true } },
+
+  // Inline Formatting
+  { key: `${MOD}-b`, mac: `${MAC_MOD}-b`, run: (view: EditorView) => { applyInlineFormat(view, "**", "**"); return true } },
+  { key: `${MOD}-i`, mac: `${MAC_MOD}-i`, run: (view: EditorView) => { applyInlineFormat(view, "*", "*"); return true } },
+  { key: `${MOD}-u`, mac: `${MAC_MOD}-u`, run: (view: EditorView) => { applyInlineFormat(view, "<u>", "</u>"); return true } },
+  { key: `${MOD}-s`, mac: `${MAC_MOD}-s`, run: (view: EditorView) => { applyInlineFormat(view, "~~", "~~"); return true } },
+  { key: `${MOD}-k`, mac: `${MAC_MOD}-k`, run: (view: EditorView) => { applyInlineFormat(view, "`", "`"); return true } },
+  { key: `${MOD}-h`, mac: `${MAC_MOD}-h`, run: (view: EditorView) => { applyInlineFormat(view, "==", "=="); return true } },
+  { key: `${MOD}-l`, mac: `${MAC_MOD}-l`, run: (view: EditorView) => { applyInlineFormat(view, "[", "](url)"); return true } },
+  { key: `${MOD}-e`, mac: `${MAC_MOD}-e`, run: (view: EditorView) => { applyInlineFormat(view, "![", "](url)"); return true } },
+
+  // Block Elements
+  { key: `${MOD}-q`, mac: `${MAC_MOD}-q`, run: (view: EditorView) => { applyBlockFormat(view, "> "); return true } },
+  { key: `${MOD}-c`, mac: `${MAC_MOD}-c`, run: (view: EditorView) => { applyBlockFormat(view, "```\n\n```"); return true } },
+  { key: `${MOD}-8`, mac: `${MAC_MOD}-8`, run: (view: EditorView) => { applyBlockFormat(view, "- "); return true } },
+  { key: `${MOD}-9`, mac: `${MAC_MOD}-9`, run: (view: EditorView) => { applyBlockFormat(view, "1. "); return true } },
+  { key: `${MOD}-0`, mac: `${MAC_MOD}-0`, run: (view: EditorView) => { applyBlockFormat(view, "- [ ] "); return true } },
+  { key: `${MOD}-enter`, mac: `${MAC_MOD}-enter`, run: (view: EditorView) => { applyBlockFormat(view, "---\n"); return true } },
+  { key: `${MOD}-t`, mac: `${MAC_MOD}-t`, run: (view: EditorView) => { applyBlockFormat(view, "| Col 1 | Col 2 | Col 3 |\n| --- | --- | --- |\n|  |  |  |\n"); return true } },
+  { key: `${MOD}-m`, mac: `${MAC_MOD}-m`, run: (view: EditorView) => { applyBlockFormat(view, "$$\n\n$$"); return true } },
+  { key: `${MOD}-/`, mac: `${MAC_MOD}-/`, run: (view: EditorView) => { applyBlockFormat(view, "> [!INFO] "); return true } },
+]
+
+
+
 
 // ─── Todo Checkbox Widget ─────────────────────────────────────────────────────
 
@@ -252,7 +291,7 @@ function buildTableDecorations(view: EditorView): DecorationSet {
   // ── Pass 2: emit decorations only for visible lines ───────────────────────
   for (const { from, to } of view.visibleRanges) {
     const startLine = doc.lineAt(from).number
-    const endLine   = doc.lineAt(to).number
+    const endLine = doc.lineAt(to).number
 
     for (let lineNum = startLine; lineNum <= endLine; lineNum++) {
       const type = lineTypes.get(lineNum)
@@ -262,10 +301,10 @@ function buildTableDecorations(view: EditorView): DecorationSet {
 
       // Line-level background decoration
       const cls =
-        type === 'header'    ? 'cm-table-header'    :
-        type === 'separator' ? 'cm-table-separator' :
-        type === 'row-even'  ? 'cm-table-row-even'  :
-                               'cm-table-row-odd'
+        type === 'header' ? 'cm-table-header' :
+          type === 'separator' ? 'cm-table-separator' :
+            type === 'row-even' ? 'cm-table-row-even' :
+              'cm-table-row-odd'
       decs.push(Decoration.line({ attributes: { class: cls } }).range(line.from))
 
       // Color each '|' pipe character (skip separator rows — dashes are the content)
@@ -542,8 +581,8 @@ class FileEmbedWidget extends WidgetType {
     const iconEl = document.createElement('span')
     iconEl.style.cssText = 'font-size:16px;line-height:1;flex-shrink:0'
     iconEl.textContent =
-      this.type === 'pdf'   ? '📄' :
-      this.type === 'video' ? '🎬' : '📎'
+      this.type === 'pdf' ? '📄' :
+        this.type === 'video' ? '🎬' : '📎'
 
     const nameEl = document.createElement('span')
     nameEl.style.cssText = [
@@ -713,9 +752,9 @@ class FileEmbedWidget extends WidgetType {
           const ext = this.relativePath.split('.').pop()?.toLowerCase() ?? 'mp4'
           const videoMime =
             ext === 'webm' ? 'video/webm' :
-            ext === 'mov'  ? 'video/quicktime' :
-            ext === 'avi'  ? 'video/x-msvideo' :
-            'video/mp4'
+              ext === 'mov' ? 'video/quicktime' :
+                ext === 'avi' ? 'video/x-msvideo' :
+                  'video/mp4'
           resolveUrl(videoMime).then(url => { video.src = url })
 
         } else {
@@ -774,7 +813,7 @@ class FileEmbedWidget extends WidgetType {
 function buildFileEmbedDecorations(
   view: EditorView,
   vaultPath: string,
-  onRemove: (relativePath: string) => void = () => {},
+  onRemove: (relativePath: string) => void = () => { },
 ): DecorationSet {
   const widgets: Range<Decoration>[] = []
   const { doc } = view.state
@@ -785,17 +824,17 @@ function buildFileEmbedDecorations(
     let m: RegExpExecArray | null
     while ((m = FILE_EMBED_RE.exec(text)) !== null) {
       const matchFrom = from + m.index
-      const matchTo   = matchFrom + m[0].length
+      const matchTo = matchFrom + m[0].length
 
       const relativePath = m[1]                             // e.g. "attachments/doc.pdf"
-      const namePart      = m[2] ?? ''                      // display name
-      const sizePart      = m[3] ?? '0'                     // size in bytes
+      const namePart = m[2] ?? ''                      // display name
+      const sizePart = m[3] ?? '0'                     // size in bytes
 
-      const ext         = relativePath.split('.').pop()?.toLowerCase() ?? ''
-      const type        = embedFileType(ext)
+      const ext = relativePath.split('.').pop()?.toLowerCase() ?? ''
+      const type = embedFileType(ext)
       const displayName = namePart || relativePath.split('/').pop() || relativePath
-      const sizeBytes   = parseInt(sizePart) || 0
-      const fullPath    = vaultPath ? `${vaultPath}/${relativePath}` : relativePath
+      const sizeBytes = parseInt(sizePart) || 0
+      const fullPath = vaultPath ? `${vaultPath}/${relativePath}` : relativePath
 
       widgets.push(
         Decoration.replace({
@@ -812,7 +851,7 @@ function buildFileEmbedDecorations(
 /** Factory — call once per EditorState with the current vaultPath. */
 export function createFileEmbedPlugin(
   vaultPath: string,
-  onRemove: (relativePath: string) => void = () => {},
+  onRemove: (relativePath: string) => void = () => { },
 ) {
   return ViewPlugin.fromClass(
     class {
