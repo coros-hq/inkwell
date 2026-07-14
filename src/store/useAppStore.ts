@@ -313,6 +313,8 @@ interface AppState {
   toggleBoardTaskSubtask: (taskId: string, subtaskId: string) => void;
   deleteBoardTaskSubtask: (taskId: string, subtaskId: string) => void;
   addBoardTaskComment: (taskId: string, content: string) => void;
+  deleteBoardTaskComment: (taskId: string, commentId: string) => void;
+  updateBoardTaskComment: (taskId: string, commentId: string, content: string) => void;
 }
 
 function updateFolderNotes(
@@ -1731,6 +1733,28 @@ export const useAppStore = create<AppState>((set, get) => ({
     flushBoards(vaultPath, boards, boardColumns, boardTasks);
   },
 
+  deleteBoardTaskComment: (taskId, commentId) => {
+    set((s) => ({
+      boardTasks: s.boardTasks.map((t) =>
+        t.id === taskId
+          ? { ...t, comments: t.comments?.filter((c) => c.id !== commentId) }
+          : t,
+      ),
+    }));
+    const { vaultPath, boards, boardColumns, boardTasks } = get();
+    flushBoards(vaultPath, boards, boardColumns, boardTasks);
+  },
+  updateBoardTaskComment: (taskId, commentId, content) => {
+    set((s) => ({
+      boardTasks: s.boardTasks.map((t) =>
+        t.id === taskId
+          ? { ...t, comments: t.comments?.map((c) => c.id === commentId ? { ...c, content } : c) }
+          : t,
+      ),
+    }));
+    const { vaultPath, boards, boardColumns, boardTasks } = get();
+    flushBoards(vaultPath, boards, boardColumns, boardTasks);
+  },
   moveBoardTask: (taskId, toColumnId, beforeTaskId = null) => {
     set((s) => {
       const task = s.boardTasks.find((t) => t.id === taskId);

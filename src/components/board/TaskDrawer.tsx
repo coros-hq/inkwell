@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Plus, Trash2, Check, ChevronDown } from 'lucide-react'
+import { X, Plus, Trash2, Check, ChevronDown, Pencil } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { TagChip } from '../shared/TagChip'
 import { formatDate } from '../../lib/utils'
@@ -68,6 +68,8 @@ function BoardTaskDrawer() {
     toggleBoardTaskSubtask,
     deleteBoardTaskSubtask,
     addBoardTaskComment,
+    deleteBoardTaskComment,
+    updateBoardTaskComment,
     openConfirm,
     deleteBoardTask,
   } = useAppStore()
@@ -84,6 +86,8 @@ function BoardTaskDrawer() {
   const [subtaskDraft, setSubtaskDraft] = useState('')
   const [addingSubtask, setAddingSubtask] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [commentEditDraft, setCommentEditDraft] = useState('')
   const [addingTag, setAddingTag] = useState(false)
   const [tagDraft, setTagDraft] = useState('')
   const [editingAssignee, setEditingAssignee] = useState(false)
@@ -148,6 +152,34 @@ function BoardTaskDrawer() {
       addBoardTaskComment(task.id, commentDraft.trim())
       setCommentDraft('')
     }
+  }
+
+  const handleDeleteComment = (commentId: string) => {
+    openConfirm({
+      title: 'Delete this comment?',
+      description: 'This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+      onConfirm: () => deleteBoardTaskComment(task.id, commentId),
+    })
+  }
+
+  const handleEditComment = (commentId: string, content: string) => {
+    setEditingCommentId(commentId)
+    setCommentEditDraft(content)
+  }
+
+  const handleSaveCommentEdit = () => {
+    if (commentEditDraft.trim() && editingCommentId) {
+      updateBoardTaskComment(task.id, editingCommentId, commentEditDraft.trim())
+    }
+    setEditingCommentId(null)
+    setCommentEditDraft('')
+  }
+
+  const handleCancelCommentEdit = () => {
+    setEditingCommentId(null)
+    setCommentEditDraft('')
   }
 
   const handleDeleteTask = () => {
@@ -238,10 +270,10 @@ function BoardTaskDrawer() {
                 <span className={cn(
                   'w-2 h-2 rounded-full shrink-0',
                   column.color === 'blue' ? 'bg-blue-400' :
-                  column.color === 'amber' ? 'bg-amber-400' :
-                  column.color === 'green' ? 'bg-green-400' :
-                  column.color === 'red' ? 'bg-red-400' :
-                  column.color === 'purple' ? 'bg-purple-400' : 'bg-muted-foreground'
+                    column.color === 'amber' ? 'bg-amber-400' :
+                      column.color === 'green' ? 'bg-green-400' :
+                        column.color === 'red' ? 'bg-red-400' :
+                          column.color === 'purple' ? 'bg-purple-400' : 'bg-muted-foreground'
                 )} />
                 {column.name}
                 <ChevronDown className="w-3 h-3 text-tertiary" />
@@ -538,7 +570,7 @@ function BoardTaskDrawer() {
             {task.comments && task.comments.length > 0 && (
               <div className="space-y-4 mb-4">
                 {task.comments.map(comment => (
-                  <div key={comment.id} className="flex gap-2.5">
+                  <div key={comment.id} className="flex gap-2.5 group">
                     <div className="w-7 h-7 rounded-full bg-accent/20 text-accent text-[10px] font-bold flex items-center justify-center shrink-0">
                       {comment.avatar}
                     </div>
@@ -546,7 +578,37 @@ function BoardTaskDrawer() {
                       <div className="flex items-baseline gap-2 mb-1">
                         <span className="text-xs font-semibold text-foreground">{comment.author}</span>
                         <span className="text-[10px] text-tertiary">{formatCommentTime(comment.createdAt)}</span>
+                        <div className="ml-auto flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button onClick={() => handleEditComment(comment.id, comment.content)} className="text-tertiary hover:text-accent transition-colors">
+                            <Pencil className="w-3 h-3" />
+                          </button>
+                          <button onClick={() => handleDeleteComment(comment.id)} className="text-tertiary hover:text-red-400 transition-colors">
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </div>
                       </div>
+
+                      {editingCommentId === comment.id ? (
+                        <div className="space-y-1.5">
+                          <textarea
+                            autoFocus
+                            value={commentEditDraft}
+                            onChange={e => setCommentEditDraft(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === 'Escape') handleCancelCommentEdit()
+                              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleSaveCommentEdit()
+                            }}
+                            className="w-full text-sm bg-surface border border-border rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground outline-none focus:border-accent/50 transition-colors resize-none"
+                            rows={2}
+                          />
+                          <div className="flex gap-1.5">
+                            <button onClick={handleSaveCommentEdit} className="px-2 py-0.5 bg-accent text-accent-foreground text-[11px] font-medium rounded-md hover:opacity-90 transition-opacity">Save</button>
+                            <button onClick={handleCancelCommentEdit} className="px-2 py-0.5 text-xs text-tertiary hover:text-foreground transition-colors">Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-foreground leading-relaxed">{comment.content}</p>
+                      )}
                       <p className="text-sm text-foreground leading-relaxed"><NoteRefDisplay text={comment.content} /></p>
                     </div>
                   </div>
