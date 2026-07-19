@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon } from 'lucide-react'
+import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Cloud } from 'lucide-react'
 import { useAppStore, type Abbreviation } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { THEMES, DARK_THEMES, LIGHT_THEMES, type CustomTheme } from '../../lib/themes'
@@ -12,11 +12,12 @@ import {
 import {
   getGithubToken, setGithubToken, getGithubOwner, setGithubOwner, listRepos, type GhRepo,
 } from '../../lib/github'
+import { CloudBackupSection } from './CloudBackupSection'
 import { SHORTCUT_DEFS, formatCombo, hasModifier, eventToCombo } from '../../lib/shortcuts'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'github' | 'about'
+type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'github' | 'cloud' | 'about'
 
 // ─── Font options ─────────────────────────────────────────────────────────────
 
@@ -53,6 +54,7 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ className?
   { id: 'abbreviations', label: 'Abbreviations', icon: List },
   { id: 'vault', label: 'Vaults', icon: Folder },
   { id: 'github', label: 'GitHub', icon: GitBranch },
+  { id: 'cloud', label: 'Cloud Backup', icon: Cloud },
   { id: 'about', label: 'About', icon: Info },
 ]
 
@@ -464,6 +466,11 @@ export function SettingsDialog() {
               {/* ── GitHub ── */}
               {section === 'github' && (
                 <GitBranchSection />
+              )}
+
+              {/* ── Cloud Backup ── */}
+              {section === 'cloud' && (
+                <CloudBackupSection />
               )}
 
               {/* ── About ── */}

@@ -85,7 +85,7 @@ export interface RecentVault {
 
 // ── Frontmatter ───────────────────────────────────────────────────────────────
 
-interface FrontmatterMeta {
+export interface FrontmatterMeta {
   id: string
   created: string
   updated: string
@@ -120,7 +120,7 @@ function parseFrontmatter(raw: string): { meta: Partial<FrontmatterMeta>; body: 
   return { meta, body }
 }
 
-function serializeFrontmatter(meta: FrontmatterMeta, body: string): string {
+export function serializeFrontmatter(meta: FrontmatterMeta, body: string): string {
   const tagStr = meta.tags.length === 0 ? '[]' : `[${meta.tags.join(', ')}]`
   return `---\nid: ${meta.id}\ncreated: ${meta.created}\nupdated: ${meta.updated}\npinned: ${meta.pinned}\ntags: ${tagStr}\n---\n\n${body}`
 }
