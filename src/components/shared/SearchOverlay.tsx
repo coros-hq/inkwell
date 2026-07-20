@@ -1,10 +1,22 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { FileText, Search, X } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 
 export function SearchOverlay() {
   const { searchOpen, searchQuery, setSearchOpen, setSearchQuery, notes, selectNote } = useAppStore()
   const inputRef = useRef<HTMLInputElement>(null)
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const resultsRef = useRef<HTMLDivElement>(null)
+
+  const filtered = useMemo(() =>
+    searchQuery.trim()
+      ? notes.filter(n =>
+          n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          n.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          n.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
+        )
+      : notes.slice(0, 8),
+  [searchQuery, notes])
 
   useEffect(() => {
     if (searchOpen) {
@@ -13,26 +25,43 @@ export function SearchOverlay() {
   }, [searchOpen])
 
   useEffect(() => {
+    setSelectedIndex(0)
+  }, [searchQuery])
+
+  useEffect(() => {
+    const el = resultsRef.current?.querySelector(`[data-index="${selectedIndex}"]`)
+    el?.scrollIntoView({ block: 'nearest' })
+  }, [selectedIndex])
+
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && searchOpen) {
+      if (!searchOpen) return
+      if (e.key === 'Escape') {
+        setSearchOpen(false)
+        setSearchQuery('')
+        return
+      }
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault()
+      }
+      if (!filtered.length) return
+      if (e.key === 'ArrowDown') {
+        setSelectedIndex(i => Math.min(i + 1, filtered.length - 1))
+      } else if (e.key === 'ArrowUp') {
+        setSelectedIndex(i => Math.max(i - 1, 0))
+      } else if (e.key === 'Enter' && selectedIndex >= 0) {
+        const note = filtered[selectedIndex]
+        if (!note) return
+        selectNote(note.id)
         setSearchOpen(false)
         setSearchQuery('')
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [searchOpen, setSearchOpen, setSearchQuery])
+  }, [searchOpen, setSearchOpen, setSearchQuery, filtered, selectedIndex, selectNote])
 
   if (!searchOpen) return null
-
-  const filtered = searchQuery.trim()
-    ? notes.filter(n =>
-        n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        n.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        n.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
-    : notes.slice(0, 8)
-
   const highlight = (text: string) => {
     if (!searchQuery.trim()) return text
     const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'))
@@ -70,7 +99,7 @@ export function SearchOverlay() {
         </div>
 
         {/* Results */}
-        <div className="max-h-[280px] overflow-y-auto">
+        <div ref={resultsRef} className="max-h-[280px] overflow-y-auto">
           {filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-8">No notes found</p>
           ) : (
@@ -78,10 +107,11 @@ export function SearchOverlay() {
               <p className="text-[10px] uppercase tracking-widest text-tertiary px-4 py-2">
                 {searchQuery ? 'Results' : 'Recent Notes'}
               </p>
-              {filtered.map(note => (
+              {filtered.map((note, i) => (
                 <button
                   key={note.id}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-active cursor-pointer text-left"
+                  data-index={i}
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 hover:bg-active cursor-pointer text-left ${selectedIndex === i ? 'bg-active' : ''}`}
                   onClick={() => {
                     selectNote(note.id)
                     setSearchOpen(false)
