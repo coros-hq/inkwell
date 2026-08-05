@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, Plus, Trash2, Check, ChevronDown } from 'lucide-react'
+import { X, Plus, Trash2, Check, ChevronDown, Maximize2, Minimize2 } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { TagChip } from '../shared/TagChip'
 import { formatDate } from '../../lib/utils'
 import { cn } from '../../lib/utils'
 import { DatePicker } from '../ui/DatePicker'
 import { NoteRefAutocomplete, NoteRefDisplay } from '../../lib/noteReferences'
+import { MarkdownEditor } from '../editor/MarkdownEditor'
+import { EditorToolbar } from '../editor/EditorToolbar'
+import { EditorViewProvider } from '../editor/EditorViewContext'
 import type { Task } from '../../types'
 
 // ─── Old task drawer constants ─────────────────────────────────────────────────
@@ -79,8 +82,8 @@ function BoardTaskDrawer() {
   // Local editing state
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
-  const [editingDesc, setEditingDesc] = useState(false)
-  const [descDraft, setDescDraft] = useState('')
+  const [descDraft, setDescDraft] = useState(task?.description ?? '')
+  const [expanded, setExpanded] = useState(false)
   const [subtaskDraft, setSubtaskDraft] = useState('')
   const [addingSubtask, setAddingSubtask] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
@@ -95,7 +98,6 @@ function BoardTaskDrawer() {
   const tagInputRef = useRef<HTMLInputElement>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
-  const descInputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (addingSubtask) subtaskInputRef.current?.focus()
@@ -104,6 +106,13 @@ function BoardTaskDrawer() {
   useEffect(() => {
     if (addingTag) tagInputRef.current?.focus()
   }, [addingTag])
+
+  // Load the new task's description into the draft when switching tasks —
+  // MarkdownEditor is keyed by task.id so it fully re-initializes on its own.
+  useEffect(() => {
+    setDescDraft(task?.description ?? '')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [task?.id])
 
   if (!task || !column) return null
 
@@ -115,11 +124,6 @@ function BoardTaskDrawer() {
       updateBoardTask(task.id, { title: titleDraft.trim() })
     }
     setEditingTitle(false)
-  }
-
-  const handleDescSave = () => {
-    updateBoardTask(task.id, { description: descDraft })
-    setEditingDesc(false)
   }
 
   const handleAddSubtask = () => {
@@ -177,8 +181,14 @@ function BoardTaskDrawer() {
         onClick={() => setActiveBoardTaskId(null)}
       />
 
-      {/* Drawer */}
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-[380px] bg-panel border-l border-border flex flex-col shadow-2xl">
+      {/* Drawer / expanded dialog */}
+      <div
+        className={cn(
+          expanded
+            ? 'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[min(92vw,900px)] h-[85vh] bg-panel border border-border rounded-xl flex flex-col shadow-2xl'
+            : 'fixed right-0 top-0 bottom-0 z-50 w-[380px] bg-panel border-l border-border flex flex-col shadow-2xl',
+        )}
+      >
 
         {/* ── Header ─────────────────────────────────────────────────────────── */}
         <div className="flex items-start gap-3 p-4 border-b border-border shrink-0">
@@ -205,6 +215,13 @@ function BoardTaskDrawer() {
             </h2>
           )}
           <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => setExpanded(v => !v)}
+              className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+              title={expanded ? 'Collapse' : 'Expand'}
+            >
+              {expanded ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+            </button>
             <button
               onClick={handleDeleteTask}
               className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-red-400 hover:bg-surface transition-colors"
@@ -363,40 +380,23 @@ function BoardTaskDrawer() {
           {/* ── Description ─────────────────────────────────────────────────── */}
           <div>
             <SectionHeader>Description</SectionHeader>
-            {editingDesc ? (
-              <div className="relative">
-                <textarea
-                  ref={descInputRef}
-                  autoFocus
-                  value={descDraft}
-                  onChange={e => setDescDraft(e.target.value)}
-                  onBlur={handleDescSave}
-                  onKeyDown={e => {
-                    if (e.key === 'Escape') handleDescSave()
-                    if (e.key === 'Enter' && e.metaKey) handleDescSave()
-                  }}
-                  placeholder="Add a description…"
-                  rows={4}
-                  className="w-full text-sm bg-surface border border-accent/40 rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed"
-                />
-                <NoteRefAutocomplete
-                  inputValue={descDraft}
-                  inputRef={descInputRef}
-                  onInsert={setDescDraft}
-                />
-              </div>
-            ) : (
-              <div
-                onClick={() => { setDescDraft(task.description); setEditingDesc(true) }}
-                className={cn(
-                  'text-sm leading-relaxed rounded-md px-3 py-2 cursor-text transition-colors',
-                  'hover:bg-surface border border-transparent hover:border-border/50 min-h-[60px]',
-                  task.description ? 'text-foreground whitespace-pre-wrap' : 'text-tertiary italic',
-                )}
-              >
-                {task.description ? <NoteRefDisplay text={task.description} /> : 'Add a description…'}
-              </div>
-            )}
+            <div
+              className="rounded-md border border-border overflow-hidden flex flex-col"
+              style={{ height: expanded ? 340 : 180 }}
+            >
+              <EditorViewProvider>
+                <EditorToolbar variant="sticky-top" onAttachmentAdded={() => {}} />
+                <div className="flex-1 min-h-0">
+                  <MarkdownEditor
+                    key={task.id}
+                    docId={task.id}
+                    content={descDraft}
+                    onChange={setDescDraft}
+                    onSave={value => updateBoardTask(task.id, { description: value })}
+                  />
+                </div>
+              </EditorViewProvider>
+            </div>
           </div>
 
           {/* ── Subtasks ────────────────────────────────────────────────────── */}

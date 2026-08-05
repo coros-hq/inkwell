@@ -13,7 +13,7 @@ export interface ShortcutDef {
 
 export const SHORTCUT_DEFS: ShortcutDef[] = [
   { id: 'search', label: 'Search', description: 'Open the search overlay', defaultCombo: 'mod+k' },
-  { id: 'toggleSidebar', label: 'Toggle Sidebar', description: 'Show or hide the sidebar', defaultCombo: 'mod+b' },
+  { id: 'toggleSidebar', label: 'Toggle Sidebar', description: 'Show or hide the sidebar', defaultCombo: 'mod+\\' },
   { id: 'openFile', label: 'Open File', description: 'Open a standalone .md file into this vault', defaultCombo: 'mod+o' },
   { id: 'findInNote', label: 'Find in Note', description: 'Search within the current note', defaultCombo: 'mod+f' },
   // Not "mod+n" — that combo is already claimed globally (even when the app is

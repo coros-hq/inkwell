@@ -18,6 +18,7 @@ import {
   confirmDeleteSelectedNotes,
 } from "../../lib/deleteActions";
 import { MarkdownEditor } from "../editor/MarkdownEditor";
+import { saveNote } from "../../lib/fs";
 import { RichPreview } from "../editor/RichPreview";
 import { SplitView } from "../editor/SplitView";
 import { EditorToolbar } from "../editor/EditorToolbar";
@@ -49,6 +50,9 @@ export function EditorPane() {
     vaultPath,
     bodyGlass,
     glassOpacity,
+    updateNote,
+    setSaveStatus,
+    addAttachment,
   } = useAppStore();
 
   const primaryNoteId = lastSelectedNoteId ?? selectedNoteIds[0] ?? null;
@@ -384,7 +388,17 @@ export function EditorPane() {
           )}
           <div className="flex-1 overflow-hidden relative">
             {viewMode === "edit" && (
-              <MarkdownEditor noteId={note.id} content={note.content} />
+              <MarkdownEditor
+                docId={note.id}
+                content={note.content}
+                onChange={(content) => updateNote(note.id, content)}
+                onSave={async (content) => {
+                  const n = useAppStore.getState().notes.find((x) => x.id === note.id);
+                  if (n) await saveNote(n.path, content);
+                }}
+                onSaveStatusChange={setSaveStatus}
+                onAttachmentSaved={(att) => addAttachment(note.id, att)}
+              />
             )}
             {viewMode === "preview" && (
               <RichPreview

@@ -4,25 +4,42 @@ import { EditorView, keymap } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, undo, redo } from '@codemirror/commands'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { useAppStore } from '../../store/useAppStore'
-import { saveNote } from '../../lib/fs'
 import { cn, glassBg } from '../../lib/utils'
 
-import { markdownHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme } from '../../lib/editorExtensions'
+import { markdownHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, autocompleteTheme, formattingKeymap } from '../../lib/editorExtensions'
 import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
 import { useEditorViewRef } from './EditorViewContext'
-import { deleteAttachmentFile } from '../../lib/attachments'
+import { saveImageBytes, makeAttachmentMarkdown } from '../../lib/attachments'
+import type { Attachment } from '../../types'
 
 interface MarkdownEditorProps {
-  noteId: string
+  /** Unique id of the document being edited — switching it fully re-initializes CodeMirror. */
+  docId: string
   content: string
+  /** Fired on every keystroke with the full document text. */
+  onChange: (content: string) => void
+  /** Fired ~800ms after typing stops, for persistence. */
+  onSave?: (content: string) => void | Promise<void>
+  onSaveStatusChange?: (status: 'saving' | 'saved') => void
+  /** Fired when an image pasted into the editor has been copied into the vault's attachments folder. */
+  onAttachmentSaved?: (attachment: Attachment) => void
   onScrollerReady?: (el: HTMLElement) => void
 }
 
-export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEditorProps) {
+export function MarkdownEditor({ docId, content, onChange, onSave, onSaveStatusChange, onAttachmentSaved, onScrollerReady }: MarkdownEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useEditorViewRef()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { updateNote, setSaveStatus, theme, vaultPath, editorFontSize, editorFontFamily, editorLineHeight, removeAttachment, bodyGlass, glassOpacity } = useAppStore()
+  const { theme, editorFontSize, editorFontFamily, editorLineHeight, bodyGlass, glassOpacity } = useAppStore()
+
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+  const onSaveRef = useRef(onSave)
+  onSaveRef.current = onSave
+  const onSaveStatusChangeRef = useRef(onSaveStatusChange)
+  onSaveStatusChangeRef.current = onSaveStatusChange
+  const onAttachmentSavedRef = useRef(onAttachmentSaved)
+  onAttachmentSavedRef.current = onAttachmentSaved
 
   const editorFontStyles = {
     fontFamily: editorFontFamily,
@@ -107,21 +124,27 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
       // autocompleteTheme, bundled into slashCommandCompletion below.
     })
 
-    // Called by the embed widget's trash button: remove the attachment from the
-    // note's list and delete the file from disk.
-    const handleRemoveEmbed = (relativePath: string) => {
-      const note = useAppStore.getState().notes.find(n => n.id === noteId)
-      const att = note?.attachments?.find(a => a.path === relativePath)
-      if (att) {
-        removeAttachment(noteId, att.id)
-        if (vaultPath) deleteAttachmentFile(vaultPath, att).catch(console.error)
-      }
+    // Saves a pasted image to the vault's attachments folder and inserts an
+    // embed at the cursor position it was pasted at.
+    const handlePasteImage = async (file: File, view: EditorView, pos: number) => {
+      const vaultPath = useAppStore.getState().vaultPath
+      if (!vaultPath) return
+      const bytes = new Uint8Array(await file.arrayBuffer())
+      const att = await saveImageBytes(vaultPath, bytes, file.type)
+      if (!att) return
+      onAttachmentSavedRef.current?.(att)
+      const embed = makeAttachmentMarkdown(att)
+      view.dispatch({
+        changes: { from: pos, to: pos, insert: embed },
+        selection: { anchor: pos + embed.length },
+      })
     }
 
     const state = EditorState.create({
       doc: content,
       extensions: [
         history(),
+        formattingKeymap,
         keymap.of([...defaultKeymap, ...historyKeymap]),
         // Chromium's contenteditable fires its own native undo/redo (beforeinput
         // historyUndo/historyRedo) which bypasses CodeMirror's managed history and
@@ -140,12 +163,20 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
             }
             return false
           },
+          paste: (event, view) => {
+            const files = Array.from(event.clipboardData?.files ?? [])
+            const imageFile = files.find(f => f.type.startsWith('image/'))
+            if (!imageFile) return false
+            event.preventDefault()
+            const pos = view.state.selection.main.from
+            handlePasteImage(imageFile, view, pos).catch(console.error)
+            return true
+          },
         }),
         markdown({ base: markdownLanguage }),
         markdownHighlighting,
         highlightMarkPlugin,
         tablePlugin,
-        createFileEmbedPlugin(vaultPath ?? '', handleRemoveEmbed, useAppStore.getState().notes.find(n => n.id === noteId)?.searchRoot),
         slashCommandCompletion,
         autocompleteTheme,
         EditorView.lineWrapping,
@@ -154,16 +185,13 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
         EditorView.updateListener.of(update => {
           if (!update.docChanged) return
           const newContent = update.state.doc.toString()
-          updateNote(noteId, newContent)
+          onChangeRef.current(newContent)
 
-          setSaveStatus('saving')
+          onSaveStatusChangeRef.current?.('saving')
           if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
           saveTimerRef.current = setTimeout(async () => {
-            const note = useAppStore.getState().notes.find(n => n.id === noteId)
-            if (note) {
-              await saveNote(note.path, newContent)
-            }
-            setSaveStatus('saved')
+            await onSaveRef.current?.(newContent)
+            onSaveStatusChangeRef.current?.('saved')
           }, 800)
         }),
       ],
@@ -178,7 +206,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
       viewRef.current = null
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [noteId, theme, editorFontSize, editorFontFamily, editorLineHeight, bodyGlass, glassOpacity])
+  }, [docId, theme, editorFontSize, editorFontFamily, editorLineHeight, bodyGlass, glassOpacity])
 
   useEffect(() => {
     const view = viewRef.current

@@ -5,6 +5,9 @@ import { useEditorViewRef } from './EditorViewContext'
 import { useAppStore } from '../../store/useAppStore'
 import { pickAndCopyImage } from '../../lib/images'
 import { pickAndCopyAttachment, makeAttachmentMarkdown } from '../../lib/attachments'
+import { applyInlineFormat } from '../../lib/editorExtensions'
+import { cn } from '../../lib/utils'
+import type { Attachment } from '../../types'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
@@ -28,45 +31,6 @@ const TOOLBAR_ITEMS: Array<{
   { label: 'H2', title: 'Heading 2', className: '', action: { type: 'block', prefix: '## ' } },
   { label: 'H3', title: 'Heading 3', className: '', action: { type: 'block', prefix: '### ' } },
 ]
-
-function applyInlineFormat(view: EditorView, prefix: string, suffix: string) {
-  const { state } = view
-  const changes = state.changeByRange(range => {
-    const selected = state.sliceDoc(range.from, range.to)
-
-    // Toggle off if the selection itself is fully wrapped, e.g. "**bold**" selected whole
-    if (selected.startsWith(prefix) && selected.endsWith(suffix) && selected.length >= prefix.length + suffix.length) {
-      const inner = selected.slice(prefix.length, selected.length - suffix.length)
-      return {
-        changes: { from: range.from, to: range.to, insert: inner },
-        range: EditorSelection.range(range.from, range.from + inner.length),
-      }
-    }
-
-    // Toggle off if the markers sit just outside the selection/cursor, e.g. cursor
-    // placed inside "**|bold|**" or "**|**" with nothing selected — the common case
-    // when the button is clicked with no text highlighted.
-    const before = state.sliceDoc(Math.max(0, range.from - prefix.length), range.from)
-    const after = state.sliceDoc(range.to, Math.min(state.doc.length, range.to + suffix.length))
-    if (before === prefix && after === suffix) {
-      return {
-        changes: [
-          { from: range.from - prefix.length, to: range.from, insert: '' },
-          { from: range.to, to: range.to + suffix.length, insert: '' },
-        ],
-        range: EditorSelection.range(range.from - prefix.length, range.to - prefix.length),
-      }
-    }
-
-    const insert = prefix + selected + suffix
-    return {
-      changes: { from: range.from, to: range.to, insert },
-      range: EditorSelection.range(range.from + prefix.length, range.from + prefix.length + selected.length),
-    }
-  })
-  view.dispatch(changes)
-  view.focus()
-}
 
 function applyBlockFormat(view: EditorView, prefix: string) {
   const { state } = view
@@ -106,7 +70,18 @@ function insertAtCursor(view: EditorView, text: string) {
   view.focus()
 }
 
-export function EditorToolbar() {
+interface EditorToolbarProps {
+  /** Overrides the default "attach to the last-selected note" behavior — used
+   *  when the toolbar is driving an editor outside the notes domain (e.g. a
+   *  task description) that has nowhere to track attachments. */
+  onAttachmentAdded?: (attachment: Attachment) => void
+  /** 'floating' (default) is the pill anchored over the bottom of the full-page
+   *  note editor. 'sticky-top' is a full-width bar docked to the top of a
+   *  bounded field, e.g. a task description box. */
+  variant?: 'floating' | 'sticky-top'
+}
+
+export function EditorToolbar({ onAttachmentAdded, variant = 'floating' }: EditorToolbarProps = {}) {
   const viewRef = useEditorViewRef()
   const { vaultPath, openPrompt, addAttachment, lastSelectedNoteId } = useAppStore()
 
@@ -147,8 +122,9 @@ export function EditorToolbar() {
     if (!vaultPath) return
     const attachment = await pickAndCopyAttachment(vaultPath)
     if (!attachment) return
-    // Add to note's attachment index
-    if (lastSelectedNoteId) addAttachment(lastSelectedNoteId, attachment)
+    // Track the attachment against whichever entity owns this editor instance
+    if (onAttachmentAdded) onAttachmentAdded(attachment)
+    else if (lastSelectedNoteId) addAttachment(lastSelectedNoteId, attachment)
     // Insert embed syntax at cursor
     const view = viewRef.current
     if (!view) return
@@ -161,7 +137,14 @@ export function EditorToolbar() {
   }
 
   return (
-    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-surface border border-border rounded-full shadow-lg h-10 px-3 flex items-center gap-0.5">
+    <div
+      className={cn(
+        'flex items-center gap-0.5',
+        variant === 'floating'
+          ? 'absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-surface border border-border rounded-full shadow-lg h-10 px-3'
+          : 'sticky top-0 z-10 bg-surface border-b border-border h-10 px-3 shrink-0',
+      )}
+    >
       {TOOLBAR_ITEMS.map((item, i) =>
         item === null ? (
           <div key={i} className="w-px h-4 bg-border mx-1" />

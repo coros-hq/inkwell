@@ -119,6 +119,55 @@ export async function pickAndCopyAttachment(vaultPath: string): Promise<Attachme
   }
 }
 
+// ─── Save pasted/dropped image bytes into the vault ──────────────────────────
+
+const MIME_EXT: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/gif': 'gif',
+  'image/webp': 'webp',
+  'image/svg+xml': 'svg',
+  'image/bmp': 'bmp',
+  'image/avif': 'avif',
+}
+
+/** Saves raw image bytes (e.g. from a clipboard paste) into `<vault>/attachments/`. */
+export async function saveImageBytes(vaultPath: string, bytes: Uint8Array, mimeType: string): Promise<Attachment | null> {
+  if (!isTauri) return null
+  try {
+    const { writeFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+
+    const attachDir = `${vaultPath}/attachments`
+    if (!(await exists(attachDir))) {
+      await mkdir(attachDir, { recursive: true })
+    }
+
+    const ext = MIME_EXT[mimeType] ?? 'png'
+    const baseName = `Pasted image ${new Date().toISOString().replace(/[:.]/g, '-')}`
+
+    let filename = `${baseName}.${ext}`
+    let counter = 1
+    while (await exists(`${attachDir}/${filename}`)) {
+      filename = `${baseName} (${counter}).${ext}`
+      counter++
+    }
+
+    const destPath = `${attachDir}/${filename}`
+    await writeFile(destPath, bytes)
+
+    return {
+      id: `att-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      name: filename,
+      path: `attachments/${filename}`,
+      size: bytes.byteLength,
+      type: 'image',
+    }
+  } catch (e) {
+    console.error('Failed to save pasted image:', e)
+    return null
+  }
+}
+
 // ─── Open a file with the system default app ──────────────────────────────────
 
 export async function openAttachment(vaultPath: string, attachment: Attachment): Promise<void> {
