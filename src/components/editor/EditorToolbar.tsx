@@ -1,110 +1,10 @@
-import type { EditorView } from '@codemirror/view'
-import { EditorSelection } from '@codemirror/state'
 import { Image, Upload, Paperclip } from 'lucide-react'
 import { useEditorViewRef } from './EditorViewContext'
 import { useAppStore } from '../../store/useAppStore'
-import { pickAndCopyImage } from '../../lib/images'
 import { pickAndCopyAttachment, makeAttachmentMarkdown } from '../../lib/attachments'
+import { insertAtCursor, applyFormatAction, FORMAT_TOOLBAR_ITEMS, type FormatAction } from '../../lib/editorFormatting'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
-
-type FormatAction =
-  | { type: 'inline'; prefix: string; suffix: string }
-  | { type: 'block'; prefix: string }
-
-const TOOLBAR_ITEMS: Array<{
-  label: string
-  title: string
-  className: string
-  action: FormatAction
-} | null> = [
-  { label: 'B', title: 'Bold', className: 'font-bold', action: { type: 'inline', prefix: '**', suffix: '**' } },
-  { label: 'I', title: 'Italic', className: 'italic', action: { type: 'inline', prefix: '_', suffix: '_' } },
-  { label: 'U', title: 'Underline', className: 'underline', action: { type: 'inline', prefix: '<u>', suffix: '</u>' } },
-  { label: 'S', title: 'Strikethrough', className: 'line-through', action: { type: 'inline', prefix: '~~', suffix: '~~' } },
-  { label: '</>', title: 'Inline Code', className: 'font-mono text-[11px]', action: { type: 'inline', prefix: '`', suffix: '`' } },
-  null,
-  { label: 'H1', title: 'Heading 1', className: '', action: { type: 'block', prefix: '# ' } },
-  { label: 'H2', title: 'Heading 2', className: '', action: { type: 'block', prefix: '## ' } },
-  { label: 'H3', title: 'Heading 3', className: '', action: { type: 'block', prefix: '### ' } },
-]
-
-function applyInlineFormat(view: EditorView, prefix: string, suffix: string) {
-  const { state } = view
-  const changes = state.changeByRange(range => {
-    const selected = state.sliceDoc(range.from, range.to)
-
-    // Toggle off if the selection itself is fully wrapped, e.g. "**bold**" selected whole
-    if (selected.startsWith(prefix) && selected.endsWith(suffix) && selected.length >= prefix.length + suffix.length) {
-      const inner = selected.slice(prefix.length, selected.length - suffix.length)
-      return {
-        changes: { from: range.from, to: range.to, insert: inner },
-        range: EditorSelection.range(range.from, range.from + inner.length),
-      }
-    }
-
-    // Toggle off if the markers sit just outside the selection/cursor, e.g. cursor
-    // placed inside "**|bold|**" or "**|**" with nothing selected — the common case
-    // when the button is clicked with no text highlighted.
-    const before = state.sliceDoc(Math.max(0, range.from - prefix.length), range.from)
-    const after = state.sliceDoc(range.to, Math.min(state.doc.length, range.to + suffix.length))
-    if (before === prefix && after === suffix) {
-      return {
-        changes: [
-          { from: range.from - prefix.length, to: range.from, insert: '' },
-          { from: range.to, to: range.to + suffix.length, insert: '' },
-        ],
-        range: EditorSelection.range(range.from - prefix.length, range.to - prefix.length),
-      }
-    }
-
-    const insert = prefix + selected + suffix
-    return {
-      changes: { from: range.from, to: range.to, insert },
-      range: EditorSelection.range(range.from + prefix.length, range.from + prefix.length + selected.length),
-    }
-  })
-  view.dispatch(changes)
-  view.focus()
-}
-
-function applyBlockFormat(view: EditorView, prefix: string) {
-  const { state } = view
-  const changes = state.changeByRange(range => {
-    const line = state.doc.lineAt(range.from)
-    const lineText = line.text
-
-    // Toggle off if the line already starts with this prefix
-    if (lineText.startsWith(prefix)) {
-      const stripped = lineText.slice(prefix.length)
-      const delta = -prefix.length
-      return {
-        changes: { from: line.from, to: line.to, insert: stripped },
-        range: EditorSelection.range(range.from + delta, range.head + delta),
-      }
-    }
-
-    // Remove any existing heading prefix first
-    const withoutPrefix = lineText.replace(/^#{1,6} /, '')
-    const insert = prefix + withoutPrefix
-    const delta = insert.length - withoutPrefix.length
-    return {
-      changes: { from: line.from, to: line.to, insert },
-      range: EditorSelection.range(range.from + delta, range.head + delta),
-    }
-  })
-  view.dispatch(changes)
-  view.focus()
-}
-
-function insertAtCursor(view: EditorView, text: string) {
-  const cursor = view.state.selection.main.head
-  view.dispatch({
-    changes: { from: cursor, to: cursor, insert: text },
-    selection: { anchor: cursor + text.length },
-  })
-  view.focus()
-}
 
 export function EditorToolbar() {
   const viewRef = useEditorViewRef()
@@ -113,11 +13,7 @@ export function EditorToolbar() {
   const handleAction = (action: FormatAction) => {
     const view = viewRef.current
     if (!view) return
-    if (action.type === 'inline') {
-      applyInlineFormat(view, action.prefix, action.suffix)
-    } else {
-      applyBlockFormat(view, action.prefix)
-    }
+    applyFormatAction(view, action)
   }
 
   const handleImageUrl = () => {
@@ -134,35 +30,28 @@ export function EditorToolbar() {
     })
   }
 
-  const handleImageUpload = async () => {
-    if (!vaultPath) return
-    const snippet = await pickAndCopyImage(vaultPath)
-    if (!snippet) return
-    const view = viewRef.current
-    if (!view) return
-    insertAtCursor(view, snippet)
-  }
-
-  const handleFileUpload = async () => {
+  // Shared by both the "Upload image" and "Attach file" buttons — the picker's
+  // dialog already lists Images first, so a dedicated image-only picker isn't
+  // needed. Both insert the `![[path|name|size]]` embed syntax so the result
+  // actually renders inline (a plain `![image](url)` snippet does not).
+  const handleAttachmentUpload = async () => {
     if (!vaultPath) return
     const attachment = await pickAndCopyAttachment(vaultPath)
     if (!attachment) return
-    // Add to note's attachment index
     if (lastSelectedNoteId) addAttachment(lastSelectedNoteId, attachment)
-    // Insert embed syntax at cursor
     const view = viewRef.current
     if (!view) return
     const cursor = view.state.selection.main.head
     const line = view.state.doc.lineAt(cursor)
     // Ensure the embed is on its own line
-    const needsLeading  = cursor !== line.from || line.text.trim().length > 0
+    const needsLeading = cursor !== line.from || line.text.trim().length > 0
     const snippet = (needsLeading ? '\n' : '') + makeAttachmentMarkdown(attachment) + '\n'
     insertAtCursor(view, snippet)
   }
 
   return (
-    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-surface border border-border rounded-full shadow-lg h-10 px-3 flex items-center gap-0.5">
-      {TOOLBAR_ITEMS.map((item, i) =>
+    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-card border border-border rounded-full shadow-md shadow-black/5 h-10 px-3 flex items-center gap-0.5">
+      {FORMAT_TOOLBAR_ITEMS.map((item, i) =>
         item === null ? (
           <div key={i} className="w-px h-4 bg-border mx-1" />
         ) : (
@@ -194,7 +83,7 @@ export function EditorToolbar() {
       {isTauri && (
         <button
           title="Upload image from computer"
-          onMouseDown={e => { e.preventDefault(); void handleImageUpload() }}
+          onMouseDown={e => { e.preventDefault(); void handleAttachmentUpload() }}
           className="text-muted-foreground hover:text-accent w-7 h-7 rounded-full hover:bg-active transition-colors flex items-center justify-center"
         >
           <Upload className="w-3.5 h-3.5" />
@@ -206,7 +95,7 @@ export function EditorToolbar() {
           <div className="w-px h-4 bg-border mx-1" />
           <button
             title="Attach file or document (PDF, Word, etc.)"
-            onMouseDown={e => { e.preventDefault(); void handleFileUpload() }}
+            onMouseDown={e => { e.preventDefault(); void handleAttachmentUpload() }}
             className="text-muted-foreground hover:text-accent w-7 h-7 rounded-full hover:bg-active transition-colors flex items-center justify-center"
           >
             <Paperclip className="w-3.5 h-3.5" />

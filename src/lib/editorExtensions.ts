@@ -1,10 +1,11 @@
-import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
+import { HighlightStyle, syntaxHighlighting, syntaxTree } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
 import { autocompletion } from '@codemirror/autocomplete'
 import type { CompletionContext, CompletionResult } from '@codemirror/autocomplete'
 import { ViewPlugin, Decoration, WidgetType, EditorView } from '@codemirror/view'
 import type { DecorationSet, ViewUpdate } from '@codemirror/view'
 import type { Range } from '@codemirror/state'
+import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark'
 import { useAppStore } from '../store/useAppStore'
 
 // ─── Syntax Highlight Style ──────────────────────────────────────────────────
@@ -33,6 +34,13 @@ export const inkwellHighlightStyle = HighlightStyle.define([
 
 export const markdownHighlighting = syntaxHighlighting(inkwellHighlightStyle)
 
+// Fenced code blocks embed a real language grammar (see `codeLanguages` on the
+// markdown() extension in MarkdownEditor) whose tokens — keywords, strings,
+// numbers, comments — aren't covered by inkwellHighlightStyle above. Layered
+// in as a fallback so it only fills gaps rather than fighting the markdown-
+// specific rules (headings, emphasis, etc.) for tags both styles define.
+export const codeHighlighting = syntaxHighlighting(oneDarkHighlightStyle, { fallback: true })
+
 // ─── Autocomplete popup theme ──────────────────────────────────────────────────
 // Shared by both the slash-command and @-mention popups (MarkdownEditor and
 // QuickNoteEditor both wire this in). Icons are CodeMirror's own mechanism:
@@ -59,8 +67,8 @@ export const autocompleteTheme = EditorView.theme({
   '.cm-tooltip-autocomplete': {
     backgroundColor: 'hsl(var(--surface))',
     border: '1px solid hsl(var(--border))',
-    borderRadius: '10px',
-    boxShadow: '0 8px 24px rgba(0,0,0,0.16), 0 2px 8px rgba(0,0,0,0.10)',
+    borderRadius: '12px',
+    boxShadow: '0 12px 32px rgba(0,0,0,0.20), 0 2px 8px rgba(0,0,0,0.10)',
     overflow: 'hidden',
     padding: '6px',
   },
@@ -69,31 +77,39 @@ export const autocompleteTheme = EditorView.theme({
     // content, so it shouldn't follow the user's prose font (e.g. a serif).
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     maxHeight: '320px',
+    minWidth: '260px',
   },
   '.cm-tooltip-autocomplete ul li': {
     display: 'flex',
     flexWrap: 'wrap',
     alignItems: 'center',
-    padding: '6px 8px',
+    padding: '7px 9px',
     margin: '1px 0',
-    borderRadius: '7px',
+    borderRadius: '8px',
+    transition: 'background-color 0.1s ease',
+  },
+  '.cm-tooltip-autocomplete ul li:hover': {
+    backgroundColor: 'hsl(var(--accent) / 0.08)',
   },
   '.cm-tooltip-autocomplete ul li[aria-selected]': {
-    backgroundColor: 'hsl(var(--accent) / 0.12)',
+    backgroundColor: 'hsl(var(--accent) / 0.14)',
   },
   '.cm-tooltip-autocomplete ul li[aria-selected] .cm-completionLabel': {
     color: 'hsl(var(--accent))',
   },
+  '.cm-tooltip-autocomplete ul li[aria-selected] .cm-completionIcon': {
+    backgroundColor: 'hsl(var(--accent) / 0.2)',
+  },
   '.cm-completionIcon': {
     flexShrink: '0',
-    width: '22px',
-    height: '22px',
+    width: '24px',
+    height: '24px',
     marginRight: '10px',
-    borderRadius: '6px',
+    borderRadius: '7px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '10px',
+    fontSize: '9.5px',
     fontWeight: '700',
     letterSpacing: '-0.02em',
     backgroundColor: 'hsl(var(--accent) / 0.12)',
@@ -101,18 +117,20 @@ export const autocompleteTheme = EditorView.theme({
     opacity: '1',
     padding: '0',
     boxSizing: 'border-box',
+    transition: 'background-color 0.1s ease',
   },
   '.cm-completionLabel': {
     fontSize: '13px',
-    fontWeight: '500',
+    fontWeight: '600',
     color: 'hsl(var(--foreground))',
   },
   '.cm-completionDetail': {
     flexBasis: '100%',
-    marginLeft: '32px',
-    marginTop: '1px',
-    fontSize: '11px',
+    marginLeft: '34px',
+    marginTop: '2px',
+    fontSize: '11.5px',
     fontStyle: 'normal',
+    opacity: '0.75',
     color: 'hsl(var(--muted-foreground))',
   },
   ...iconRules(),
@@ -376,6 +394,141 @@ function buildCheckboxDecorations(view: EditorView): DecorationSet {
   return Decoration.set(widgets, true)
 }
 
+// ─── Live markdown preview (Normal mode WYSIWYG) ─────────────────────────────
+// Conceals the raw delimiter characters (#, **, ~~, `, >, [](url), list marks)
+// so the note reads as formatted text with no visible markdown — the styling
+// itself comes from inkwellHighlightStyle above, which already tags the
+// remaining text as heading/strong/emphasis/etc. Marks on the line the cursor
+// is currently on are revealed so they stay editable, matching the standard
+// "live preview" pattern (Obsidian, Typora).
+
+// Delimiters hidden outright wherever they appear (inline marks only — the
+// fenced-code ``` fence reuses the "CodeMark" node name but is handled as a
+// block below, so it's excluded here rather than added to this set).
+const CONCEALED_MARK_NODES = new Set([
+  'HeaderMark',
+  'EmphasisMark',
+  'StrikethroughMark',
+  'QuoteMark',
+])
+
+class BulletWidget extends WidgetType {
+  toDOM() {
+    const span = document.createElement('span')
+    span.className = 'cm-bullet-dot'
+    span.textContent = '•'
+    return span
+  }
+  ignoreEvent() { return false }
+}
+
+function activeLineSet(view: EditorView): Set<number> {
+  const lines = new Set<number>()
+  for (const range of view.state.selection.ranges) {
+    const fromLine = view.state.doc.lineAt(range.from).number
+    const toLine = view.state.doc.lineAt(range.to).number
+    for (let l = fromLine; l <= toLine; l++) lines.add(l)
+  }
+  return lines
+}
+
+// Applies a class to every line spanned by a block node (fenced code,
+// blockquote) so it reads as a distinct block rather than plain paragraph
+// text — mirrors what the rendered preview already does for the same nodes.
+function decorateBlockLines(
+  view: EditorView,
+  decos: Range<Decoration>[],
+  from: number,
+  to: number,
+  className: string,
+  firstClass?: string,
+  lastClass?: string,
+) {
+  const startLine = view.state.doc.lineAt(from).number
+  const endLine = view.state.doc.lineAt(to).number
+  for (let l = startLine; l <= endLine; l++) {
+    const line = view.state.doc.line(l)
+    const extra = l === startLine ? firstClass : l === endLine ? lastClass : undefined
+    const cls = extra ? `${className} ${extra}` : className
+    decos.push(Decoration.line({ attributes: { class: cls } }).range(line.from))
+  }
+}
+
+function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
+  const decos: Range<Decoration>[] = []
+  const activeLines = activeLineSet(view)
+
+  for (const { from, to } of view.visibleRanges) {
+    syntaxTree(view.state).iterate({
+      from,
+      to,
+      enter: (node) => {
+        // Block-level styling applies regardless of the active line — a code
+        // block or quote shouldn't lose its box just because you're typing in it.
+        if (node.name === 'FencedCode') {
+          decorateBlockLines(view, decos, node.from, node.to, 'cm-line-codeblock', 'cm-line-codeblock-first', 'cm-line-codeblock-last')
+          return
+        }
+        if (node.name === 'Blockquote') {
+          decorateBlockLines(view, decos, node.from, node.to, 'cm-line-blockquote')
+        }
+
+        const lineNo = view.state.doc.lineAt(node.from).number
+        if (activeLines.has(lineNo)) return
+
+        if (CONCEALED_MARK_NODES.has(node.name)) {
+          let end = node.to
+          // ATX heading marks ("#", "##", ...) and blockquote's ">" are each
+          // followed by a single space that reads oddly once the mark itself
+          // disappears — swallow it along with the mark.
+          if (
+            (node.name === 'HeaderMark' || node.name === 'QuoteMark') &&
+            view.state.sliceDoc(node.to, node.to + 1) === ' '
+          ) {
+            end = node.to + 1
+          }
+          decos.push(Decoration.replace({}).range(node.from, end))
+          return
+        }
+
+        if (
+          node.name === 'CodeMark' &&
+          (node.node.parent?.name === 'InlineCode' || node.node.parent?.name === 'FencedCode')
+        ) {
+          decos.push(Decoration.replace({}).range(node.from, node.to))
+          return
+        }
+
+        if (node.name === 'LinkMark' || (node.name === 'URL' && node.node.parent?.name === 'Link')) {
+          decos.push(Decoration.replace({}).range(node.from, node.to))
+          return
+        }
+
+        if (node.name === 'ListMark' && node.node.parent?.parent?.name === 'BulletList') {
+          decos.push(Decoration.replace({ widget: new BulletWidget() }).range(node.from, node.to))
+        }
+      },
+    })
+  }
+
+  return Decoration.set(decos, true)
+}
+
+export const liveMarkdownPlugin = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet
+    constructor(view: EditorView) {
+      this.decorations = buildLiveMarkdownDecorations(view)
+    }
+    update(update: ViewUpdate) {
+      if (update.docChanged || update.viewportChanged || update.selectionSet) {
+        this.decorations = buildLiveMarkdownDecorations(update.view)
+      }
+    }
+  },
+  { decorations: v => v.decorations },
+)
+
 // ─── Markdown Table Plugin ────────────────────────────────────────────────────
 
 function isTableRow(text: string): boolean {
@@ -391,10 +544,27 @@ function isSeparatorRow(text: string): boolean {
 
 type TableLineType = 'header' | 'separator' | 'row-even' | 'row-odd'
 
+// Lines that fall inside a fenced/indented code block — ASCII art in a code
+// sample (box-drawing with "|" columns) reads as a table by pure regex, but
+// it's literal code content and must be left alone.
+function codeBlockLineNumbers(view: EditorView): Set<number> {
+  const lines = new Set<number>()
+  syntaxTree(view.state).iterate({
+    enter(node) {
+      if (node.name !== 'FencedCode' && node.name !== 'CodeBlock') return
+      const startLine = view.state.doc.lineAt(node.from).number
+      const endLine = view.state.doc.lineAt(node.to).number
+      for (let l = startLine; l <= endLine; l++) lines.add(l)
+    },
+  })
+  return lines
+}
+
 function buildTableDecorations(view: EditorView): DecorationSet {
   const decs: Range<Decoration>[] = []
   const doc = view.state.doc
   const totalLines = doc.lines
+  const codeLines = codeBlockLineNumbers(view)
 
   // ── Pass 1: classify every line in the document ──────────────────────────
   const lineTypes = new Map<number, TableLineType>()
@@ -402,12 +572,12 @@ function buildTableDecorations(view: EditorView): DecorationSet {
   let i = 1
   while (i <= totalLines) {
     const lineText = doc.line(i).text
-    if (!isTableRow(lineText)) { i++; continue }
+    if (codeLines.has(i) || !isTableRow(lineText)) { i++; continue }
 
     // Collect consecutive table-row lines as a block
     const blockLines: number[] = [i]
     i++
-    while (i <= totalLines && isTableRow(doc.line(i).text)) {
+    while (i <= totalLines && !codeLines.has(i) && isTableRow(doc.line(i).text)) {
       blockLines.push(i)
       i++
     }
@@ -676,7 +846,14 @@ class FileEmbedWidget extends WidgetType {
       if (!url) { showNotFound(); return }
       img.onerror = showNotFound
       img.src = url
-      img.onload = () => { placeholder.replaceWith(img) }
+      img.onload = () => {
+        placeholder.replaceWith(img)
+        // The widget's real height is now known and almost always differs from
+        // `estimatedHeight` (a fixed guess used before the image loads) — tell
+        // CodeMirror to remeasure, or the line stays sized to the stale
+        // estimate and the image renders clipped/cut off.
+        view.requestMeasure()
+      }
     })
 
     const trashBtn = document.createElement('button')
@@ -911,9 +1088,11 @@ class FileEmbedWidget extends WidgetType {
             openBtn.addEventListener('mousedown', e => { e.preventDefault(); openExternally() })
             bar.appendChild(openBtn)
             this.previewEl.appendChild(bar)
+            view.requestMeasure()
           }).catch(() => {
             if (!this.previewEl) return
             loader.textContent = `File not found: ${this.displayName}`
+            view.requestMeasure()
           })
 
         } else if (this.type === 'video') {
@@ -935,6 +1114,7 @@ class FileEmbedWidget extends WidgetType {
               msg.textContent = `File not found: ${this.displayName}`
               msg.style.cssText = 'font-size:13px;color:hsl(var(--muted-foreground));padding:24px;text-align:center;margin:0'
               video.replaceWith(msg)
+              view.requestMeasure()
             })
 
         } else {
@@ -972,6 +1152,10 @@ class FileEmbedWidget extends WidgetType {
         this.previewEl?.remove()
         this.previewEl = null
       }
+      // Same reasoning as the image widget's onload handler — the DOM just
+      // changed size outside CodeMirror's own update cycle, so it needs to be
+      // told to remeasure or the line stays sized to the stale estimate.
+      view.requestMeasure()
     }
 
     header.addEventListener('mousedown', e => {

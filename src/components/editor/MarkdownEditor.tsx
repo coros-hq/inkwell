@@ -3,32 +3,39 @@ import { EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, undo, redo } from '@codemirror/commands'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
+import { languages } from '@codemirror/language-data'
+import { vim } from '@replit/codemirror-vim'
 import { useAppStore } from '../../store/useAppStore'
 import { saveNote } from '../../lib/fs'
 import { cn, glassBg } from '../../lib/utils'
 
-import { markdownHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme } from '../../lib/editorExtensions'
+import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin } from '../../lib/editorExtensions'
 import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
 import { useEditorViewRef } from './EditorViewContext'
-import { deleteAttachmentFile } from '../../lib/attachments'
+import { deleteAttachmentFile, makeAttachmentMarkdown } from '../../lib/attachments'
+import { saveClipboardImage } from '../../lib/images'
+import { applyInlineFormat } from '../../lib/editorFormatting'
 
 interface MarkdownEditorProps {
   noteId: string
   content: string
   onScrollerReady?: (el: HTMLElement) => void
+  /** false for the raw-source pane in Markdown mode — Normal mode wants the
+   * WYSIWYG live-preview conceal behavior, the source pane wants plain markdown. */
+  liveConceal?: boolean
 }
 
-export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEditorProps) {
+export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal = true }: MarkdownEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useEditorViewRef()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { updateNote, setSaveStatus, theme, vaultPath, editorFontSize, editorFontFamily, editorLineHeight, removeAttachment, bodyGlass, glassOpacity } = useAppStore()
+  const { updateNote, setSaveStatus, theme, vaultPath, editorFontSize, editorFontFamily, editorLineHeight, removeAttachment, addAttachment, bodyGlass, glassOpacity, vimModeEnabled } = useAppStore()
 
   const editorFontStyles = {
     fontFamily: editorFontFamily,
     fontSize: editorFontSize,
     lineHeight: editorLineHeight,
-    fontWeight: '400',
+    fontWeight: '500',
     WebkitFontSmoothing: 'antialiased',
     MozOsxFontSmoothing: 'grayscale',
     fontFeatureSettings: '"kern" 1, "liga" 1, "calt" 1',
@@ -55,8 +62,8 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
         ...editorFontStyles,
       },
       '.cm-content': {
-        padding: '24px 32px',
-        maxWidth: '720px',
+        padding: '64px 40px 96px',
+        maxWidth: '740px',
         margin: '0 auto',
         caretColor: 'hsl(var(--accent))',
         ...editorFontStyles,
@@ -105,7 +112,35 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
       },
       // Autocomplete (slash command / @-mention) popup styling lives in
       // autocompleteTheme, bundled into slashCommandCompletion below.
-    })
+      // ── Vim mode (only present when vimModeEnabled) ──────────────────────
+      // The package ships its own theme (block cursor color, status panel) with
+      // Prec.highest + hardcoded colors (a pink cursor block) that clash with
+      // every app theme. Override with `!important` — that's the only thing
+      // that reliably beats both the package's own Prec.highest theme and the
+      // inline `style.color` it sets directly on the cursor element per frame.
+      '.cm-vim-panel': {
+        borderTop: '1px solid hsl(var(--border))',
+        color: 'hsl(var(--foreground))',
+        backgroundColor: editorBg,
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+        fontSize: '12px',
+      },
+      '.cm-vim-panel input': {
+        color: 'hsl(var(--foreground))',
+        caretColor: 'hsl(var(--accent))',
+      },
+      // Normal/Visual-mode block cursor
+      '.cm-fat-cursor': {
+        backgroundColor: 'hsl(var(--accent)) !important',
+        color: 'hsl(var(--background)) !important',
+      },
+      '&:not(.cm-focused) .cm-fat-cursor': {
+        backgroundColor: 'transparent !important',
+        outline: '1px solid hsl(var(--accent) / 0.6)',
+        color: 'hsl(var(--accent)) !important',
+      },
+      // `dark` flag below activates vim's own `&dark`/`&light` search-match rule
+    }, { dark: theme === 'dark' })
 
     // Called by the embed widget's trash button: remove the attachment from the
     // note's list and delete the file from disk.
@@ -121,6 +156,10 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
     const state = EditorState.create({
       doc: content,
       extensions: [
+        // Must be the first extension — it needs to see keystrokes before the
+        // default keymap does so it can interpret them as vim motions/commands
+        // instead of plain text input while in Normal/Visual mode.
+        ...(vimModeEnabled ? [vim({ status: true })] : []),
         history(),
         keymap.of([...defaultKeymap, ...historyKeymap]),
         // Chromium's contenteditable fires its own native undo/redo (beforeinput
@@ -140,9 +179,50 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
             }
             return false
           },
+          // Cmd/Ctrl+B/I/U/Shift+S toggle inline formatting. Handled here (not via
+          // `keymap.of`) so we can stopPropagation — Cmd+B is also the global
+          // "toggle sidebar" shortcut (see shortcuts.ts) listened for on `window`,
+          // and without stopping propagation it would fire both.
+          keydown: (event, view) => {
+            if (!(event.metaKey || event.ctrlKey)) return false
+            const key = event.key.toLowerCase()
+            const wrap = (prefix: string, suffix: string) => {
+              event.preventDefault()
+              event.stopPropagation()
+              applyInlineFormat(view, prefix, suffix)
+              return true
+            }
+            if (key === 'b') return wrap('**', '**')
+            if (key === 'i') return wrap('_', '_')
+            if (key === 'u') return wrap('<u>', '</u>')
+            if (event.shiftKey && key === 's') return wrap('~~', '~~')
+            return false
+          },
+          // Paste a clipboard image straight into the note, saved to
+          // {vaultPath}/assets/, instead of dropping it silently.
+          paste: (event, view) => {
+            const vp = useAppStore.getState().vaultPath
+            const files = event.clipboardData?.files
+            const imageFile = files && Array.from(files).find(f => f.type.startsWith('image/'))
+            if (!imageFile || !vp) return false
+            event.preventDefault()
+            const { from, to } = view.state.selection.main
+            saveClipboardImage(vp, imageFile).then(attachment => {
+              if (!attachment) return
+              addAttachment(noteId, attachment)
+              const snippet = makeAttachmentMarkdown(attachment)
+              view.dispatch({
+                changes: { from, to, insert: snippet },
+                selection: { anchor: from + snippet.length },
+              })
+            })
+            return true
+          },
         }),
-        markdown({ base: markdownLanguage }),
+        markdown({ base: markdownLanguage, codeLanguages: languages }),
         markdownHighlighting,
+        codeHighlighting,
+        ...(liveConceal ? [liveMarkdownPlugin] : []),
         highlightMarkPlugin,
         tablePlugin,
         createFileEmbedPlugin(vaultPath ?? '', handleRemoveEmbed, useAppStore.getState().notes.find(n => n.id === noteId)?.searchRoot),
@@ -178,7 +258,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady }: MarkdownEdi
       viewRef.current = null
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [noteId, theme, editorFontSize, editorFontFamily, editorLineHeight, bodyGlass, glassOpacity])
+  }, [noteId, theme, editorFontSize, editorFontFamily, editorLineHeight, bodyGlass, glassOpacity, vimModeEnabled, liveConceal])
 
   useEffect(() => {
     const view = viewRef.current
