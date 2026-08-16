@@ -6,6 +6,7 @@ import { formatDate } from '../../lib/utils'
 import { cn } from '../../lib/utils'
 import { DatePicker } from '../ui/DatePicker'
 import { NoteRefAutocomplete, NoteRefDisplay } from '../../lib/noteReferences'
+import { MarkdownField } from '../shared/MarkdownField'
 import type { Task } from '../../types'
 
 // ─── Old task drawer constants ─────────────────────────────────────────────────
@@ -70,6 +71,7 @@ function BoardTaskDrawer() {
     addBoardTaskComment,
     openConfirm,
     deleteBoardTask,
+    vaultPath,
   } = useAppStore()
 
   const task = boardTasks.find(t => t.id === activeBoardTaskId)
@@ -79,8 +81,6 @@ function BoardTaskDrawer() {
   // Local editing state
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
-  const [editingDesc, setEditingDesc] = useState(false)
-  const [descDraft, setDescDraft] = useState('')
   const [subtaskDraft, setSubtaskDraft] = useState('')
   const [addingSubtask, setAddingSubtask] = useState(false)
   const [commentDraft, setCommentDraft] = useState('')
@@ -95,7 +95,6 @@ function BoardTaskDrawer() {
   const tagInputRef = useRef<HTMLInputElement>(null)
   const titleInputRef = useRef<HTMLInputElement>(null)
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
-  const descInputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (addingSubtask) subtaskInputRef.current?.focus()
@@ -115,11 +114,6 @@ function BoardTaskDrawer() {
       updateBoardTask(task.id, { title: titleDraft.trim() })
     }
     setEditingTitle(false)
-  }
-
-  const handleDescSave = () => {
-    updateBoardTask(task.id, { description: descDraft })
-    setEditingDesc(false)
   }
 
   const handleAddSubtask = () => {
@@ -178,7 +172,7 @@ function BoardTaskDrawer() {
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 bottom-0 z-50 w-[380px] bg-panel border-l border-border flex flex-col shadow-2xl">
+      <div className="fixed right-0 top-0 bottom-0 z-50 w-[560px] bg-panel border-l border-border flex flex-col shadow-2xl">
 
         {/* ── Header ─────────────────────────────────────────────────────────── */}
         <div className="flex items-start gap-3 p-4 border-b border-border shrink-0">
@@ -360,43 +354,17 @@ function BoardTaskDrawer() {
             </div>
           </div>
 
-          {/* ── Description ─────────────────────────────────────────────────── */}
+          {/* ── Details ──────────────────────────────────────────────────────── */}
           <div>
-            <SectionHeader>Description</SectionHeader>
-            {editingDesc ? (
-              <div className="relative">
-                <textarea
-                  ref={descInputRef}
-                  autoFocus
-                  value={descDraft}
-                  onChange={e => setDescDraft(e.target.value)}
-                  onBlur={handleDescSave}
-                  onKeyDown={e => {
-                    if (e.key === 'Escape') handleDescSave()
-                    if (e.key === 'Enter' && e.metaKey) handleDescSave()
-                  }}
-                  placeholder="Add a description…"
-                  rows={4}
-                  className="w-full text-sm bg-surface border border-accent/40 rounded-md px-3 py-2 text-foreground placeholder:text-muted-foreground outline-none resize-none leading-relaxed"
-                />
-                <NoteRefAutocomplete
-                  inputValue={descDraft}
-                  inputRef={descInputRef}
-                  onInsert={setDescDraft}
-                />
-              </div>
-            ) : (
-              <div
-                onClick={() => { setDescDraft(task.description); setEditingDesc(true) }}
-                className={cn(
-                  'text-sm leading-relaxed rounded-md px-3 py-2 cursor-text transition-colors',
-                  'hover:bg-surface border border-transparent hover:border-border/50 min-h-[60px]',
-                  task.description ? 'text-foreground whitespace-pre-wrap' : 'text-tertiary italic',
-                )}
-              >
-                {task.description ? <NoteRefDisplay text={task.description} /> : 'Add a description…'}
-              </div>
-            )}
+            <SectionHeader>Details</SectionHeader>
+            <MarkdownField
+              key={task.id}
+              value={task.description}
+              onChange={v => updateBoardTask(task.id, { description: v })}
+              placeholder="Add details… ( / for commands, @ to link a note )"
+              minHeight="140px"
+              vaultPath={vaultPath ?? undefined}
+            />
           </div>
 
           {/* ── Subtasks ────────────────────────────────────────────────────── */}

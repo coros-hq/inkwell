@@ -1,22 +1,31 @@
 import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon } from 'lucide-react'
+import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail } from 'lucide-react'
 import { useAppStore, type Abbreviation } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { THEMES, DARK_THEMES, LIGHT_THEMES, type CustomTheme } from '../../lib/themes'
 import { ThemeEditor } from './ThemeEditor'
 import {
   pickVaultDirectory, readVaultFS, addRecentVault,
-  getRecentVaults, removeRecentVault, writeBoardsFile, type RecentVault,
+  getRecentVaults, removeRecentVault, writeBoardsFile, writeTeamData, type RecentVault,
 } from '../../lib/vault'
+import { genId } from '../../lib/id'
 import {
   getGithubToken, setGithubToken, getGithubOwner, setGithubOwner, listRepos, type GhRepo,
 } from '../../lib/github'
 import { SHORTCUT_DEFS, formatCombo, hasModifier, eventToCombo } from '../../lib/shortcuts'
+import { getSession, signOut, type Session } from '../../lib/auth'
+import {
+  listMyTeams, createTeam, listTeamMembers, inviteMember, removeMember, acceptPendingInvites,
+  createSharedVault, type Team, type TeamMember,
+} from '../../lib/team'
+import { SignInDialog } from '../shared/SignInDialog'
+import { JoinVaultDialog } from './JoinVaultDialog'
+import { closeVaultSync, resumeVaultSyncIfShared, openVaultSync, pushLocalBoardsState } from '../../lib/sync/yjsSync'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'github' | 'about'
+type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'github' | 'team' | 'about'
 
 // ─── Font options ─────────────────────────────────────────────────────────────
 
@@ -53,6 +62,7 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ className?
   { id: 'abbreviations', label: 'Abbreviations', icon: List },
   { id: 'vault', label: 'Vaults', icon: Folder },
   { id: 'github', label: 'GitHub', icon: GitBranch },
+  { id: 'team', label: 'Team', icon: Users },
   { id: 'about', label: 'About', icon: Info },
 ]
 
@@ -69,12 +79,13 @@ export function SettingsDialog() {
     customThemes, saveCustomTheme, deleteCustomTheme,
     editorFontSize, editorFontFamily, editorLineHeight,
     setEditorSettings,
+    vimModeEnabled, setVimModeEnabled,
+    defaultEditorMode, setDefaultEditorMode,
     sidebarGlass, setSidebarGlass,
     bodyGlass, setBodyGlass,
     glassOpacity, setGlassOpacity,
     canvasEnabled, setCanvasEnabled,
     canvasLinkedVaultPath, setCanvasLinkedVaultPath,
-    plannerEnabled, setPlannerEnabled,
   } = useAppStore()
 
   const handleLinkCanvasVault = async () => {
@@ -386,6 +397,32 @@ export function SettingsDialog() {
                     </div>
                   </SettingRow>
 
+                  <SettingRow label="Vim mode" description="Edit notes with Vim keybindings (modal editing, motions, : commands)">
+                    <ToggleSwitch checked={vimModeEnabled} onChange={setVimModeEnabled} />
+                  </SettingRow>
+
+                  <SettingRow
+                    label="Default note mode"
+                    description="Normal is the single-pane WYSIWYG editor. Markdown shows raw source and preview side by side. Applies to notes with no per-note override."
+                  >
+                    <div className="flex items-center gap-1 border border-border rounded-lg p-1">
+                      {(['normal', 'markdown'] as const).map(mode => (
+                        <button
+                          key={mode}
+                          onClick={() => setDefaultEditorMode(mode)}
+                          className={cn(
+                            'px-3 py-1.5 rounded-md text-xs capitalize transition-colors',
+                            defaultEditorMode === mode
+                              ? 'bg-active text-foreground font-medium'
+                              : 'text-muted-foreground hover:text-foreground',
+                          )}
+                        >
+                          {mode}
+                        </button>
+                      ))}
+                    </div>
+                  </SettingRow>
+
                   {/* Preview */}
                   <div className="rounded-lg border border-border bg-background p-4">
                     <p className="text-[10px] uppercase tracking-wider text-tertiary mb-3">Preview</p>
@@ -440,13 +477,6 @@ export function SettingsDialog() {
                       )}
                     </SettingRow>
                   )}
-
-                  <SettingRow
-                    label="Planner"
-                    description="Daily task planner with week navigation — add a Planner page to the sidebar"
-                  >
-                    <ToggleSwitch checked={plannerEnabled} onChange={setPlannerEnabled} />
-                  </SettingRow>
                 </>
               )}
 
@@ -464,6 +494,11 @@ export function SettingsDialog() {
               {/* ── GitHub ── */}
               {section === 'github' && (
                 <GitBranchSection />
+              )}
+
+              {/* ── Team ── */}
+              {section === 'team' && (
+                <TeamSection />
               )}
 
               {/* ── About ── */}
@@ -893,15 +928,48 @@ function formatVaultDate(iso: string | Date): string {
 }
 
 function VaultSection({ onClose }: { onClose: () => void }) {
-  const { vaultPath, openVault } = useAppStore()
+  const { vaultPath, openVault, sharedVault, setSharedVault, syncStatus } = useAppStore()
   const [recents, setRecents] = useState<RecentVault[]>([])
   const [switching, setSwitching] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const [myTeam, setMyTeam] = useState<Team | null>(null)
+  const [sharing, setSharing] = useState(false)
+  const [shareStatus, setShareStatus] = useState<{ ok: boolean; msg: string } | null>(null)
+  const [showJoin, setShowJoin] = useState(false)
 
   // Reload recents whenever vaultPath changes, filtering out the active vault
   useEffect(() => {
     setRecents(getRecentVaults().filter(v => v.path !== vaultPath))
   }, [vaultPath])
+
+  // Load the caller's team (if any) so "Share with team" can be offered
+  useEffect(() => {
+    listMyTeams().then(teams => setMyTeam(teams[0] ?? null)).catch(() => setMyTeam(null))
+  }, [])
+
+  const handleShare = async () => {
+    if (!vaultPath || !myTeam) return
+    setSharing(true)
+    setShareStatus(null)
+    try {
+      const session = await getSession()
+      if (!session) throw new Error('Sign in first (see the Team tab).')
+      const clientVaultKey = genId('vault')
+      const name = vaultPath.split('/').pop() ?? 'Vault'
+      const vault = await createSharedVault(myTeam.id, name, clientVaultKey, session.user.id)
+      await writeTeamData(vaultPath, { vaultId: vault.id, teamId: myTeam.id, sharedAt: new Date().toISOString() })
+      const { boards, boardColumns, boardTasks } = useAppStore.getState()
+      const handle = await openVaultSync(vaultPath, vault.id, session.user.id, () => {})
+      pushLocalBoardsState(handle, { boards, boardColumns, boardTasks })
+      setSharedVault({ vaultId: vault.id, teamId: myTeam.id })
+      setShareStatus({ ok: true, msg: 'Shared. Teammates can join it from their Team tab.' })
+    } catch (e) {
+      setShareStatus({ ok: false, msg: e instanceof Error ? e.message : 'Failed to share vault.' })
+    } finally {
+      setSharing(false)
+    }
+  }
 
   const switchTo = async (path: string, empty = false) => {
     setError(null)
@@ -911,10 +979,13 @@ function VaultSection({ onClose }: { onClose: () => void }) {
       const { vaultPath: currentPath, boards, boardColumns, boardTasks } = useAppStore.getState()
       if (currentPath && currentPath !== path) {
         await writeBoardsFile(currentPath, { version: 1, boards, boardColumns, boardTasks })
+        closeVaultSync(currentPath)
+        useAppStore.getState().setSharedVault(null)
       }
       const data = empty ? null : await readVaultFS(path)
       addRecentVault(path)
       openVault(path, data)
+      await resumeVaultSyncIfShared(path)
       onClose()
     } catch {
       setError("Couldn't open this vault. The folder may have moved or been deleted.")
@@ -965,6 +1036,49 @@ function VaultSection({ onClose }: { onClose: () => void }) {
             <span className="text-[10px] text-muted-foreground">Open</span>
           </div>
         </div>
+      </div>
+
+      {/* Team sharing */}
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-2">Team</p>
+        {sharedVault ? (
+          <div className={cn(
+            'flex items-center gap-2 px-3 py-2.5 rounded-lg border',
+            syncStatus === 'error' ? 'border-red-500/30 bg-red-500/8' : 'border-green-500/30 bg-green-500/8',
+          )}>
+            <Users className={cn('w-3.5 h-3.5 shrink-0', syncStatus === 'error' ? 'text-red-400' : 'text-green-400')} />
+            <span className="text-xs text-foreground">
+              {syncStatus === 'syncing' ? 'Syncing…' : syncStatus === 'error' ? 'Sync error — will retry' : 'Synced with team'}
+            </span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              disabled={sharing || !myTeam}
+              title={!myTeam ? 'Create a team first (see the Team tab)' : undefined}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-xs font-medium bg-accent text-white hover:opacity-90 transition-colors',
+                (sharing || !myTeam) && 'opacity-40 pointer-events-none',
+              )}
+            >
+              {sharing ? 'Sharing…' : 'Share with team'}
+            </button>
+            <span className="text-border text-xs">·</span>
+            <button
+              onClick={() => setShowJoin(true)}
+              className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Join a shared vault
+            </button>
+          </div>
+        )}
+        {shareStatus && (
+          <p className={cn('text-[11px] mt-1.5', shareStatus.ok ? 'text-green-400' : 'text-red-400')}>
+            {shareStatus.msg}
+          </p>
+        )}
+        <JoinVaultDialog open={showJoin} onClose={() => setShowJoin(false)} />
       </div>
 
       {/* Other vaults */}
@@ -1220,6 +1334,258 @@ function GitBranchSection() {
             ))}
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+// ─── TeamSection ──────────────────────────────────────────────────────────────
+
+function TeamSection() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [checkingSession, setCheckingSession] = useState(true)
+  const [showSignIn, setShowSignIn] = useState(false)
+
+  const [activeTeam, setActiveTeam] = useState<Team | null>(null)
+  const [members, setMembers] = useState<TeamMember[]>([])
+
+  const [newTeamName, setNewTeamName] = useState('')
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState<{ ok: boolean; msg: string } | null>(null)
+
+  const loadTeams = async (currentSession: Session) => {
+    await acceptPendingInvites(currentSession.user.id, currentSession.user.email ?? '')
+    const myTeams = await listMyTeams()
+    // v1: a user belongs to at most one team's worth of UI at a time — the
+    // first team (owned or joined) becomes "active". Multi-team switching is
+    // future work.
+    const active = myTeams[0] ?? null
+    setActiveTeam(active)
+    setMembers(active ? await listTeamMembers(active.id) : [])
+  }
+
+  useEffect(() => {
+    getSession()
+      .then(s => {
+        setSession(s)
+        if (s) return loadTeams(s)
+      })
+      .catch(e => setStatus({ ok: false, msg: e instanceof Error ? e.message : 'Failed to load session.' }))
+      .finally(() => setCheckingSession(false))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleSignedIn = () => {
+    getSession().then(s => {
+      setSession(s)
+      if (s) loadTeams(s)
+    })
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+    setSession(null)
+    setActiveTeam(null)
+    setMembers([])
+  }
+
+  const handleCreateTeam = async () => {
+    if (!session || !newTeamName.trim()) return
+    setBusy(true)
+    setStatus(null)
+    try {
+      const team = await createTeam(newTeamName.trim(), session.user.id)
+      setNewTeamName('')
+      setActiveTeam(team)
+      setMembers([])
+    } catch (e) {
+      setStatus({ ok: false, msg: e instanceof Error ? e.message : 'Failed to create team.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleInvite = async () => {
+    if (!activeTeam || !inviteEmail.trim()) return
+    setBusy(true)
+    setStatus(null)
+    try {
+      const member = await inviteMember(activeTeam.id, inviteEmail.trim())
+      setMembers(m => [...m, member])
+      setInviteEmail('')
+      setStatus({ ok: true, msg: 'Invited.' })
+    } catch (e) {
+      setStatus({ ok: false, msg: e instanceof Error ? e.message : 'Failed to invite member.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleRemove = async (memberId: string) => {
+    setBusy(true)
+    try {
+      await removeMember(memberId)
+      setMembers(m => m.map(x => x.id === memberId ? { ...x, status: 'removed' } : x))
+    } catch (e) {
+      setStatus({ ok: false, msg: e instanceof Error ? e.message : 'Failed to remove member.' })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  if (checkingSession) {
+    return <p className="text-xs text-muted-foreground">Loading…</p>
+  }
+
+  if (!session) {
+    return (
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground">
+          Sign in to create a team and share a vault with collaborators.
+        </p>
+        <button
+          onClick={() => setShowSignIn(true)}
+          className="px-3 py-1.5 rounded-lg text-xs font-medium bg-accent text-white hover:opacity-90 transition-colors"
+        >
+          Sign in
+        </button>
+        <SignInDialog open={showSignIn} onClose={() => setShowSignIn(false)} onSignedIn={handleSignedIn} />
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Account */}
+      <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-accent/8 border border-accent/20">
+        <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
+          <Mail className="w-4 h-4 text-accent" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-semibold text-foreground truncate">{session.user.email}</p>
+          <p className="text-[10px] text-muted-foreground truncate mt-0.5">Signed in</p>
+        </div>
+        <button
+          onClick={handleSignOut}
+          className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors shrink-0"
+        >
+          <LogOut className="w-3 h-3" />
+          Sign out
+        </button>
+      </div>
+
+      {/* Team */}
+      {!activeTeam ? (
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">
+            Create a team
+          </label>
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={newTeamName}
+              onChange={e => setNewTeamName(e.target.value)}
+              placeholder="Team name"
+              className={cn(
+                'flex-1 px-3 py-2 rounded-lg text-xs bg-surface border border-border',
+                'text-foreground placeholder:text-tertiary',
+                'focus:outline-none focus:border-accent/50 transition-colors',
+              )}
+            />
+            <button
+              onClick={handleCreateTeam}
+              disabled={busy || !newTeamName.trim()}
+              className="px-3 py-2 rounded-lg text-xs font-medium bg-accent text-white hover:opacity-90 transition-colors disabled:opacity-40"
+            >
+              Create
+            </button>
+          </div>
+          <p className="text-[10px] text-tertiary">
+            Teams let you share a whole vault (notes + boards) with collaborators.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-2">Team</p>
+            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border">
+              <Users className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span className="text-xs font-medium text-foreground truncate">{activeTeam.name}</span>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">
+              Invite a member
+            </label>
+            <div className="flex items-center gap-2">
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="teammate@example.com"
+                className={cn(
+                  'flex-1 px-3 py-2 rounded-lg text-xs bg-surface border border-border',
+                  'text-foreground placeholder:text-tertiary',
+                  'focus:outline-none focus:border-accent/50 transition-colors',
+                )}
+              />
+              <button
+                onClick={handleInvite}
+                disabled={busy || !inviteEmail.trim()}
+                className="px-3 py-2 rounded-lg text-xs font-medium bg-accent text-white hover:opacity-90 transition-colors disabled:opacity-40"
+              >
+                Invite
+              </button>
+            </div>
+            <p className="text-[10px] text-tertiary">
+              They'll see this team automatically once they sign up or sign in with that email.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-2">Members</p>
+            {members.length === 0 ? (
+              <p className="text-xs text-muted-foreground">No members yet.</p>
+            ) : (
+              <div className="rounded-lg border border-border overflow-hidden">
+                {members.map((m, i) => (
+                  <div
+                    key={m.id}
+                    className={cn(
+                      'flex items-center gap-2.5 px-3 py-2 text-xs',
+                      i > 0 && 'border-t border-border',
+                    )}
+                  >
+                    <span className="flex-1 text-foreground font-medium truncate">{m.email}</span>
+                    <span className={cn(
+                      'text-[10px] px-1.5 py-0.5 rounded border shrink-0',
+                      m.status === 'active' && 'text-green-400 border-green-500/30',
+                      m.status === 'pending' && 'text-tertiary border-border',
+                      m.status === 'removed' && 'text-red-400 border-red-500/30',
+                    )}>
+                      {m.status}
+                    </span>
+                    {m.status !== 'removed' && m.role !== 'owner' && (
+                      <button
+                        onClick={() => handleRemove(m.id)}
+                        className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                        title="Remove from team"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {status && (
+        <p className={cn('text-xs', status.ok ? 'text-green-400' : 'text-red-400')}>{status.msg}</p>
       )}
     </div>
   )

@@ -13,7 +13,6 @@ interface NoteSearchBarProps {
   matches: number[]       // array of char offsets in note.content
   onNext: () => void
   onPrev: () => void
-  viewMode: 'edit' | 'split' | 'preview'
 }
 
 export function NoteSearchBar({
@@ -24,7 +23,6 @@ export function NoteSearchBar({
   matches,
   onNext,
   onPrev,
-  viewMode,
 }: NoteSearchBarProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const viewRef = useEditorViewRef()
@@ -35,9 +33,8 @@ export function NoteSearchBar({
     inputRef.current?.select()
   }, [])
 
-  // Highlight all matches + scroll to active match in CodeMirror (edit / split)
+  // Highlight all matches + scroll to active match in the source CodeMirror view
   useEffect(() => {
-    if (viewMode === 'preview') return
     const view = viewRef.current
     if (!view) return
 
@@ -53,7 +50,7 @@ export function NoteSearchBar({
       selection: EditorSelection.single(activeFrom, activeFrom + query.length),
       scrollIntoView: true,
     })
-  }, [matchIndex, matches, query, viewMode, viewRef])
+  }, [matchIndex, matches, query, viewRef])
 
   // Clear highlights when search bar unmounts
   useEffect(() => {

@@ -6,7 +6,7 @@ import { NoteList } from './NoteList'
 import { EditorPane } from './EditorPane'
 import { BoardView } from '../board/BoardView'
 import { CanvasView } from '../canvas/CanvasView'
-import { WeeklyPlannerView } from '../planner/WeeklyPlannerView'
+import { TaskDrawer } from '../board/TaskDrawer'
 import { SearchOverlay } from '../shared/SearchOverlay'
 import { NamePromptDialog } from '../shared/NamePromptDialog'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
@@ -16,10 +16,10 @@ import { confirmDeleteNote, confirmDeleteSelectedNotes, confirmDeleteFolderById 
 import { readVaultFS, writeAppData, readAppData, addRecentVault, getLastVaultPath } from '../../lib/vault'
 import type { AppData } from '../../lib/vault'
 import { comboMatches } from '../../lib/shortcuts'
-import { cn, glassBg } from '../../lib/utils'
+import { resumeVaultSyncIfShared } from '../../lib/sync/yjsSync'
 
 export function AppShell() {
-  const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, initPlanner, openExternalNote, bodyGlass, glassOpacity, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
+  const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Restore theme from localStorage on mount
@@ -68,12 +68,6 @@ export function AppShell() {
     }
   }, [])
 
-  // Load planner data from global app storage on startup (vault-independent)
-  useEffect(() => {
-    initPlanner()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   // Quiet background check for a newer release — see updateCheck.ts for the
   // rate-limiting/dismissal rules that keep this from ever nagging.
   useEffect(() => {
@@ -88,6 +82,7 @@ export function AppShell() {
     readVaultFS(lastPath).then((data) => {
       addRecentVault(lastPath)
       openVault(lastPath, data)
+      resumeVaultSyncIfShared(lastPath).catch(console.error)
     }).catch(() => {
       // Silently fail — vault picker will be shown instead
     })
@@ -219,16 +214,7 @@ export function AppShell() {
 
       {activeView === 'canvas' && <CanvasView />}
 
-      {activeView === 'planner' && <WeeklyPlannerView />}
-
-      {activeView === 'trash' && (
-        <div
-          className={cn("flex-1 flex items-center justify-center", bodyGlass ? "backdrop-blur-2xl" : "bg-panel")}
-          style={bodyGlass ? glassBg('panel', glassOpacity) : undefined}
-        >
-          <p className="text-muted-foreground text-sm">Trash is empty</p>
-        </div>
-      )}
+      <TaskDrawer />
 
       <SearchOverlay />
       <NamePromptDialog />

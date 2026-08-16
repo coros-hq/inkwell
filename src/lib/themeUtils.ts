@@ -62,11 +62,13 @@ export function hslStringToHex(hsl: string): string {
 // Produces reasonable values for all 19 variables in the inkwell design system.
 
 export interface ThemeColors {
-  background: string  // hex
-  foreground: string  // hex
-  sidebar: string     // hex
-  accent: string      // hex
-  border: string      // hex
+  background: string       // hex
+  foreground: string       // hex
+  sidebar: string          // hex
+  accent: string           // hex
+  border: string           // hex
+  mutedForeground?: string // hex — overrides derived secondary text/icon color
+  borderStrong?: string    // hex — overrides derived separator color
 }
 
 function clamp(v: number, min: number, max: number) {
@@ -102,20 +104,27 @@ export function deriveThemeVars(
         : clamp(Math.round(ac.l * 1.55), 72, 95),
     }),
     '--border':            h(bd),
+    '--border-strong':     colors.borderStrong
+      ? h(hexToHslParts(colors.borderStrong))
+      : h({ ...bd, l: clamp(bd.l + d * 10, 2, 98) }),
     '--input':             h(bd),
     '--accent':            h(ac),
     '--accent-foreground': dark ? h(bg) : '0 0% 100%',
     '--muted':             h({ ...bg, l: clamp(bg.l + d * 5, 2, 98) }),
-    '--muted-foreground':  h({
-      h: fg.h,
-      s: clamp(Math.round(fg.s * 0.35), 2, 28),
-      l: dark ? 58 : 48,
-    }),
-    '--tertiary':          h({
-      h: fg.h,
-      s: clamp(Math.round(fg.s * 0.18), 2, 18),
-      l: dark ? 40 : 65,
-    }),
+    '--muted-foreground':  colors.mutedForeground
+      ? h(hexToHslParts(colors.mutedForeground))
+      : h({
+        h: fg.h,
+        s: clamp(Math.round(fg.s * 0.35), 2, 28),
+        l: dark ? 58 : 48,
+      }),
+    '--tertiary':          colors.mutedForeground
+      ? h({ ...hexToHslParts(colors.mutedForeground), l: clamp(hexToHslParts(colors.mutedForeground).l + d * -10, 2, 98) })
+      : h({
+        h: fg.h,
+        s: clamp(Math.round(fg.s * 0.18), 2, 18),
+        l: dark ? 40 : 65,
+      }),
     '--code-bg':           h({ ...sb, l: clamp(sb.l + d * 1, 2, 98) }),
     '--tag-bg':            h({
       h: ac.h,
@@ -134,7 +143,7 @@ export function deriveThemeVars(
 const ALL_VAR_NAMES = [
   '--background', '--foreground', '--card', '--card-foreground',
   '--sidebar', '--panel', '--surface', '--active',
-  '--border', '--input', '--accent', '--accent-foreground',
+  '--border', '--border-strong', '--input', '--accent', '--accent-foreground',
   '--muted', '--muted-foreground', '--tertiary',
   '--code-bg', '--tag-bg', '--tag-text', '--code-block-bg',
 ]

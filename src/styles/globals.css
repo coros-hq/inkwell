@@ -26,47 +26,52 @@ html, body, #root {
 
 @layer base {
   :root {
-    --background:        40 20% 97%;
-    --foreground:        35 8% 11%;
+    /* Cool-neutral "Notion-inspired" default — near-white canvas, single muted ink-blue accent */
+    --background:        0 0% 100%;
+    --foreground:        0 0% 12%;
     --card:              0 0% 100%;
-    --card-foreground:   35 8% 11%;
-    --sidebar:           35 15% 93%;
+    --card-foreground:   0 0% 12%;
+    --sidebar:           240 4% 97%;
     --panel:             0 0% 100%;
-    --surface:           35 12% 95%;
-    --active:            35 70% 84%;
-    --border:            30 12% 88%;
-    --input:             30 12% 88%;
-    --accent:            33 65% 47%;
+    --surface:           240 4% 94%;
+    --active:            212 38% 92%;
+    --border:            240 3% 91%;
+    --border-strong:     240 3% 82%;
+    --input:             240 3% 91%;
+    --accent:            209 39% 37%;
     --accent-foreground: 0 0% 100%;
-    --muted:             35 10% 92%;
-    --muted-foreground:  30 5% 52%;
-    --tertiary:          30 4% 68%;
-    --code-bg:           35 14% 92%;
-    --tag-bg:            38 90% 95%;
-    --tag-text:          33 65% 47%;
+    --muted:             240 4% 95%;
+    --muted-foreground:  30 2% 53%;
+    --tertiary:          30 2% 68%;
+    --code-bg:           240 4% 93%;
+    --tag-bg:             209 39% 93%;
+    --tag-text:          209 39% 37%;
+    --destructive:       4 62% 47%;
     --radius:            0.5rem;
   }
 
   .dark {
     color-scheme: dark;
-    --background:        36 8% 10%;
-    --foreground:        0 0% 96%;
-    --card:              35 8% 14%;
-    --card-foreground:   0 0% 96%;
-    --sidebar:           35 8% 11%;
-    --panel:             35 7% 13%;
-    --surface:           34 7% 16%;
-    --active:            33 45% 22%;
-    --border:            34 5% 22%;
-    --input:             34 5% 22%;
-    --accent:            31 55% 57%;
-    --accent-foreground: 36 8% 10%;
-    --muted:             34 7% 16%;
-    --muted-foreground:  30 8% 62%;
-    --tertiary:          30 6% 48%;
-    --code-bg:           35 8% 14%;
-    --tag-bg:            34 16% 16%;
-    --tag-text:          33 70% 60%;
+    --background:        0 0% 10%;
+    --foreground:        60 3% 92%;
+    --card:              0 0% 12%;
+    --card-foreground:   60 3% 92%;
+    --sidebar:           0 0% 12%;
+    --panel:             0 0% 13%;
+    --surface:           0 0% 16%;
+    --active:            213 32% 22%;
+    --border:             0 0% 17%;
+    --border-strong:      0 0% 27%;
+    --input:              0 0% 17%;
+    --accent:            209 55% 68%;
+    --accent-foreground: 0 0% 10%;
+    --muted:              0 0% 16%;
+    --muted-foreground:  30 2% 56%;
+    --tertiary:          30 2% 40%;
+    --code-bg:            0 0% 14%;
+    --tag-bg:            213 30% 18%;
+    --tag-text:          209 55% 72%;
+    --destructive:        4 68% 62%;
   }
 }
 
@@ -97,8 +102,8 @@ html, body, #root {
   }
 
   ::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -106,12 +111,15 @@ html, body, #root {
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--border));
-    border-radius: 2px;
+    background: hsl(var(--foreground) / 0.12);
+    border-radius: 9999px;
+    border: 1.5px solid transparent;
+    background-clip: padding-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground));
+    background: hsl(var(--foreground) / 0.22);
+    background-clip: padding-box;
   }
 
   /* CodeMirror defaults to monospace — override for prose editing */
@@ -158,48 +166,52 @@ html, body, #root {
 
 html[data-theme="midnight"] {
   color-scheme: dark;
-  --background:        36 8% 10%;
-  --foreground:        0 0% 96%;
-  --card:              35 8% 14%;
-  --card-foreground:   0 0% 96%;
-  --sidebar:           35 8% 11%;
-  --panel:             35 7% 13%;
-  --surface:           34 7% 16%;
-  --active:            33 45% 22%;
-  --border:            34 5% 22%;
-  --input:             34 5% 22%;
-  --accent:            31 55% 57%;
-  --accent-foreground: 36 8% 10%;
-  --muted:             34 7% 16%;
-  --muted-foreground:  30 8% 62%;
-  --tertiary:          30 6% 48%;
-  --code-bg:           35 8% 14%;
-  --tag-bg:            34 16% 16%;
-  --tag-text:          33 70% 60%;
-  --code-block-bg:     36 10% 7%;   /* warm near-black, matches theme hue */
+  --background:        0 0% 10%;
+  --foreground:        60 3% 92%;
+  --card:              0 0% 12%;
+  --card-foreground:   60 3% 92%;
+  --sidebar:           0 0% 12%;
+  --panel:             0 0% 13%;
+  --surface:           0 0% 16%;
+  --active:            213 32% 22%;
+  --border:             0 0% 17%;
+  --border-strong:      0 0% 27%;
+  --input:              0 0% 17%;
+  --accent:            209 55% 68%;
+  --accent-foreground: 0 0% 10%;
+  --muted:              0 0% 16%;
+  --muted-foreground:  30 2% 56%;
+  --tertiary:          30 2% 40%;
+  --code-bg:            0 0% 14%;
+  --tag-bg:            213 30% 18%;
+  --tag-text:          209 55% 72%;
+  --destructive:        4 68% 62%;
+  --code-block-bg:      0 0% 8%;
 }
 
 html[data-theme="parchment"] {
   color-scheme: light;
-  --background:        40 20% 97%;
-  --foreground:        35 8% 11%;
+  --background:        0 0% 100%;
+  --foreground:        0 0% 12%;
   --card:              0 0% 100%;
-  --card-foreground:   35 8% 11%;
-  --sidebar:           35 15% 93%;
+  --card-foreground:   0 0% 12%;
+  --sidebar:           240 4% 97%;
   --panel:             0 0% 100%;
-  --surface:           35 12% 95%;
-  --active:            35 70% 84%;
-  --border:            30 12% 88%;
-  --input:             30 12% 88%;
-  --accent:            33 65% 47%;
+  --surface:           240 4% 94%;
+  --active:            212 38% 92%;
+  --border:            240 3% 91%;
+  --border-strong:     240 3% 80%;
+  --input:             240 3% 91%;
+  --accent:            209 39% 37%;
   --accent-foreground: 0 0% 100%;
-  --muted:             35 10% 92%;
-  --muted-foreground:  30 5% 52%;
-  --tertiary:          30 4% 68%;
-  --code-bg:           35 14% 92%;
-  --tag-bg:            38 90% 95%;
-  --tag-text:          33 65% 47%;
-  --code-block-bg:     36 10% 94%;
+  --muted:             240 4% 95%;
+  --muted-foreground:  30 2% 53%;
+  --tertiary:          30 2% 68%;
+  --code-bg:           240 4% 93%;
+  --tag-bg:             209 39% 93%;
+  --tag-text:          209 39% 37%;
+  --destructive:        4 62% 47%;
+  --code-block-bg:     240 4% 96%;
 }
 
 html[data-theme="ink"] {
@@ -213,6 +225,7 @@ html[data-theme="ink"] {
   --surface:           220 14% 14%;
   --active:            214 50% 20%;
   --border:            220 12% 18%;
+  --border-strong:     220 12% 30%;
   --input:             220 12% 18%;
   --accent:            210 80% 65%;
   --accent-foreground: 222 18% 8%;
@@ -236,6 +249,7 @@ html[data-theme="dusk"] {
   --surface:           250 16% 15%;
   --active:            265 40% 22%;
   --border:            250 12% 20%;
+  --border-strong:     250 12% 32%;
   --input:             250 12% 20%;
   --accent:            265 65% 68%;
   --accent-foreground: 250 20% 9%;
@@ -259,6 +273,7 @@ html[data-theme="forest"] {
   --surface:           148 14% 13%;
   --active:            145 38% 18%;
   --border:            148 10% 17%;
+  --border-strong:     148 10% 28%;
   --input:             148 10% 17%;
   --accent:            142 52% 50%;
   --accent-foreground: 0 0% 100%;
@@ -282,6 +297,7 @@ html[data-theme="sepia"] {
   --surface:           36 36% 91%;
   --active:            30 52% 78%;
   --border:            32 22% 82%;
+  --border-strong:     32 22% 68%;
   --input:             32 22% 82%;
   --accent:            20 65% 40%;
   --accent-foreground: 0 0% 100%;
@@ -306,6 +322,7 @@ html[data-theme="gruvbox"] {
   --surface:           20 5% 22%;     /* #3c3836 bg1 */
   --active:            22 10% 27%;    /* #504945 bg2 */
   --border:            18 7% 29%;     /* #504945 */
+  --border-strong:     18 7% 42%;
   --input:             18 7% 29%;
   --accent:            43 72% 47%;    /* #d79921 gruvbox yellow */
   --accent-foreground: 0 0% 15%;
@@ -329,6 +346,7 @@ html[data-theme="fog"] {
   --surface:           210 16% 95%;
   --active:            214 60% 85%;
   --border:            210 14% 87%;
+  --border-strong:     210 14% 75%;
   --input:             210 14% 87%;
   --accent:            215 75% 48%;
   --accent-foreground: 0 0% 100%;
@@ -339,6 +357,56 @@ html[data-theme="fog"] {
   --tag-bg:            215 60% 93%;
   --tag-text:          215 75% 48%;
   --code-block-bg:     210 16% 91%;
+}
+
+html[data-theme="graphite"] {
+  color-scheme: light;
+  --background:        0 0% 100%;
+  --foreground:        0 0% 9%;
+  --card:              0 0% 100%;
+  --card-foreground:   0 0% 9%;
+  --sidebar:           0 0% 97%;
+  --panel:             0 0% 100%;
+  --surface:           0 0% 94%;
+  --active:            0 0% 90%;
+  --border:            0 0% 90%;
+  --border-strong:     0 0% 78%;
+  --input:             0 0% 90%;
+  --accent:            0 0% 9%;
+  --accent-foreground: 0 0% 100%;
+  --muted:             0 0% 95%;
+  --muted-foreground:  0 0% 45%;
+  --tertiary:          0 0% 65%;
+  --code-bg:           0 0% 95%;
+  --tag-bg:            0 0% 90%;
+  --tag-text:          0 0% 20%;
+  --destructive:       4 62% 47%;
+  --code-block-bg:     0 0% 96%;
+}
+
+html[data-theme="onyx"] {
+  color-scheme: dark;
+  --background:        0 0% 10%;
+  --foreground:        0 0% 90%;
+  --card:              0 0% 12%;
+  --card-foreground:   0 0% 90%;
+  --sidebar:           0 0% 12%;
+  --panel:             0 0% 13%;
+  --surface:           0 0% 16%;
+  --active:            0 0% 22%;
+  --border:            0 0% 18%;
+  --border-strong:     0 0% 30%;
+  --input:             0 0% 18%;
+  --accent:            0 0% 85%;
+  --accent-foreground: 0 0% 10%;
+  --muted:             0 0% 16%;
+  --muted-foreground:  0 0% 56%;
+  --tertiary:          0 0% 40%;
+  --code-bg:           0 0% 14%;
+  --tag-bg:            0 0% 20%;
+  --tag-text:          0 0% 80%;
+  --destructive:       4 68% 62%;
+  --code-block-bg:     0 0% 8%;
 }
 
 /* ── Syntax highlighting ─────────────────────────────────────────────────── */
@@ -423,3 +491,155 @@ html[data-theme="fog"] {
 .canvas-notes-preview hr   { border: none; border-top: 1px solid hsl(var(--border)); margin: 1em 0; }
 .canvas-notes-preview strong { font-weight: 600; }
 .canvas-notes-preview em   { font-style: italic; }
+
+/* ── Live markdown preview (Normal mode) — bullet dot for concealed "-"/"*" ── */
+
+.cm-bullet-dot {
+  color: hsl(var(--accent) / 0.7);
+  font-weight: 700;
+}
+
+.cm-line.cm-line-codeblock {
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-size: 0.85em;
+  background: hsl(var(--muted) / 0.5);
+  white-space: pre !important;
+  overflow-x: auto;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+}
+
+.cm-line.cm-line-codeblock-first {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  padding-top: 10px !important;
+}
+
+.cm-line.cm-line-codeblock-last {
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  padding-bottom: 10px !important;
+}
+
+.cm-line.cm-line-blockquote {
+  border-left: 3px solid hsl(var(--border));
+  padding-left: 14px !important;
+  font-style: italic;
+}
+
+/* ── Markdown mode split view — resizable source + preview ─────────────────── */
+
+.markdown-mode-source {
+  opacity: 0.92;
+}
+
+.markdown-mode-source .cm-editor,
+.markdown-mode-source .cm-content,
+.markdown-mode-source .cm-line,
+.markdown-mode-source .cm-gutters {
+  font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace !important;
+  font-size: 12.5px !important;
+}
+
+.markdown-mode-divider {
+  width: 9px;
+  margin: 0 -4px;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background: transparent;
+  touch-action: none;
+}
+
+.markdown-mode-divider-line {
+  width: 1px;
+  background: hsl(var(--border));
+  transition: background 120ms, width 120ms;
+}
+
+.markdown-mode-divider:hover .markdown-mode-divider-line,
+.markdown-mode-divider.is-dragging .markdown-mode-divider-line {
+  width: 2px;
+  background: hsl(var(--accent));
+}
+
+/* ── Structure rail — right-edge document map, doubles as scroll position ── */
+
+.structure-rail {
+  position: absolute;
+  top: 0;
+  right: 14px;
+  bottom: 0;
+  width: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.structure-rail-tick {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.structure-rail-tick::before {
+  content: '';
+  display: block;
+  height: 2px;
+  width: 6px;
+  background: hsl(var(--muted-foreground) / 0.45);
+  border-radius: 1px;
+  transition: background 150ms, width 150ms, height 150ms, box-shadow 150ms;
+}
+
+.structure-rail-tick[data-level="1"]::before {
+  width: 9px;
+  background: hsl(var(--foreground) / 0.5);
+}
+
+.structure-rail-tick:hover::before,
+.structure-rail-tick:focus-visible::before {
+  background: hsl(var(--accent));
+  width: 12px;
+}
+
+/* Current section — unmistakably highlighted (full-opacity accent, wider,
+   thicker) regardless of heading level, and swells further while scrolling */
+.structure-rail-tick.active::before {
+  background: hsl(var(--accent));
+  width: 13px;
+  height: 2.5px;
+}
+
+.structure-rail-tick.active.swelling::before {
+  width: 16px;
+  height: 3px;
+  box-shadow: 0 0 6px hsl(var(--accent) / 0.7);
+}
+
+.structure-rail-label {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: 6px;
+  background: hsl(var(--foreground));
+  color: hsl(var(--background));
+  box-shadow: 0 2px 10px hsl(var(--foreground) / 0.18);
+}
