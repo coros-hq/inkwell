@@ -16,7 +16,6 @@ import {
 import { useAppStore } from '../../store/useAppStore'
 import { KanbanColumn } from './KanbanColumn'
 import { TaskCard } from './TaskCard'
-import { TaskDrawer } from './TaskDrawer'
 import { cn } from '../../lib/utils'
 import type { BoardTask, BoardColumn } from '../../types'
 
@@ -72,7 +71,6 @@ export function BoardView() {
     boardColumns,
     boardTasks,
     activeBoardId,
-    activeBoardTaskId,
     setActiveBoardId,
     createBoard,
     deleteBoard,
@@ -84,7 +82,6 @@ export function BoardView() {
     sidebarOpen,
     toggleSidebar,
   } = useAppStore()
-  void activeBoardTaskId  // used by TaskDrawer which reads from store directly
 
   const board = boards.find(b => b.id === activeBoardId)
   const columns: BoardColumn[] = board
@@ -418,9 +415,6 @@ export function BoardView() {
             ) : null}
           </div>
         </div>
-
-        {/* Task detail drawer */}
-        <TaskDrawer />
 
         {/* Drag overlay */}
         <DragOverlay dropAnimation={{ duration: 120, easing: 'ease-out' }}>

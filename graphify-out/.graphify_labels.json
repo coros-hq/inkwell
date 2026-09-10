@@ -106,5 +106,6 @@
   "104": "Slash Quick-Formatting Commands",
   "105": "Edit/Split/Preview View Modes",
   "106": "CheckboxWidget",
-  "108": "description"
+  "107": "ThemeEditor.tsx",
+  "112": "ShellScopeEntryAllowedArgs"
 }

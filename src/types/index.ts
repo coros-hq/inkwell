@@ -68,25 +68,9 @@ export interface Comment {
   createdAt: Date
 }
 
-export type ViewMode = 'edit' | 'split' | 'preview'
-export type ActiveView = 'notes' | 'board' | 'trash' | 'canvas' | 'planner'
-
-// ─── Weekly Planner ───────────────────────────────────────────────────────────
-
-export interface PlannerTask {
-  id: string
-  text: string
-  done: boolean
-  label?: string   // category label, e.g. "DESIGN", "PERSONAL"
-}
-
-export interface PlannerDay {
-  date: string   // 'YYYY-MM-DD'
-  tasks: PlannerTask[]
-}
-
-/** Keyed by the Monday ISO date of each week, e.g. "2025-06-16" */
-export type WeeklyPlan = Record<string, PlannerDay[]>
+/** Normal = single-pane WYSIWYG editor. Markdown = resizable raw-source + preview split. */
+export type EditorMode = 'normal' | 'markdown'
+export type ActiveView = 'notes' | 'board' | 'canvas'
 
 // ─── Board system ─────────────────────────────────────────────────────────────
 

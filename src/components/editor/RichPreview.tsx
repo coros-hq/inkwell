@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef, useLayoutEffect, useCallback } from
 import { Trash2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
+import rehypeKatex from 'rehype-katex'
 import { remarkHighlight } from '../../lib/remarkHighlight'
+import { remarkMathCodeBlocks } from '../../lib/remarkMathCodeBlocks'
 import { useAppStore } from '../../store/useAppStore'
 import { formatFileSize } from '../../lib/attachments'
 import { navigateToNote } from '../../lib/noteReferences'
@@ -732,9 +735,9 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
   const segments = splitByEmbeds(content)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mdComponents: Record<string, any> = {
-    h1: ({ children }: any) => <h1 className="text-2xl font-semibold mb-4 text-foreground leading-tight tracking-tight">{children}</h1>,
-    h2: ({ children }: any) => <h2 className="text-lg font-semibold mb-3 text-accent mt-8 tracking-tight">{children}</h2>,
-    h3: ({ children }: any) => <h3 className="text-base font-semibold mb-2 text-foreground mt-6 tracking-tight">{children}</h3>,
+    h1: ({ children }: any) => <h1 className="text-[30px] font-semibold mb-4 text-foreground leading-tight tracking-[-0.015em]">{children}</h1>,
+    h2: ({ children }: any) => <h2 className="text-[22px] font-semibold mb-3 text-foreground mt-9 tracking-tight">{children}</h2>,
+    h3: ({ children }: any) => <h3 className="text-[17px] font-semibold mb-2 text-foreground mt-7 tracking-tight">{children}</h3>,
     p: ({ children }: any) => {
       // If the paragraph is a single link pointing to a video URL, embed the player
       const kids = React.Children.toArray(children)
@@ -837,8 +840,8 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
   }
 
   return (
-    <div ref={scrollRef} className="h-full overflow-y-auto px-8 py-6 antialiased">
-      <div ref={containerRef} className="max-w-[720px] mx-auto font-sans text-[15px] leading-[1.7] text-foreground">
+    <div ref={scrollRef} className="h-full overflow-y-auto px-10 pt-16 pb-24 antialiased">
+      <div ref={containerRef} className="max-w-[740px] mx-auto font-sans text-[15.5px] leading-[1.7] text-foreground">
         <ExportModeContext.Provider value={forExport}>
         {segments.map((seg, i) =>
           seg.kind === 'embed' ? (
@@ -857,8 +860,12 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
           ) : (
             <ReactMarkdown
               key={i}
-              remarkPlugins={[remarkGfm, remarkHighlight]}
-              rehypePlugins={[rehypeHighlight, rehypeRaw]}
+              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkHighlight]}
+              rehypePlugins={[
+                [rehypeHighlight, { ignoreMissing: true }],
+                rehypeRaw,
+                [rehypeKatex, { throwOnError: false, output: 'htmlAndMathml', errorColor: 'var(--katex-error, #cc0000)' }],
+              ]}
               components={mdComponents}
               urlTransform={(url) => {
                 if (url.startsWith('note://')) return url

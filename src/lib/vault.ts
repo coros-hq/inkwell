@@ -30,15 +30,16 @@
  * Note.path   = absolute path to the .md file
  */
 
-import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, LinkedItem, WeeklyPlan } from '../types'
+import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, LinkedItem } from '../types'
 import { slugifyTitle } from './utils'
+import { genId } from './id'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
 const INKWELL_DIR = '.inkwell'
 const APP_DATA_FILE = 'app.json'
 const BOARDS_FILE = 'boards.json'
-const PLANNER_FILE = 'planner.json'
+const TEAM_FILE = 'team.json'
 const CANVAS_FILE = 'canvas.json'
 const CANVAS_NOTES_FILE = 'canvas-notes.md'
 const RECENT_KEY = 'inkwell-recent-vaults'
@@ -239,7 +240,7 @@ async function readDirectory(
     try {
       const raw = await readTextFile(file.path)
       const { meta, body } = parseFrontmatter(raw)
-      const id = meta.id ?? `note-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const id = meta.id ?? genId('note')
       const noteMeta = appData.noteMeta?.[id] ?? { attachments: [], linkedItems: [] }
       const note: Note = {
         id,
@@ -307,7 +308,7 @@ export async function readVaultFS(vaultPath: string): Promise<VaultData | null> 
     try {
       const raw = await readTextFile(file.path)
       const { meta, body } = parseFrontmatter(raw)
-      const id = meta.id ?? `note-${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const id = meta.id ?? genId('note')
       const noteMeta = appData.noteMeta?.[id] ?? { attachments: [], linkedItems: [] }
       allNotes.push({
         id,
@@ -434,6 +435,38 @@ export async function writeAppData(vaultPath: string, data: AppData): Promise<vo
   } catch (e) { console.error('Failed to write app data:', e) }
 }
 
+// ── Team data (.inkwell/team.json) ────────────────────────────────────────────
+// Durable link between this local vault folder and a `vaults` row in Supabase.
+// Only present once a vault has been shared with a team or joined from one —
+// its absence means the vault is (and stays) purely local, so all sync code
+// paths should treat a missing team.json as "nothing to do here".
+
+export interface TeamData {
+  vaultId: string
+  teamId: string
+  sharedAt: string
+}
+
+export async function readTeamData(vaultPath: string): Promise<TeamData | null> {
+  if (!isTauri) return null
+  try {
+    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
+    const filePath = `${vaultPath}/${INKWELL_DIR}/${TEAM_FILE}`
+    if (!await exists(filePath)) return null
+    return JSON.parse(await readTextFile(filePath)) as TeamData
+  } catch { return null }
+}
+
+export async function writeTeamData(vaultPath: string, data: TeamData): Promise<void> {
+  if (!isTauri) return
+  try {
+    const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+    const dir = `${vaultPath}/${INKWELL_DIR}`
+    if (!await exists(dir)) await mkdir(dir, { recursive: true })
+    await writeTextFile(`${dir}/${TEAM_FILE}`, JSON.stringify(data, null, 2))
+  } catch (e) { console.error('Failed to write team data:', e) }
+}
+
 // ── Board data (boards.json) ──────────────────────────────────────────────────
 
 export interface BoardsData {
@@ -465,41 +498,9 @@ export async function readBoardsFile(vaultPath: string): Promise<BoardsData | nu
   } catch { return null }
 }
 
-// ── Planner data (~/.inkwell/planner.json) ────────────────────────────────────
-// Stored globally — independent of which vault is open, so tasks are always
-// visible regardless of which vault the user currently has selected.
-
-async function getGlobalPlannerPath(): Promise<string> {
-  const { homeDir, join } = await import('@tauri-apps/api/path')
-  const home = await homeDir()
-  return join(home, INKWELL_DIR, PLANNER_FILE)
-}
-
-export async function writePlannerFile(data: WeeklyPlan): Promise<void> {
-  if (!isTauri) return
-  try {
-    const { writeTextFile, mkdir } = await import('@tauri-apps/plugin-fs')
-    const { homeDir, join } = await import('@tauri-apps/api/path')
-    const home = await homeDir()
-    const dir  = await join(home, INKWELL_DIR)
-    await mkdir(dir, { recursive: true })
-    await writeTextFile(await getGlobalPlannerPath(), JSON.stringify(data, null, 2))
-  } catch (e) { console.error('Failed to write planner:', e) }
-}
-
-export async function readPlannerFile(): Promise<WeeklyPlan | null> {
-  if (!isTauri) return null
-  try {
-    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
-    const filePath = await getGlobalPlannerPath()
-    if (!await exists(filePath)) return null
-    return JSON.parse(await readTextFile(filePath)) as WeeklyPlan
-  } catch { return null }
-}
-
 // ── Canvas data (~/.inkwell/canvas.json) ───────────────────────────────────────
-// Stored globally by default — independent of which vault is open — mirroring
-// the planner. The user can optionally link the canvas to a specific vault
+// Stored globally by default — independent of which vault is open. The user
+// can optionally link the canvas to a specific vault
 // (see canvasLinkedVaultPath in useAppStore), in which case it's stored at
 // {vaultPath}/.inkwell/canvas.json instead, regardless of the vault currently open.
 
@@ -708,7 +709,7 @@ export async function saveQuickNote(vaultPath: string, text: string): Promise<No
   const firstLine = (headingMatch ? headingMatch[1] : trimmed.split('\n')[0])?.trim() ?? ''
   const title = firstLine.slice(0, 80) || 'Quick Note'
   const now = new Date()
-  const id = `note-${now.getTime()}-${Math.random().toString(36).slice(2, 8)}`
+  const id = genId('note')
   const filename = `${slugifyTitle(title)}-${now.getTime()}.md`
   const dir = `${vaultPath}/${QUICK_NOTES_FOLDER}`
   const path = `${dir}/${filename}`

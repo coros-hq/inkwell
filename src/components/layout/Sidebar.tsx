@@ -10,10 +10,10 @@ import {
   Search,
   PenLine,
   PenSquare,
-  CalendarDays,
   FileInput,
   ArrowUpCircle,
   ArrowRight,
+  MoreHorizontal,
 } from "lucide-react";
 import { SettingsDialog } from '../settings/SettingsDialog'
 import {
@@ -30,7 +30,28 @@ import {
   type DragStartEvent,
   type DragOverEvent,
   type DragEndEvent,
+  type Modifier,
 } from "@dnd-kit/core";
+import { getEventCoordinates } from "@dnd-kit/utilities";
+
+// Pins the drag overlay to the cursor (down-and-right, like a file manager)
+// instead of anchoring it to wherever the row was first grabbed. Without this
+// the visible card and the actual drop point (the pointer) drift apart, so the
+// card has to be dragged well past the target for the drop to register.
+const snapOverlayToCursor: Modifier = ({
+  activatorEvent,
+  draggingNodeRect,
+  transform,
+}) => {
+  if (!draggingNodeRect || !activatorEvent) return transform;
+  const coords = getEventCoordinates(activatorEvent);
+  if (!coords) return transform;
+  return {
+    ...transform,
+    x: transform.x + coords.x - draggingNodeRect.left - 8,
+    y: transform.y + coords.y - draggingNodeRect.top - 16,
+  };
+};
 
 // Prefer pointer-within (exact hit) then fall back to rect intersection.
 // This eliminates false "over" readings caused by the dragged item's rect
@@ -68,9 +89,9 @@ interface DropIndicator {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const ROW_PADDING = 8;
-const CHEVRON_WIDTH = 16;
+const CHEVRON_WIDTH = 14;
 const FOLDER_ICON_WIDTH = 14;
-const ITEM_GAP = 4;
+const ITEM_GAP = 2;
 
 function folderPadding(depth: number): number {
   if (depth === 0) return ROW_PADDING;
@@ -84,7 +105,7 @@ function notePadding(depth: number): number {
 }
 
 const treeRowClass = cn(
-  "flex items-center gap-1 py-1 pr-2 my-0.5 rounded-md transition-colors min-w-0 text-[13px]",
+  "flex items-center gap-1.5 h-[30px] pr-1.5 rounded-md transition-colors min-w-0 text-[13px] font-medium",
 );
 
 /** Drop insertion line — dot + rule, like Finder/VSCode. */
@@ -216,15 +237,26 @@ function NoteRow({
         )}
 
         {!isRenaming && (
-          <button
-            className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 w-5 h-5 flex items-center justify-center rounded text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10"
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            onPointerDown={(e) => e.stopPropagation()}
-            tabIndex={-1}
-            title={note.external ? "Remove from library" : "Delete note"}
-          >
-            <Trash2 className="w-3 h-3" />
-          </button>
+          <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 flex items-center gap-0.5">
+            <button
+              className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-muted"
+              onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              tabIndex={-1}
+              title="More options"
+            >
+              <MoreHorizontal className="w-3 h-3" />
+            </button>
+            <button
+              className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10"
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              tabIndex={-1}
+              title={note.external ? "Remove from library" : "Delete note"}
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
         )}
       </div>
       {dropAfter && <DropLine pos="bottom" />}
@@ -259,7 +291,7 @@ function FolderRow({
   onCommitRename,
   onCancelRename,
 }: FolderRowProps) {
-  const { selectedFolderId, selectedNoteIds, selectFolder, toggleFolder, activeView, setActiveView } =
+  const { selectedFolderId, selectedNoteIds, selectFolder, toggleFolder, activeView, setActiveView, createNote } =
     useAppStore();
   const isRenamingThis = renamingId === folder.id;
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -318,7 +350,7 @@ function FolderRow({
   return (
     <div>
       {/* Folder header row — droppable wraps the visible row */}
-      <div ref={setDropRef} className="relative">
+      <div ref={setDropRef} className="relative group">
         {dropBefore && <DropLine pos="top" />}
         <div
           ref={setDragRef}
@@ -387,12 +419,35 @@ function FolderRow({
               {folder.name}
             </span>
           )}
+
+          {!isRenamingThis && (
+            <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0 flex items-center gap-0.5">
+              <button
+                className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-muted"
+                onClick={(e) => { e.stopPropagation(); createNote(folder.id); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                tabIndex={-1}
+                title="New note in this folder"
+              >
+                <PenLine className="w-3 h-3" />
+              </button>
+              <button
+                className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-muted"
+                onClick={(e) => { e.stopPropagation(); onFolderContextMenu(e, folder); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                tabIndex={-1}
+                title="More options"
+              >
+                <MoreHorizontal className="w-3 h-3" />
+              </button>
+            </div>
+          )}
         </div>
         {dropAfter && <DropLine pos="bottom" />}
       </div>
 
       {folder.expanded && (
-        <div>
+        <div className="mt-1">
           {folder.children.map((child) => (
             <FolderRow
               key={child.id}
@@ -470,7 +525,6 @@ export function Sidebar() {
     sidebarGlass,
     glassOpacity,
     canvasEnabled,
-    plannerEnabled,
     updateInfo,
     updateInstallState,
     installUpdate,
@@ -544,6 +598,10 @@ export function Sidebar() {
   const [dropIndicator, setDropIndicator] = useState<DropIndicator | null>(null);
   // Ref mirror so handleDragEnd never reads a stale closure value
   const dropIndicatorRef = useRef<DropIndicator | null>(null);
+  // Last classified position per over-target, for drag-over hysteresis
+  const lastPosRef = useRef<{ overId: string; position: DropPosition } | null>(
+    null,
+  );
   const expandTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Only trigger a re-render when the indicator actually changes
@@ -554,16 +612,34 @@ export function Sidebar() {
     setDropIndicator(next);
   }, []);
 
+
   const sensors = useSensors(
-    // 8 px prevents accidental drags on clicks
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    // 5 px = quick to pick up, still ignores click jitter
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
 
+  // Flat id → folder lookup, rebuilt only when the tree changes. Used on every
+  // drag-over event, so it must not re-walk the tree each time.
+  const folderById = useMemo(() => {
+    const m = new Map<string, FolderType>();
+    for (const f of flatFolders(folders)) m.set(f.id, f);
+    return m;
+  }, [folders]);
+
   // ── Root drop zone ──────────────────────────────────────────────────────────
-  const { setNodeRef: setRootRef, isOver: isRootOver } = useDroppable({
+  const { setNodeRef: setRootRef, isOver: isRootHeadingOver } = useDroppable({
     id: "root",
     data: { type: "root" },
   });
+
+  // The empty space beneath the folder list is also a "move to root" target,
+  // so dragging a folder out doesn't require hitting the thin Library heading.
+  const { setNodeRef: setRootEmptyRef, isOver: isRootEmptyOver } = useDroppable({
+    id: "root-empty",
+    data: { type: "root" },
+  });
+
+  const isRootOver = isRootHeadingOver || isRootEmptyOver;
 
   // ── Destination label shown in DragOverlay ──────────────────────────────────
   const dropDestinationLabel = useMemo(() => {
@@ -572,14 +648,11 @@ export function Sidebar() {
     const { overId, position } = dropIndicator;
     if (overId.startsWith("folder:")) {
       const folderId = overId.slice(7);
-      const folder = flatFolders(folders).find((f) => f.id === folderId);
+      const folder = folderById.get(folderId);
       if (!folder) return null;
       if (position === "into") return folder.name;
       if (folder.parentId) {
-        return (
-          flatFolders(folders).find((f) => f.id === folder.parentId)?.name ??
-          "Library"
-        );
+        return folderById.get(folder.parentId)?.name ?? "Library";
       }
       return "Library";
     }
@@ -588,10 +661,7 @@ export function Sidebar() {
       const note = notes.find((n) => n.id === noteId);
       if (!note) return null;
       if (!note.folder) return "Library";
-      return (
-        flatFolders(folders).find((f) => f.id === note.folder)?.name ??
-        "Library"
-      );
+      return folderById.get(note.folder)?.name ?? "Library";
     }
     return null;
   }, [dropIndicator, isRootOver, folders, notes]);
@@ -608,13 +678,10 @@ export function Sidebar() {
     setActiveItem({ type: data.type, label });
   };
 
-  const handleDragOver = ({
-    active,
-    over,
-    delta,
-    activatorEvent,
-  }: DragOverEvent) => {
-    if (!over || over.id === "root") {
+  const handleDragOver = ({ active, over }: DragOverEvent) => {
+    const overRootType = (over?.data.current as { type?: string } | undefined)
+      ?.type;
+    if (!over || overRootType === "root") {
       updateDropIndicator(null);
       return;
     }
@@ -623,10 +690,16 @@ export function Sidebar() {
     const overData = over.data.current as DragItemData;
     const overId = over.id as string;
 
-    // Pointer Y = activation point + cumulative delta (both from @dnd-kit)
-    const rect = over.rect;
-    const pointerY = (activatorEvent as PointerEvent).clientY + delta.y;
-    const ratio = (pointerY - rect.top) / rect.height;
+    // Reference point = vertical centre of the dragged row (its live translated
+    // rect). Both rects come from @dnd-kit in the same, scroll-corrected frame,
+    // so the ratio stays accurate even while the sidebar auto-scrolls — unlike
+    // reconstructing the pointer from `delta`.
+    const overRect = over.rect;
+    const dragRect = active.rect.current.translated;
+    const refY = dragRect
+      ? dragRect.top + dragRect.height / 2
+      : overRect.top + overRect.height / 2;
+    const ratio = (refY - overRect.top) / overRect.height;
 
     let position: DropPosition;
 
@@ -634,18 +707,36 @@ export function Sidebar() {
       if (activeData.type === "note") {
         position = "into";
       } else {
-        // Wider edge zones (20 % / 80 %) keep "into" stable in the middle
-        position = ratio < 0.20 ? "before" : ratio > 0.80 ? "after" : "into";
+        // Nesting is the wide default (middle 60 %); the outer 20 % reorders.
+        // Hysteresis: once a zone is chosen it stays chosen until the pointer
+        // crosses a looser boundary, so the indicator doesn't flicker between
+        // "into" and "before/after" while you hover near an edge.
+        const prev =
+          lastPosRef.current?.overId === overId
+            ? lastPosRef.current.position
+            : null;
+        if (prev === "into") {
+          position = ratio < 0.12 ? "before" : ratio > 0.88 ? "after" : "into";
+        } else if (prev === "before") {
+          position =
+            ratio > 0.35 ? (ratio > 0.88 ? "after" : "into") : "before";
+        } else if (prev === "after") {
+          position =
+            ratio < 0.65 ? (ratio < 0.12 ? "before" : "into") : "after";
+        } else {
+          position = ratio < 0.2 ? "before" : ratio > 0.8 ? "after" : "into";
+        }
       }
     } else {
       position = ratio < 0.5 ? "before" : "after";
     }
+    lastPosRef.current = { overId, position };
 
     updateDropIndicator({ overId, position });
 
     // Auto-expand collapsed folder after 700 ms of hovering "into" it
     if (overData.type === "folder" && position === "into") {
-      const folder = flatFolders(folders).find((f) => f.id === overData.id);
+      const folder = folderById.get(overData.id);
       if (folder && !folder.expanded && !expandTimerRef.current) {
         expandTimerRef.current = setTimeout(() => {
           useAppStore.getState().toggleFolder(overData.id);
@@ -670,6 +761,7 @@ export function Sidebar() {
   const handleDragEnd = ({ active, over }: DragEndEvent) => {
     setActiveItem(null);
     clearExpandTimer();
+    lastPosRef.current = null;
 
     // Read from ref — guaranteed current even if state batching delayed the update
     const indicator = dropIndicatorRef.current;
@@ -678,9 +770,10 @@ export function Sidebar() {
     if (!over) return;
 
     const activeData = active.data.current as DragItemData;
+    const overData = over.data.current as DragItemData;
 
-    // ── Drop on root — no indicator needed ─────────────────────────────────
-    if (over.id === "root") {
+    // ── Drop on a root zone (Library heading or the empty space below) ─────
+    if ((overData as { type?: string })?.type === "root") {
       if (activeData.type === "note") {
         moveNotes([activeData.id], null);
       } else {
@@ -689,9 +782,16 @@ export function Sidebar() {
       return;
     }
 
+    // ── Folder dropped directly onto a note — relocate it to that note's
+    //    folder (or the root if the note is unfiled) ─────────────────────────
+    if (activeData.type === "folder" && overData.type === "note") {
+      const targetNote = notes.find((n) => n.id === overData.id);
+      moveFolder(activeData.id, targetNote?.folder ?? null, null);
+      return;
+    }
+
     if (!indicator) return;
 
-    const overData = over.data.current as DragItemData;
     const { position } = indicator;
 
     // ── Note being dragged ──────────────────────────────────────────────────
@@ -757,6 +857,7 @@ export function Sidebar() {
     setActiveItem(null);
     updateDropIndicator(null);
     clearExpandTimer();
+    lastPosRef.current = null;
   };
 
   // ── Context menus ───────────────────────────────────────────────────────────
@@ -807,11 +908,28 @@ export function Sidebar() {
   };
 
   const handleNewFolder = () => {
+    // Flatten the tree into indented options so the new folder's location is an
+    // explicit choice rather than implied by the current selection.
+    const flatten = (
+      list: FolderType[],
+      depth: number,
+    ): { id: string | null; label: string }[] =>
+      list.flatMap((f) => [
+        { id: f.id, label: `${"  ".repeat(depth)}${f.name}` },
+        ...flatten(f.children, depth + 1),
+      ]);
+
     openPrompt({
-      title: selectedFolderId ? "New Subfolder" : "New Folder",
+      title: "New Folder",
       placeholder: "Folder name",
       confirmLabel: "Create",
-      onConfirm: (name) => createFolder(name, selectedFolderId),
+      destinations: [
+        { id: null, label: "Library (root)" },
+        ...flatten(folders, 0),
+      ],
+      initialDestinationId: selectedFolderId ?? null,
+      onConfirm: (name, destinationId) =>
+        createFolder(name, destinationId ?? null),
     });
   };
 
@@ -829,6 +947,13 @@ export function Sidebar() {
     <DndContext
       sensors={sensors}
       collisionDetection={collisionDetection}
+      // Vertical list — never auto-scroll sideways, and ease into the vertical
+      // scroll instead of the default hard ramp near the edges.
+      autoScroll={{
+        threshold: { x: 0, y: 0.18 },
+        acceleration: 8,
+        interval: 8,
+      }}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
@@ -836,7 +961,7 @@ export function Sidebar() {
     >
       <div
         className={cn(
-          "w-[220px] shrink-0 flex flex-col border-r border-border h-full overflow-hidden relative",
+          "w-[224px] shrink-0 flex flex-col h-full overflow-hidden relative border-r border-border-strong",
           // backdrop-blur + semi-transparent bg = frosted glass against the macOS desktop
           sidebarGlass ? "backdrop-blur-2xl" : "bg-sidebar",
         )}
@@ -844,9 +969,9 @@ export function Sidebar() {
       >
         <div className="h-8 shrink-0" data-tauri-drag-region />
 
-        <div className="flex items-center justify-between px-3 pb-2">
-          <span className="font-sans text-lg font-semibold text-foreground tracking-tight">
-            inkwell
+        <div className="flex items-center justify-between px-3 pb-3.5">
+          <span className="font-sans text-[17px] font-bold text-foreground tracking-tight">
+            Inkwell
           </span>
           <div className="flex items-center gap-1">
             <ThemeToggle />
@@ -855,33 +980,33 @@ export function Sidebar() {
               onClick={handleNewFolder}
               title={selectedFolderId ? "New subfolder" : "New folder"}
             >
-              <FolderPlus className="w-4 h-4" />
+              <FolderPlus className="w-4 h-4" strokeWidth={2.25} />
             </button>
             <button
               className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
               onClick={handleNewNote}
               title="New note"
             >
-              <PenLine className="w-4 h-4" />
+              <PenLine className="w-4 h-4" strokeWidth={2.25} />
             </button>
             <button
               className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
               onClick={() => openExternalNote()}
               title="Open file... (⌘O)"
             >
-              <FileInput className="w-4 h-4" />
+              <FileInput className="w-4 h-4" strokeWidth={2.25} />
             </button>
           </div>
         </div>
 
-        <div className="px-3 pb-3">
+        <div className="px-3 pb-3.5">
           <button
-            className="w-full flex items-center gap-2 h-8 px-2 bg-surface border border-border rounded-md text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="w-full flex items-center gap-2 h-8 px-2.5 bg-muted border border-border-strong rounded-md text-[13px] font-medium text-muted-foreground hover:text-foreground hover:border-accent/40 transition-colors"
             onClick={() => setSearchOpen(true)}
           >
-            <Search className="w-3.5 h-3.5" />
+            <Search className="w-3.5 h-3.5" strokeWidth={2.25} />
             <span className="flex-1 text-left">Search</span>
-            <span className="text-[10px] text-tertiary">⌘K</span>
+            <span className="text-[10px] font-semibold text-tertiary">⌘K</span>
           </button>
         </div>
 
@@ -906,7 +1031,7 @@ export function Sidebar() {
         <div className="flex-1 overflow-y-auto px-2 space-y-4">
           {pinnedNotes.length > 0 && (
             <div>
-              <p className="uppercase text-[10px] tracking-widest text-tertiary px-2 mb-1">
+              <p className="uppercase text-[10.5px] font-semibold tracking-wider text-tertiary px-2 mb-1">
                 Pinned
               </p>
               {pinnedNotes.map((note) => {
@@ -946,9 +1071,9 @@ export function Sidebar() {
             >
               <p
                 className={cn(
-                  "uppercase text-[10px] tracking-widest flex-1",
+                  "uppercase text-[10.5px] font-semibold tracking-wider flex-1",
                   selectedFolderId === null
-                    ? "text-foreground font-semibold"
+                    ? "text-foreground"
                     : "text-tertiary",
                 )}
               >
@@ -1005,11 +1130,21 @@ export function Sidebar() {
                 No notes yet
               </p>
             )}
+
+            {/* Fills the leftover space so dropping a folder anywhere below the
+                list moves it back to the library root. */}
+            <div
+              ref={setRootEmptyRef}
+              className={cn(
+                "min-h-[48px] rounded-md transition-colors",
+                isRootEmptyOver && "bg-accent/15 ring-2 ring-accent/50",
+              )}
+            />
           </div>
 
           {externalNotes.length > 0 && (
             <div>
-              <p className="uppercase text-[10px] tracking-widest text-tertiary px-2 mb-1">
+              <p className="uppercase text-[10.5px] font-semibold tracking-wider text-tertiary px-2 mb-1">
                 Open Files
               </p>
               {externalNotes.map((note) => {
@@ -1036,7 +1171,7 @@ export function Sidebar() {
           )}
 
           <div>
-            <p className="uppercase text-[10px] tracking-widest text-tertiary px-2 mb-1">
+            <p className="uppercase text-[10.5px] font-semibold tracking-wider text-tertiary px-2 mb-1">
               Quick Access
             </p>
             <div
@@ -1066,34 +1201,6 @@ export function Sidebar() {
               </span>
             </div>
 
-            {plannerEnabled && (
-              <div
-                className={cn(
-                  treeRowClass,
-                  "px-2 cursor-pointer hover:bg-surface",
-                  activeView === "planner" && "bg-active",
-                )}
-                onClick={() => setActiveView("planner")}
-              >
-                <CalendarDays
-                  className={cn(
-                    "w-3.5 h-3.5",
-                    activeView === "planner"
-                      ? "text-accent"
-                      : "text-muted-foreground",
-                  )}
-                />
-                <span
-                  className={cn(
-                    activeView === "planner"
-                      ? "text-accent font-medium"
-                      : "text-foreground",
-                  )}
-                >
-                  Planner
-                </span>
-              </div>
-            )}
             {canvasEnabled && (
               <div
                 className={cn(
@@ -1122,32 +1229,6 @@ export function Sidebar() {
                 </span>
               </div>
             )}
-            <div
-              className={cn(
-                treeRowClass,
-                "px-2 cursor-pointer hover:bg-surface",
-                activeView === "trash" && "bg-active",
-              )}
-              onClick={() => setActiveView("trash")}
-            >
-              <Trash2
-                className={cn(
-                  "w-3.5 h-3.5",
-                  activeView === "trash"
-                    ? "text-accent"
-                    : "text-muted-foreground",
-                )}
-              />
-              <span
-                className={cn(
-                  activeView === "trash"
-                    ? "text-accent font-medium"
-                    : "text-foreground",
-                )}
-              >
-                Trash
-              </span>
-            </div>
           </div>
         </div>
 
@@ -1201,7 +1282,12 @@ export function Sidebar() {
       </div>
 
       {/* Drag overlay — looks like the actual row + destination badge */}
-      <DragOverlay dropAnimation={{ duration: 120, easing: "ease-out" }}>
+      <DragOverlay
+        modifiers={[snapOverlayToCursor]}
+        // No fly-back animation — the row should just appear in its new spot,
+        // like Finder / Notion, rather than the ghost gliding back first.
+        dropAnimation={null}
+      >
         {activeItem && (
           <div className="flex flex-col gap-1 pointer-events-none w-[196px]">
             {/* Row preview */}

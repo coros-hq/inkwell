@@ -231,8 +231,8 @@ function drawRubberBand(ctx: CanvasRenderingContext2D, p1: Point, p2: Point) {
 
 // ── Disk I/O ───────────────────────────────────────────────────────────────────
 // Canvas data is stored globally (~/.inkwell/canvas.json) by default, independent
-// of whichever vault happens to be open — same model as the planner. If the user
-// links the canvas to a specific vault (linkedVaultPath), it's stored at
+// of whichever vault happens to be open. If the user links the canvas to a
+// specific vault (linkedVaultPath), it's stored at
 // {linkedVaultPath}/.inkwell/canvas.json instead, regardless of the open vault.
 
 const canvasPath = (vp: string) => `${vp}/.inkwell/canvas.json`

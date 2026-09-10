@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { ArrowLeft, Moon, Sun, Check } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { type CustomTheme } from '../../lib/themes'
-import { deriveThemeVars, applyCustomThemeVars } from '../../lib/themeUtils'
+import { deriveThemeVars, applyCustomThemeVars, hslStringToHex } from '../../lib/themeUtils'
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
@@ -22,6 +22,19 @@ const LIGHT_DEFAULTS = {
   border:     '#e0d8cc',
 }
 
+const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
+
+function normalizeHex(raw: string): string | null {
+  const v = raw.trim().startsWith('#') ? raw.trim() : `#${raw.trim()}`
+  if (!HEX_RE.test(v)) return null
+  if (v.length === 4) {
+    // expand shorthand #abc -> #aabbcc
+    const [, r, g, b] = v
+    return `#${r}${r}${g}${g}${b}${b}`.toLowerCase()
+  }
+  return v.toLowerCase()
+}
+
 // ─── Color row ────────────────────────────────────────────────────────────────
 
 function ColorRow({
@@ -34,6 +47,25 @@ function ColorRow({
   onChange: (hex: string) => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
+  // Local text buffer so the user can type/paste freely without every
+  // keystroke needing to be a valid hex color.
+  const [text, setText] = useState(value)
+
+  // Keep the text buffer in sync when the value changes from elsewhere
+  // (e.g. the native color picker, or switching dark/light defaults).
+  useEffect(() => {
+    setText(value)
+  }, [value])
+
+  const commitText = (raw: string) => {
+    const normalized = normalizeHex(raw)
+    if (normalized) {
+      onChange(normalized)
+    } else {
+      // Invalid input — revert the buffer to the last known-good value.
+      setText(value)
+    }
+  }
 
   return (
     <div className="flex items-center gap-3 py-2">
@@ -52,7 +84,40 @@ function ColorRow({
         onChange={e => onChange(e.target.value)}
         className="sr-only"
       />
-      <span className="text-xs font-mono text-muted-foreground uppercase">{value}</span>
+      <input
+        type="text"
+        value={text}
+        onChange={e => setText(e.target.value)}
+        onBlur={e => commitText(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            commitText(e.currentTarget.value)
+            e.currentTarget.blur()
+          }
+          if (e.key === 'Escape') {
+            e.preventDefault()
+            setText(value)
+            e.currentTarget.blur()
+          }
+        }}
+        onPaste={e => {
+          // Let the paste land in the input, then normalize on the next tick
+          // so hex values copied with surrounding text/whitespace still work.
+          const pasted = e.clipboardData.getData('text')
+          const normalized = normalizeHex(pasted)
+          if (normalized) {
+            e.preventDefault()
+            setText(normalized)
+            onChange(normalized)
+          }
+        }}
+        spellCheck={false}
+        className={cn(
+          'w-20 text-xs font-mono uppercase bg-transparent border border-border rounded-md px-2 py-1',
+          'text-foreground focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent',
+        )}
+      />
     </div>
   )
 }
@@ -147,16 +212,23 @@ export function ThemeEditor({ initial, onSave, onCancel }: ThemeEditorProps) {
   const setColor = (key: keyof CustomTheme['colors']) => (hex: string) =>
     setColors(c => ({ ...c, [key]: hex }))
 
+  // The derived vars always reflect the current colors (including any
+  // explicit overrides), so we can read the effective hex straight back out
+  // of them — that's what the picker/swatch should show when the user
+  // hasn't set an override yet.
+  const derivedVars = useMemo(() => deriveThemeVars(colors, dark), [colors, dark])
+  const effectiveMutedForeground = colors.mutedForeground ?? hslStringToHex(derivedVars['--muted-foreground'])
+  const effectiveBorderStrong = colors.borderStrong ?? hslStringToHex(derivedVars['--border-strong'])
+
   // Live-preview: apply derived vars while editing
   useEffect(() => {
-    const vars = deriveThemeVars(colors, dark)
-    applyCustomThemeVars(vars)
+    applyCustomThemeVars(derivedVars)
     document.documentElement.classList.toggle('dark', dark)
     delete document.documentElement.dataset.theme
     return () => {
       // Cleanup handled by parent (it will call setTheme on save/cancel)
     }
-  }, [colors, dark])
+  }, [derivedVars, dark])
 
   const handleSave = () => {
     if (!label.trim()) return
@@ -168,13 +240,14 @@ export function ThemeEditor({ initial, onSave, onCancel }: ThemeEditorProps) {
     })
   }
 
-  // Helper: get hex from a built-in theme's CSS var for "eyedropper" style init
-  const colorRows: Array<{ key: keyof CustomTheme['colors']; label: string }> = [
-    { key: 'background', label: 'Background' },
-    { key: 'foreground', label: 'Text' },
-    { key: 'sidebar', label: 'Sidebar' },
-    { key: 'accent', label: 'Accent' },
-    { key: 'border', label: 'Border' },
+  const colorRows: Array<{ key: keyof CustomTheme['colors']; label: string; value: string }> = [
+    { key: 'background', label: 'Background', value: colors.background },
+    { key: 'foreground', label: 'Text', value: colors.foreground },
+    { key: 'sidebar', label: 'Sidebar', value: colors.sidebar },
+    { key: 'accent', label: 'Accent', value: colors.accent },
+    { key: 'border', label: 'Border', value: colors.border },
+    { key: 'mutedForeground', label: 'Icons & links', value: effectiveMutedForeground },
+    { key: 'borderStrong', label: 'Separators', value: effectiveBorderStrong },
   ]
 
   return (
@@ -237,11 +310,11 @@ export function ThemeEditor({ initial, onSave, onCancel }: ThemeEditorProps) {
 
       {/* Color pickers */}
       <div className="rounded-lg border border-border bg-surface/40 px-3 divide-y divide-border">
-        {colorRows.map(({ key, label: rowLabel }) => (
+        {colorRows.map(({ key, label: rowLabel, value }) => (
           <ColorRow
             key={key}
             label={rowLabel}
-            value={colors[key]}
+            value={value}
             onChange={setColor(key)}
           />
         ))}

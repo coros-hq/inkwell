@@ -16,6 +16,7 @@ const config: Config = {
           foreground: 'hsl(var(--card-foreground))',
         },
         border: 'hsl(var(--border))',
+        'border-strong': 'hsl(var(--border-strong))',
         input: 'hsl(var(--input))',
         muted: {
           DEFAULT: 'hsl(var(--muted))',
@@ -25,6 +26,7 @@ const config: Config = {
           DEFAULT: 'hsl(var(--accent))',
           foreground: 'hsl(var(--accent-foreground))',
         },
+        destructive: 'hsl(var(--destructive))',
         sidebar: 'hsl(var(--sidebar))',
         panel: 'hsl(var(--panel))',
         surface: 'hsl(var(--surface))',

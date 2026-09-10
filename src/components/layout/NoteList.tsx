@@ -1,4 +1,4 @@
-import { Star, Trash2 } from 'lucide-react'
+import { Star, Trash2, FileX } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { TagChip } from '../shared/TagChip'
 import { formatDate } from '../../lib/utils'
@@ -58,14 +58,14 @@ export function NoteList() {
   return (
     <div
       className={cn(
-        'w-[280px] shrink-0 flex flex-col border-r border-border h-full overflow-hidden',
-        bodyGlass ? 'backdrop-blur-2xl' : 'bg-background',
+        'w-[272px] shrink-0 flex flex-col h-full overflow-hidden border-r border-border-strong',
+        bodyGlass ? 'backdrop-blur-2xl' : 'bg-sidebar',
       )}
-      style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
+      style={bodyGlass ? glassBg('sidebar', glassOpacity) : undefined}
     >
       <div
         className={cn(
-          'h-10 flex items-center justify-between px-3 border-b border-border shrink-0 transition-colors',
+          'h-10 flex items-center justify-between px-3.5 shrink-0 transition-colors',
           dragOverFolderId === (selectedFolderId ?? '__root__') && 'bg-accent/10 ring-inset ring-1 ring-accent'
         )}
         data-tauri-drag-region
@@ -85,50 +85,55 @@ export function NoteList() {
           moveNotes(ids, selectedFolderId)
         }}
       >
-        <span className="text-sm font-semibold text-foreground truncate">
+        <span className="text-[14px] font-bold text-foreground truncate">
           {selectedNoteIds.length > 1
             ? `${selectedNoteIds.length} selected`
             : (folder?.name ?? 'Unfiled')}
         </span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-0 bg-muted border border-border-strong rounded-md p-0.5">
+            <button
+              className={cn(
+                'px-2 h-6 text-[11px] font-semibold rounded transition-colors',
+                sortBy === 'date'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setSortBy('date')}
+            >
+              Date
+            </button>
+            <button
+              className={cn(
+                'px-2 h-6 text-[11px] font-semibold rounded transition-colors',
+                sortBy === 'name'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setSortBy('name')}
+            >
+              Name
+            </button>
+          </div>
           <button
             className={cn(
-              'px-2.5 py-1 text-xs rounded-full transition-colors',
-              sortBy === 'date'
-                ? 'bg-accent text-white font-medium'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-            onClick={() => setSortBy('date')}
-          >
-            Date
-          </button>
-          <button
-            className={cn(
-              'px-2.5 py-1 text-xs rounded-full transition-colors',
-              sortBy === 'name'
-                ? 'bg-accent text-white font-medium'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
-            onClick={() => setSortBy('name')}
-          >
-            Name
-          </button>
-          <button
-            className={cn(
-              'w-6 h-6 flex items-center justify-center rounded transition-colors',
-              showPinned ? 'text-accent' : 'text-muted-foreground hover:text-foreground'
+              'w-7 h-7 flex items-center justify-center rounded-md transition-colors',
+              showPinned ? 'text-accent bg-active' : 'text-muted-foreground hover:text-foreground hover:bg-surface'
             )}
             onClick={() => setShowPinned(!showPinned)}
             title="Show pinned only"
           >
-            <Star className={cn('w-3.5 h-3.5', showPinned && 'fill-accent')} />
+            <Star className={cn('w-4 h-4', showPinned && 'fill-accent')} strokeWidth={2.25} />
           </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-2 pb-2">
         {displayNotes.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center mt-12 px-4">No notes here yet</p>
+          <div className="flex flex-col items-center justify-center gap-2.5 mt-16 px-4 text-center">
+            <FileX className="w-7 h-7 text-tertiary" strokeWidth={1.75} />
+            <p className="text-sm font-semibold text-muted-foreground">No notes here yet</p>
+          </div>
         ) : (
           displayNotes.map(note => {
             const isSelected = selectedNoteIds.includes(note.id)
@@ -137,10 +142,8 @@ export function NoteList() {
                 key={note.id}
                 draggable
                 className={cn(
-                  'group border-b border-border p-3 cursor-grab active:cursor-grabbing transition-colors hover:bg-surface',
-                  isSelected
-                    ? 'border-l-[3px] border-l-accent bg-active'
-                    : 'border-l-[3px] border-l-transparent'
+                  'group rounded-lg px-2.5 py-2.5 my-0.5 cursor-grab active:cursor-grabbing transition-colors',
+                  isSelected ? 'bg-active' : 'hover:bg-surface',
                 )}
                 onClick={e => handleNoteSelect(e, note.id, orderedIds)}
                 onDragStart={e => {
@@ -151,7 +154,10 @@ export function NoteList() {
                 }}
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
-                  <span className="text-sm font-semibold text-foreground leading-snug line-clamp-1 min-w-0">
+                  <span className={cn(
+                    'text-[13.5px] font-medium leading-snug line-clamp-1 min-w-0',
+                    isSelected ? 'text-accent' : 'text-foreground',
+                  )}>
                     {note.title}
                   </span>
                   <div className="flex items-center gap-1 shrink-0">
@@ -166,7 +172,7 @@ export function NoteList() {
                     <button
                       className={cn(
                         'w-6 h-6 flex items-center justify-center rounded transition-all',
-                        'text-muted-foreground hover:text-red-500 hover:bg-red-500/10',
+                        'text-muted-foreground hover:text-destructive hover:bg-destructive/10',
                         isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
                       )}
                       title="Delete note"

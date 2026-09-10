@@ -69,6 +69,20 @@ export const THEMES: ThemeDef[] = [
     dark: false,
     preview: { bg: '#f4f6f9', sidebar: '#eaedf2', accent: '#2563eb', text: '#1a2030', border: '#dde2ea' },
   },
+  {
+    id: 'graphite',
+    label: 'Graphite',
+    description: 'Grayscale black & white, Notion-style',
+    dark: false,
+    preview: { bg: '#ffffff', sidebar: '#f7f7f7', accent: '#171717', text: '#171717', border: '#e6e6e6' },
+  },
+  {
+    id: 'onyx',
+    label: 'Onyx',
+    description: 'Grayscale dark, Notion-style',
+    dark: true,
+    preview: { bg: '#1a1a1a', sidebar: '#202020', accent: '#d9d9d9', text: '#e6e6e6', border: '#2e2e2e' },
+  },
 ]
 
 export const isDarkTheme = (id: string): boolean =>
@@ -84,11 +98,13 @@ export interface CustomTheme {
   label: string
   dark: boolean
   colors: {
-    background: string  // hex
-    foreground: string  // hex
-    sidebar: string     // hex
-    accent: string      // hex
-    border: string      // hex
+    background: string      // hex
+    foreground: string      // hex
+    sidebar: string         // hex
+    accent: string          // hex
+    border: string          // hex
+    mutedForeground?: string // hex — sidebar/icon secondary text, settings links
+    borderStrong?: string    // hex — sidebar/note-list separators
   }
 }
 

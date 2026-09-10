@@ -8,6 +8,7 @@ import {
   Paperclip,
   Plus,
   GitBranch,
+  Columns2,
 } from "lucide-react";
 import { ShareDialog } from "../editor/ShareDialog";
 import { GitHubSyncDialog } from "../shared/GitHubSyncDialog";
@@ -18,13 +19,13 @@ import {
   confirmDeleteSelectedNotes,
 } from "../../lib/deleteActions";
 import { MarkdownEditor } from "../editor/MarkdownEditor";
-import { RichPreview } from "../editor/RichPreview";
 import { SplitView } from "../editor/SplitView";
 import { EditorToolbar } from "../editor/EditorToolbar";
 import { NoteSearchBar } from "../editor/NoteSearchBar";
 import { LinksPanel } from "../editor/LinksPanel";
 import { MediaPanel } from "../editor/MediaPanel";
 import { EditorViewProvider } from "../editor/EditorViewContext";
+import { StructureRail } from "../editor/StructureRail";
 import { cn, glassBg } from "../../lib/utils";
 import { formatDate } from "../../lib/utils";
 import { comboMatches } from "../../lib/shortcuts";
@@ -36,8 +37,8 @@ export function EditorPane() {
     selectedNoteIds,
     lastSelectedNoteId,
     selectedFolderId,
-    viewMode,
-    setViewMode,
+    getEditorMode,
+    setNoteEditorMode,
     pinNote,
     saveStatus,
     createNote,
@@ -53,6 +54,7 @@ export function EditorPane() {
 
   const primaryNoteId = lastSelectedNoteId ?? selectedNoteIds[0] ?? null;
   const note = notes.find((n) => n.id === primaryNoteId);
+  const editorMode = note ? getEditorMode(note.id) : "normal";
   const [editingTitle, setEditingTitle] = useState("");
 
   useEffect(() => {
@@ -73,6 +75,14 @@ export function EditorPane() {
 
   // ── GitHub sync dialog ────────────────────────────────────────────────────
   const [githubSyncOpen, setGithubSyncOpen] = useState(false);
+
+  // ── Structure rail scroller ──────────────────────────────────────────────
+  const [scrollerEl, setScrollerEl] = useState<HTMLElement | null>(null);
+  // Reset on cleanup (when the old note/mode goes away), not in the effect
+  // body — the body runs after the editor's own mount effect (child effects
+  // fire before parent effects) and would immediately null out the real
+  // scroller it just registered via onScrollerReady.
+  useEffect(() => () => setScrollerEl(null), [note?.id, editorMode]);
 
   // ── In-note search ────────────────────────────────────────────────────────
   const [searchOpen, setSearchOpen] = useState(false);
@@ -174,20 +184,23 @@ export function EditorPane() {
   if (!note) {
     return (
       <div
-        className={cn("flex-1 flex flex-col items-center justify-center gap-4", bodyGlass ? "backdrop-blur-2xl" : "bg-background")}
+        className={cn("flex-1 flex flex-col items-center justify-center gap-5", bodyGlass ? "backdrop-blur-2xl" : "bg-background")}
         style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
       >
-        <PenLine className="w-10 h-10 text-tertiary" />
+        <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-surface border border-border-strong shadow-sm">
+          <PenLine className="w-7 h-7 text-muted-foreground" strokeWidth={1.75} />
+        </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-muted-foreground">Nothing open</p>
-          <p className="text-xs text-tertiary mt-1">Pick a note from the list, or start a new one.</p>
+          <p className="text-[15px] font-bold text-foreground">Nothing open</p>
+          <p className="text-[13px] text-muted-foreground mt-1">Pick a note from the list, or start a new one.</p>
         </div>
         <button
           onClick={handleNewNote}
-          className="w-8 h-8 flex items-center justify-center rounded-full bg-surface border border-border text-muted-foreground hover:text-foreground hover:bg-active hover:border-accent/40 transition-colors"
+          className="flex items-center gap-1.5 h-9 px-4 rounded-full bg-accent text-accent-foreground text-[13px] font-semibold shadow-sm hover:opacity-90 transition-opacity"
           title="New note"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4" strokeWidth={2.5} />
+          New note
         </button>
       </div>
     );
@@ -211,11 +224,11 @@ export function EditorPane() {
       style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
     >
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {/* Top bar */}
-        <div className="h-10 shrink-0 border-b border-border flex items-center px-4 gap-4" data-tauri-drag-region>
+        {/* Top bar — minimal: breadcrumb + title left, actions tucked right, no divider */}
+        <div className="h-12 shrink-0 flex items-center px-5 gap-3" data-tauri-drag-region>
           {!sidebarOpen && (
             <button
-              className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface transition-colors shrink-0"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors shrink-0"
               onClick={toggleSidebar}
               title="Show sidebar (⌘B)"
             >
@@ -228,17 +241,17 @@ export function EditorPane() {
             </span>
           )}
           {/* Breadcrumb */}
-          <div className="flex items-center gap-1 text-xs text-muted-foreground min-w-0 flex-1">
+          <div className="flex items-center gap-1.5 text-[12.5px] text-muted-foreground min-w-0 flex-1">
             {parentFolder && (
               <>
-                <span>{parentFolder.name}</span>
-                <span>/</span>
+                <span className="hover:text-foreground transition-colors truncate max-w-[120px]">{parentFolder.name}</span>
+                <span className="text-tertiary">›</span>
               </>
             )}
             {folder && (
               <>
-                <span>{folder.name}</span>
-                <span>/</span>
+                <span className="hover:text-foreground transition-colors truncate max-w-[120px]">{folder.name}</span>
+                <span className="text-tertiary">›</span>
               </>
             )}
             <input
@@ -259,78 +272,76 @@ export function EditorPane() {
               }}
               placeholder="Untitled"
               className={cn(
-                "min-w-[4ch] max-w-[240px] flex-1 truncate",
-                "text-xs text-foreground bg-transparent",
+                "min-w-[4ch] max-w-[280px] flex-1 truncate",
+                "text-[12.5px] font-medium text-foreground bg-transparent",
                 "border-none outline-none p-0",
-                "placeholder:text-muted-foreground",
+                "placeholder:text-muted-foreground placeholder:font-normal",
                 "focus:ring-0",
               )}
             />
           </div>
 
           {/* Right controls */}
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xs text-tertiary">{saveLabel}</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[11px] text-tertiary mr-1">{saveLabel}</span>
 
-            {/* View mode toggle */}
-            <div className="flex items-center gap-0 border border-border rounded-md overflow-hidden">
-              {(["edit", "split", "preview"] as const).map((mode) => (
-                <button
-                  key={mode}
-                  className={cn(
-                    "px-2.5 py-1 text-xs transition-colors capitalize",
-                    viewMode === mode
-                      ? "font-medium text-foreground underline underline-offset-4 bg-active"
-                      : "text-muted-foreground hover:text-foreground hover:bg-surface",
-                  )}
-                  onClick={() => setViewMode(mode)}
-                >
-                  {mode}
-                </button>
-              ))}
-            </div>
+            {/* Markdown mode toggle — small escape hatch, not a primary control */}
+            <button
+              className={cn(
+                "w-7 h-7 flex items-center justify-center rounded-md transition-colors",
+                editorMode === "markdown"
+                  ? "text-accent bg-active"
+                  : "text-muted-foreground hover:text-foreground hover:bg-surface",
+              )}
+              onClick={() =>
+                setNoteEditorMode(note.id, editorMode === "markdown" ? "normal" : "markdown")
+              }
+              title={editorMode === "markdown" ? "Switch to Normal mode" : "Switch to Markdown mode"}
+            >
+              <Columns2 className="w-3.5 h-3.5" />
+            </button>
 
             <button
               className={cn(
-                "w-7 h-7 flex items-center justify-center rounded transition-colors",
+                "w-7 h-7 flex items-center justify-center rounded-md transition-colors",
                 note.pinned
                   ? "text-accent"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground hover:text-foreground hover:bg-surface",
               )}
               onClick={() => pinNote(note.id)}
               title={note.pinned ? "Unpin" : "Pin"}
             >
-              <Pin className={cn("w-4 h-4", note.pinned && "fill-accent")} />
+              <Pin className={cn("w-3.5 h-3.5", note.pinned && "fill-accent")} />
             </button>
 
             <button
               onClick={() => setLinksOpen((v) => !v)}
               className={cn(
-                "w-7 h-7 flex items-center justify-center rounded transition-colors",
+                "w-7 h-7 flex items-center justify-center rounded-md transition-colors",
                 linksOpen
                   ? "text-accent bg-active"
                   : "text-muted-foreground hover:text-foreground hover:bg-surface",
               )}
               title="Links"
             >
-              <Link2 className="w-4 h-4" />
+              <Link2 className="w-3.5 h-3.5" />
             </button>
 
             <button
               onClick={() => setMediaOpen((v) => !v)}
               className={cn(
-                "w-7 h-7 flex items-center justify-center rounded transition-colors",
+                "w-7 h-7 flex items-center justify-center rounded-md transition-colors",
                 mediaOpen
                   ? "text-accent bg-active"
                   : "text-muted-foreground hover:text-foreground hover:bg-surface",
               )}
               title="Media & attachments"
             >
-              <Paperclip className="w-4 h-4" />
+              <Paperclip className="w-3.5 h-3.5" />
             </button>
 
             <button
-              className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-red-500 transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
               onClick={() =>
                 selectedNoteIds.length > 1
                   ? confirmDeleteSelectedNotes()
@@ -338,28 +349,28 @@ export function EditorPane() {
               }
               title="Delete note"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
 
             <ShareDialog note={note} vaultPath={vaultPath ?? undefined} />
 
             <button
-              className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors"
+              className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
               onClick={() => setGithubSyncOpen(true)}
               title="Sync with GitHub"
             >
-              <GitBranch className="w-4 h-4" />
+              <GitBranch className="w-3.5 h-3.5" />
             </button>
 
-            <button className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground transition-colors">
-              <MoreHorizontal className="w-4 h-4" />
+            <button className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors">
+              <MoreHorizontal className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
 
         {/* Meta line */}
-        {viewMode !== "edit" && (
-          <div className="px-8 pt-4 pb-0 shrink-0">
+        {editorMode === "markdown" && (
+          <div className="px-10 pt-2 pb-0 shrink-0">
             <p className="text-xs text-muted-foreground">
               {parentFolder && `${parentFolder.name} / `}
               {folder?.name} · Edited {formatDate(note.updatedAt)} ·{" "}
@@ -379,26 +390,18 @@ export function EditorPane() {
               matches={searchMatches}
               onNext={goNext}
               onPrev={goPrev}
-              viewMode={viewMode}
             />
           )}
           <div className="flex-1 overflow-hidden relative">
-            {viewMode === "edit" && (
-              <MarkdownEditor noteId={note.id} content={note.content} />
+            {editorMode === "normal" && (
+              <MarkdownEditor noteId={note.id} content={note.content} onScrollerReady={setScrollerEl} />
             )}
-            {viewMode === "preview" && (
-              <RichPreview
-                content={note.content}
-                noteId={note.id}
-                searchQuery={searchOpen ? searchQuery : ""}
-                searchMatchIndex={searchMatchIndex}
-              />
-            )}
-            {viewMode === "split" && (
+            {editorMode === "markdown" && (
               <SplitView noteId={note.id} content={note.content} />
             )}
 
-            {viewMode === "edit" && <EditorToolbar />}
+            {editorMode === "normal" && <EditorToolbar />}
+            {editorMode === "normal" && <StructureRail content={note.content} scrollerEl={scrollerEl} />}
           </div>
         </EditorViewProvider>
       </div>

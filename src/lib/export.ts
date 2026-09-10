@@ -1,5 +1,9 @@
 import { save } from '@tauri-apps/plugin-dialog'
 import { writeTextFile } from '@tauri-apps/plugin-fs'
+// Raw KaTeX stylesheet, inlined into exported HTML so rendered formulas keep
+// their layout outside the app. Font files are referenced by URL and won't
+// resolve in a standalone file — KaTeX's MathML fallback keeps math legible.
+import katexCss from 'katex/dist/katex.min.css?inline'
 
 // ─── Theme vars ───────────────────────────────────────────────────────────────
 
@@ -45,6 +49,9 @@ export function buildHtmlDocument(title: string, bodyHtml: string, vars: ThemeVa
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escHtml(title)}</title>
+<style>
+${katexCss}
+</style>
 <style>
   *, *::before, *::after { box-sizing: border-box; }
 

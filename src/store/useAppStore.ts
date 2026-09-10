@@ -4,7 +4,7 @@ import type {
   Folder,
   Task,
   Subtask,
-  ViewMode,
+  EditorMode,
   ActiveView,
   Board,
   BoardColumn,
@@ -12,14 +12,14 @@ import type {
   BoardComment,
   LinkedItem,
   Attachment,
-  WeeklyPlan,
-  PlannerDay,
 } from "../types";
 import {
   extractTitleFromContent,
   setContentTitle,
   slugifyTitle,
 } from "../lib/utils";
+import { genId } from "../lib/id";
+import { getSyncHandle, pushLocalBoardsState, pushNoteContent } from "../lib/sync/yjsSync";
 import {
   writeNoteFile,
   deleteNoteFile,
@@ -28,8 +28,6 @@ import {
   renameItem,
   writeNoteMeta,
   writeBoardsFile,
-  writePlannerFile,
-  readPlannerFile,
   pickExternalMarkdownFile,
   readExternalNote,
   addExternalFileToVault,
@@ -141,12 +139,29 @@ export interface NamePromptConfig {
   placeholder?: string;
   defaultValue?: string;
   confirmLabel?: string;
-  onConfirm: (name: string) => void;
+  /** When provided, the dialog shows a "destination" picker. The selected
+   *  option's `id` (a folder id, or `null` for the library root) is passed to
+   *  `onConfirm` as the second argument. */
+  destinations?: { id: string | null; label: string }[];
+  initialDestinationId?: string | null;
+  onConfirm: (name: string, destinationId?: string | null) => void;
 }
 
 export interface Abbreviation {
   key: string
   value: string
+}
+
+// ─── Editor mode (Normal / Markdown) ───────────────────────────────────────────
+// The global default and per-note overrides are pure UI preferences (not note
+// content), so they live in localStorage rather than the vault's note metadata.
+
+function loadNoteEditorModes(): Record<string, EditorMode> {
+  try {
+    return JSON.parse(localStorage.getItem("inkwell-note-editor-modes") ?? "{}");
+  } catch {
+    return {};
+  }
 }
 
 export interface ConfirmConfig {
@@ -167,7 +182,17 @@ interface AppState {
   selectedNoteIds: string[];
   lastSelectedNoteId: string | null;
   selectedFolderId: string | null;
-  viewMode: ViewMode;
+  /** Global default editor mode applied to notes with no per-note override. */
+  defaultEditorMode: EditorMode;
+  setDefaultEditorMode: (mode: EditorMode) => void;
+  /** Per-note overrides, keyed by note id — independent of later global default changes. */
+  noteEditorModes: Record<string, EditorMode>;
+  setNoteEditorMode: (noteId: string, mode: EditorMode) => void;
+  /** Resolves a note's effective mode: its override, else the global default. */
+  getEditorMode: (noteId: string) => EditorMode;
+  /** Split ratio (0–1, source pane share) for Markdown mode, remembered globally. */
+  markdownSplitRatio: number;
+  setMarkdownSplitRatio: (ratio: number) => void;
   theme: "dark" | "light";
   themeName: string;
   customThemes: CustomTheme[];
@@ -200,12 +225,12 @@ interface AppState {
   canvasEnabled: boolean;
   setCanvasEnabled: (enabled: boolean) => void;
   // Canvas data is stored globally (independent of whichever vault is open) by
-  // default — this mirrors the planner. If set, canvas data instead reads/writes
-  // to this specific vault's .inkwell/canvas.json regardless of the open vault.
+  // default. If set, canvas data instead reads/writes to this specific vault's
+  // .inkwell/canvas.json regardless of the open vault.
   canvasLinkedVaultPath: string | null;
   setCanvasLinkedVaultPath: (path: string | null) => void;
-  plannerEnabled: boolean;
-  setPlannerEnabled: (enabled: boolean) => void;
+  vimModeEnabled: boolean;
+  setVimModeEnabled: (enabled: boolean) => void;
   abbreviationTrigger: string;
   abbreviations: Abbreviation[];
   setAbbreviationTrigger: (trigger: string) => void;
@@ -236,7 +261,6 @@ interface AppState {
   clearFolderSelection: () => void;
   selectFolder: (id: string) => void;
   toggleFolder: (id: string) => void;
-  setViewMode: (mode: ViewMode) => void;
   toggleTheme: () => void;
   setSearchOpen: (open: boolean) => void;
   setSearchQuery: (q: string) => void;
@@ -261,6 +285,7 @@ interface AppState {
     insertBeforeFolderId: string | null,
   ) => void;
   updateNote: (id: string, content: string) => void;
+  applyRemoteNoteUpdate: (id: string, content: string) => void;
   openExternalNote: () => Promise<void>;
   setActiveTask: (id: string | null) => void;
   sidebarOpen: boolean;
@@ -280,11 +305,6 @@ interface AppState {
   boardTasks: BoardTask[];
   activeBoardId: string | null;
   activeBoardTaskId: string | null;
-
-  // ─── Weekly Planner ─────────────────────────────────────────────────────────
-  plannerData: WeeklyPlan;
-  initPlanner: () => Promise<void>;
-  updatePlannerWeek: (weekKey: string, days: PlannerDay[]) => void;
 
   createBoard: (name: string) => void;
   deleteBoard: (id: string) => void;
@@ -313,6 +333,22 @@ interface AppState {
   toggleBoardTaskSubtask: (taskId: string, subtaskId: string) => void;
   deleteBoardTaskSubtask: (taskId: string, subtaskId: string) => void;
   addBoardTaskComment: (taskId: string, content: string) => void;
+
+  // ─── Team sync ──────────────────────────────────────────────────────────────
+  /** Non-null once the active vault is linked to a cloud team vault (see .inkwell/team.json). */
+  sharedVault: { vaultId: string; teamId: string } | null;
+  setSharedVault: (shared: { vaultId: string; teamId: string } | null) => void;
+  /** Applied when a remote peer's board/column/task change arrives via yjsSync — a plain
+   * set(), same shape as openVault, so it flows through the existing debounced-save path. */
+  applyRemoteBoardsUpdate: (
+    boards: Board[],
+    boardColumns: BoardColumn[],
+    boardTasks: BoardTask[],
+  ) => void;
+  /** Cloud sync status for the active shared vault — distinct from saveStatus
+   * (which tracks the local-disk write on every keystroke). Idle when unshared. */
+  syncStatus: "idle" | "syncing" | "synced" | "error";
+  setSyncStatus: (status: "idle" | "syncing" | "synced" | "error") => void;
 }
 
 function updateFolderNotes(
@@ -477,6 +513,45 @@ function removeFolderFromTree(folders: Folder[], folderId: string): Folder[] {
     }));
 }
 
+/**
+ * Rewrites a moved folder subtree so every descendant folder's id/path/parentId
+ * and every contained note's `folder`/`path` reflect the new location.
+ * Folder ids are vault-relative paths, so relocating is a prefix swap
+ * (`oldId` → `newId`) applied through the whole subtree.
+ */
+function rekeySubtree(
+  folder: Folder,
+  oldId: string,
+  newId: string,
+  newParentId: string | null,
+  vaultPath: string | null,
+): Folder {
+  const swapId = (id: string): string =>
+    id === oldId
+      ? newId
+      : id.startsWith(`${oldId}/`)
+        ? newId + id.slice(oldId.length)
+        : id;
+
+  const walk = (f: Folder, parentId: string | null): Folder => {
+    const id = swapId(f.id);
+    const path = vaultPath ? `${vaultPath}/${id}` : id;
+    return {
+      ...f,
+      id,
+      path,
+      parentId,
+      notes: f.notes.map((n) => {
+        const fileName = n.path.split("/").pop() ?? "";
+        return { ...n, folder: id, path: `${path}/${fileName}` };
+      }),
+      children: f.children.map((c) => walk(c, id)),
+    };
+  };
+
+  return walk(folder, newParentId);
+}
+
 function collectNoteIdsFromFolder(folder: Folder): string[] {
   const ids = folder.notes.map((n) => n.id);
   for (const child of folder.children) {
@@ -539,6 +614,12 @@ function flushBoards(
   }
   // 2. Async disk write (portable across machines)
   writeBoardsFile(vaultPath, data).catch(console.error);
+  // 3. Push to the shared doc if this vault is synced — a no-op for unshared
+  // vaults (getSyncHandle returns undefined) and for updates that originated
+  // remotely (state already matches the doc, so the diff-patch finds nothing
+  // to change and no outbound update is generated).
+  const handle = getSyncHandle(vaultPath);
+  if (handle) pushLocalBoardsState(handle, { boards, boardColumns, boardTasks });
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -550,7 +631,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedNoteIds: [],
   lastSelectedNoteId: null,
   selectedFolderId: null,
-  viewMode: "edit",
+  defaultEditorMode: (localStorage.getItem("inkwell-default-editor-mode") as EditorMode | null) ?? "normal",
+  noteEditorModes: loadNoteEditorModes(),
+  markdownSplitRatio: Number(localStorage.getItem("inkwell-markdown-split-ratio")) || 0.5,
   theme: "dark",
   themeName: "midnight",
   customThemes: loadCustomThemes(),
@@ -566,7 +649,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   recordingShortcut: false,
   canvasEnabled: localStorage.getItem("inkwell-canvas-enabled") === "true",
   canvasLinkedVaultPath: localStorage.getItem("inkwell-canvas-linked-vault"),
-  plannerEnabled: localStorage.getItem("inkwell-planner-enabled") !== "false",
+  vimModeEnabled: localStorage.getItem("inkwell-vim-mode") === "true",
   abbreviationTrigger: localStorage.getItem("inkwell-abbrev-trigger") ?? ":",
   abbreviations: JSON.parse(localStorage.getItem("inkwell-abbreviations") ?? "[]"),
   searchOpen: false,
@@ -583,7 +666,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   boardTasks: [],
   activeBoardId: null,
   activeBoardTaskId: null,
-  plannerData: {},
+  sharedVault: null,
+  syncStatus: "idle",
 
   openVault: (path, data) => {
     // Flush boards to boards.json before switching vaults
@@ -610,8 +694,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     // First-run: seed a welcome note so the vault isn't empty
     if (!data) {
-      const folderId = `folder-${Date.now()}`;
-      const noteId = `note-${Date.now() + 1}`;
+      const folderId = genId("folder");
+      const noteId = genId("note");
       const folderPath = `${path}/getting-started`;
       const welcomeNote: Note = {
         id: noteId,
@@ -734,7 +818,29 @@ export const useAppStore = create<AppState>((set, get) => ({
   toggleFolder: (id) =>
     set((s) => ({ folders: toggleFolderById(s.folders, id) })),
 
-  setViewMode: (mode) => set({ viewMode: mode }),
+  setDefaultEditorMode: (mode) => {
+    localStorage.setItem("inkwell-default-editor-mode", mode);
+    set({ defaultEditorMode: mode });
+  },
+
+  setNoteEditorMode: (noteId, mode) => {
+    set((s) => {
+      const noteEditorModes = { ...s.noteEditorModes, [noteId]: mode };
+      localStorage.setItem("inkwell-note-editor-modes", JSON.stringify(noteEditorModes));
+      return { noteEditorModes };
+    });
+  },
+
+  getEditorMode: (noteId) => {
+    const { noteEditorModes, defaultEditorMode } = get();
+    return noteEditorModes[noteId] ?? defaultEditorMode;
+  },
+
+  setMarkdownSplitRatio: (ratio) => {
+    const clamped = Math.min(0.8, Math.max(0.2, ratio));
+    localStorage.setItem("inkwell-markdown-split-ratio", String(clamped));
+    set({ markdownSplitRatio: clamped });
+  },
 
   setTheme: (name: string) => {
     const custom = get().customThemes.find((t) => t.id === name);
@@ -893,12 +999,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ canvasLinkedVaultPath: path });
   },
 
-  setPlannerEnabled: (enabled) => {
-    localStorage.setItem("inkwell-planner-enabled", String(enabled));
-    set({ plannerEnabled: enabled });
-    if (!enabled && get().activeView === "planner") {
-      set({ activeView: "notes" });
-    }
+  setVimModeEnabled: (enabled) => {
+    localStorage.setItem("inkwell-vim-mode", String(enabled));
+    set({ vimModeEnabled: enabled });
   },
 
   setAbbreviationTrigger: (trigger) => {
@@ -962,7 +1065,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   createNote: (folderId) => {
-    const id = `note-${Date.now()}`;
+    const id = genId("note");
     const { vaultPath } = get();
     const folderAbsPath = folderId
       ? buildFolderPath(vaultPath, folderId)
@@ -1138,9 +1241,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   moveFolder: (folderId, targetParentId, insertBeforeFolderId) => {
     if (folderId === targetParentId) return;
     const { folders, vaultPath } = get();
+    // Can't drop a folder into itself or one of its own descendants.
     if (
       targetParentId &&
-      isFolderInsideDeleted(folders, folderId, targetParentId)
+      (targetParentId === folderId ||
+        targetParentId.startsWith(`${folderId}/`))
     )
       return;
     const folder = findFolderById(folders, folderId);
@@ -1151,26 +1256,79 @@ export const useAppStore = create<AppState>((set, get) => ({
     const newId = targetParentId
       ? `${targetParentId}/${folderName}`
       : folderName;
-    const newAbsPath = vaultPath ? `${vaultPath}/${newId}` : newId;
 
+    // Same parent → this is a reorder, not a relocation. Reposition in place
+    // without touching ids or the filesystem.
+    if (newId === folderId) {
+      set((s) => {
+        const moving = findFolderById(s.folders, folderId);
+        if (!moving) return {};
+        return {
+          folders: insertFolderAt(
+            removeFolderFromTree(s.folders, folderId),
+            targetParentId,
+            moving,
+            insertBeforeFolderId,
+          ),
+        };
+      });
+      return;
+    }
+
+    // Refuse to clobber an existing folder of the same name at the destination.
+    const destSiblings =
+      targetParentId === null
+        ? folders
+        : (findFolderById(folders, targetParentId)?.children ?? []);
+    if (destSiblings.some((f) => f.id === newId)) {
+      console.warn(`moveFolder: "${newId}" already exists at the destination`);
+      return;
+    }
+
+    const newAbsPath = vaultPath ? `${vaultPath}/${newId}` : newId;
     if (folder.path !== newAbsPath) {
       renameItem(folder.path, newAbsPath).catch(console.error);
     }
 
-    const updated = {
-      ...folder,
-      id: newId,
-      path: newAbsPath,
-      parentId: targetParentId,
+    // Rebuild the subtree with corrected ids/paths/parentIds and note pointers.
+    const rekeyed = rekeySubtree(
+      folder,
+      folderId,
+      newId,
+      targetParentId,
+      vaultPath,
+    );
+
+    // Every note inside the moved subtree needs its flat-list entry updated too.
+    const noteMoves = new Map<string, { folder: string; path: string }>();
+    const gatherNotes = (f: Folder) => {
+      for (const n of f.notes) noteMoves.set(n.id, { folder: f.id, path: n.path });
+      f.children.forEach(gatherNotes);
     };
-    set((s) => ({
-      folders: insertFolderAt(
-        removeFolderFromTree(s.folders, folderId),
-        targetParentId,
-        updated,
-        insertBeforeFolderId,
-      ),
-    }));
+    gatherNotes(rekeyed);
+
+    set((s) => {
+      let selectedFolderId = s.selectedFolderId;
+      if (
+        selectedFolderId &&
+        (selectedFolderId === folderId ||
+          selectedFolderId.startsWith(`${folderId}/`))
+      ) {
+        selectedFolderId = newId + selectedFolderId.slice(folderId.length);
+      }
+      return {
+        folders: insertFolderAt(
+          removeFolderFromTree(s.folders, folderId),
+          targetParentId,
+          rekeyed,
+          insertBeforeFolderId,
+        ),
+        notes: s.notes.map((n) =>
+          noteMoves.has(n.id) ? { ...n, ...noteMoves.get(n.id)! } : n,
+        ),
+        selectedFolderId,
+      };
+    });
   },
 
   updateNote: (id, content) => {
@@ -1189,6 +1347,31 @@ export const useAppStore = create<AppState>((set, get) => ({
         if (updated.external) saveNote(updated.path, updated.content).catch(console.error);
         else writeNoteFile(updated).catch(console.error);
       }
+      return {
+        notes: updatedNotes,
+        folders: updateFolderNotes(s.folders, id, (n) => ({
+          ...n,
+          content,
+          title,
+          wordCount,
+          updatedAt,
+        })),
+      };
+    });
+    const { vaultPath, sharedVault } = get();
+    if (vaultPath && sharedVault) pushNoteContent(vaultPath, sharedVault.vaultId, id, content);
+  },
+
+  applyRemoteNoteUpdate: (id, content) => {
+    const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+    const title = extractTitleFromContent(content);
+    const updatedAt = new Date();
+    set((s) => {
+      const updatedNotes = s.notes.map((n) =>
+        n.id === id ? { ...n, content, title, wordCount, updatedAt } : n,
+      );
+      const updated = updatedNotes.find((n) => n.id === id);
+      if (updated && !updated.external) writeNoteFile(updated).catch(console.error);
       return {
         notes: updatedNotes,
         folders: updateFolderNotes(s.folders, id, (n) => ({
@@ -1390,7 +1573,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addSubtask: (taskId, title) => {
     const newSub: Subtask = {
-      id: `sub-${Date.now()}`,
+      id: genId("sub"),
       title,
       completed: false,
     };
@@ -1500,16 +1683,15 @@ export const useAppStore = create<AppState>((set, get) => ({
   // ─── Board actions ──────────────────────────────────────────────────────────
 
   createBoard: (name) => {
-    const boardId = `board-${Date.now()}`;
-    const now = Date.now();
+    const boardId = genId("board");
     const colDefs = [
       { name: "To Do", color: "blue" },
       { name: "In Progress", color: "amber" },
       { name: "In Review", color: "red" },
       { name: "Done", color: "green" },
     ];
-    const columns: BoardColumn[] = colDefs.map((def, i) => ({
-      id: `col-${now}-${i}`,
+    const columns: BoardColumn[] = colDefs.map((def) => ({
+      id: genId("col"),
       boardId,
       name: def.name,
       color: def.color,
@@ -1548,7 +1730,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setActiveBoardTaskId: (id) => set({ activeBoardTaskId: id }),
 
   addBoardColumn: (boardId, name) => {
-    const colId = `col-${Date.now()}`;
+    const colId = genId("col");
     const column: BoardColumn = {
       id: colId,
       boardId,
@@ -1605,7 +1787,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   createBoardTask: (columnId, title, priority = "medium") => {
     const column = get().boardColumns.find((c) => c.id === columnId);
     if (!column) return;
-    const taskId = `btask-${Date.now()}`;
+    const taskId = genId("btask");
     const task: BoardTask = {
       id: taskId,
       boardId: column.boardId,
@@ -1673,7 +1855,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addBoardTaskSubtask: (taskId, title) => {
-    const sub: Subtask = { id: `bsub-${Date.now()}`, title, completed: false };
+    const sub: Subtask = { id: genId("bsub"), title, completed: false };
     set((s) => ({
       boardTasks: s.boardTasks.map((t) =>
         t.id === taskId ? { ...t, subtasks: [...t.subtasks, sub] } : t,
@@ -1714,7 +1896,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   addBoardTaskComment: (taskId, content) => {
     const comment: BoardComment = {
-      id: `bcmt-${Date.now()}`,
+      id: genId("bcmt"),
       author: "You",
       avatar: "Y",
       content,
@@ -1764,16 +1946,12 @@ export const useAppStore = create<AppState>((set, get) => ({
     flushBoards(vaultPath, boards, boardColumns, boardTasks);
   },
 
-  // ─── Weekly Planner ─────────────────────────────────────────────────────────
+  setSharedVault: (shared) => set({ sharedVault: shared, syncStatus: shared ? "synced" : "idle" }),
+  setSyncStatus: (status) => set({ syncStatus: status }),
 
-  initPlanner: async () => {
-    const data = await readPlannerFile();
-    if (data) set({ plannerData: data });
-  },
-
-  updatePlannerWeek: (weekKey, days) => {
-    const next = { ...get().plannerData, [weekKey]: days };
-    set({ plannerData: next });
-    writePlannerFile(next);
+  applyRemoteBoardsUpdate: (boards, boardColumns, boardTasks) => {
+    set({ boards, boardColumns, boardTasks });
+    const { vaultPath } = get();
+    flushBoards(vaultPath, boards, boardColumns, boardTasks);
   },
 }));
