@@ -4,7 +4,7 @@
   <h1>inkwell</h1>
   <p>A focused, beautiful markdown note-taking app for macOS.</p>
 
-  ![Version](https://img.shields.io/badge/version-0.7.2-orange?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-0.7.8-orange?style=flat-square)
   ![Platform](https://img.shields.io/badge/platform-macOS-black?style=flat-square)
   ![License](https://img.shields.io/badge/license-MIT-orange?style=flat-square&color=c47d2e)
 </div>
@@ -25,6 +25,7 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 - Distraction-free CodeMirror 6 editor with markdown syntax decoration
 - Live split-view preview with full GFM rendering (tables, task lists, strikethrough)
 - Syntax-highlighted code blocks that adapt to the active theme
+- LaTeX math via KaTeX *(new in v0.7.8)* — inline `$…$`, display `$$…$$`, and fenced ` ```math ` / ` ```latex ` blocks, rendered live in the editor and preview
 - Inline code, blockquotes, ==highlights==, and embedded images
 - Attach files to any note — images, PDFs, and documents stored alongside your vault
 - Embed attachments inline with `![[filename]]` syntax
@@ -32,8 +33,9 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 **Organisation**
 - Vault-based storage — notes live as real `.md` files on disk (Obsidian-compatible)
 - Nested folders that map 1:1 to real filesystem directories
+- Create a folder anywhere — the New Folder dialog lets you pick its parent (or the library root)
 - Inline rename of notes and folders directly in the sidebar (double-click or right-click → Rename)
-- Drag-and-drop reordering and reparenting for notes and folders
+- Drag-and-drop to reorder, nest, and un-nest notes and folders — the drop target follows the cursor, and moving a folder relocates its whole subtree on disk
 - YAML frontmatter on every note (`id`, `created`, `updated`, `pinned`, `tags`)
 - Automatic migration from legacy JSON storage on first open
 - Kanban board view with columns, cards, due dates, subtasks, and comments
@@ -59,6 +61,7 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 
 **Export & Share**
 - Export notes as Markdown, standalone HTML, or PDF
+- Rendered math and code highlighting carried into HTML/PDF exports
 - Live preview before exporting
 - One-click copy to clipboard
 
@@ -91,7 +94,7 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 | Editor | CodeMirror 6 |
 | Canvas | HTML5 Canvas 2D API (custom engine) |
 | State | Zustand |
-| Markdown | react-markdown + remark-gfm + rehype-highlight |
+| Markdown | react-markdown + remark-gfm + rehype-highlight + remark-math / rehype-katex (KaTeX) |
 | Drag & drop | @dnd-kit/core |
 | MCP server | Rust (stdio JSON-RPC 2.0) |
 | Build | Vite |
