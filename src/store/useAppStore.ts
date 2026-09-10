@@ -139,7 +139,12 @@ export interface NamePromptConfig {
   placeholder?: string;
   defaultValue?: string;
   confirmLabel?: string;
-  onConfirm: (name: string) => void;
+  /** When provided, the dialog shows a "destination" picker. The selected
+   *  option's `id` (a folder id, or `null` for the library root) is passed to
+   *  `onConfirm` as the second argument. */
+  destinations?: { id: string | null; label: string }[];
+  initialDestinationId?: string | null;
+  onConfirm: (name: string, destinationId?: string | null) => void;
 }
 
 export interface Abbreviation {
@@ -506,6 +511,45 @@ function removeFolderFromTree(folders: Folder[], folderId: string): Folder[] {
       ...f,
       children: removeFolderFromTree(f.children, folderId),
     }));
+}
+
+/**
+ * Rewrites a moved folder subtree so every descendant folder's id/path/parentId
+ * and every contained note's `folder`/`path` reflect the new location.
+ * Folder ids are vault-relative paths, so relocating is a prefix swap
+ * (`oldId` → `newId`) applied through the whole subtree.
+ */
+function rekeySubtree(
+  folder: Folder,
+  oldId: string,
+  newId: string,
+  newParentId: string | null,
+  vaultPath: string | null,
+): Folder {
+  const swapId = (id: string): string =>
+    id === oldId
+      ? newId
+      : id.startsWith(`${oldId}/`)
+        ? newId + id.slice(oldId.length)
+        : id;
+
+  const walk = (f: Folder, parentId: string | null): Folder => {
+    const id = swapId(f.id);
+    const path = vaultPath ? `${vaultPath}/${id}` : id;
+    return {
+      ...f,
+      id,
+      path,
+      parentId,
+      notes: f.notes.map((n) => {
+        const fileName = n.path.split("/").pop() ?? "";
+        return { ...n, folder: id, path: `${path}/${fileName}` };
+      }),
+      children: f.children.map((c) => walk(c, id)),
+    };
+  };
+
+  return walk(folder, newParentId);
 }
 
 function collectNoteIdsFromFolder(folder: Folder): string[] {
@@ -1197,9 +1241,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   moveFolder: (folderId, targetParentId, insertBeforeFolderId) => {
     if (folderId === targetParentId) return;
     const { folders, vaultPath } = get();
+    // Can't drop a folder into itself or one of its own descendants.
     if (
       targetParentId &&
-      isFolderInsideDeleted(folders, folderId, targetParentId)
+      (targetParentId === folderId ||
+        targetParentId.startsWith(`${folderId}/`))
     )
       return;
     const folder = findFolderById(folders, folderId);
@@ -1210,26 +1256,79 @@ export const useAppStore = create<AppState>((set, get) => ({
     const newId = targetParentId
       ? `${targetParentId}/${folderName}`
       : folderName;
-    const newAbsPath = vaultPath ? `${vaultPath}/${newId}` : newId;
 
+    // Same parent → this is a reorder, not a relocation. Reposition in place
+    // without touching ids or the filesystem.
+    if (newId === folderId) {
+      set((s) => {
+        const moving = findFolderById(s.folders, folderId);
+        if (!moving) return {};
+        return {
+          folders: insertFolderAt(
+            removeFolderFromTree(s.folders, folderId),
+            targetParentId,
+            moving,
+            insertBeforeFolderId,
+          ),
+        };
+      });
+      return;
+    }
+
+    // Refuse to clobber an existing folder of the same name at the destination.
+    const destSiblings =
+      targetParentId === null
+        ? folders
+        : (findFolderById(folders, targetParentId)?.children ?? []);
+    if (destSiblings.some((f) => f.id === newId)) {
+      console.warn(`moveFolder: "${newId}" already exists at the destination`);
+      return;
+    }
+
+    const newAbsPath = vaultPath ? `${vaultPath}/${newId}` : newId;
     if (folder.path !== newAbsPath) {
       renameItem(folder.path, newAbsPath).catch(console.error);
     }
 
-    const updated = {
-      ...folder,
-      id: newId,
-      path: newAbsPath,
-      parentId: targetParentId,
+    // Rebuild the subtree with corrected ids/paths/parentIds and note pointers.
+    const rekeyed = rekeySubtree(
+      folder,
+      folderId,
+      newId,
+      targetParentId,
+      vaultPath,
+    );
+
+    // Every note inside the moved subtree needs its flat-list entry updated too.
+    const noteMoves = new Map<string, { folder: string; path: string }>();
+    const gatherNotes = (f: Folder) => {
+      for (const n of f.notes) noteMoves.set(n.id, { folder: f.id, path: n.path });
+      f.children.forEach(gatherNotes);
     };
-    set((s) => ({
-      folders: insertFolderAt(
-        removeFolderFromTree(s.folders, folderId),
-        targetParentId,
-        updated,
-        insertBeforeFolderId,
-      ),
-    }));
+    gatherNotes(rekeyed);
+
+    set((s) => {
+      let selectedFolderId = s.selectedFolderId;
+      if (
+        selectedFolderId &&
+        (selectedFolderId === folderId ||
+          selectedFolderId.startsWith(`${folderId}/`))
+      ) {
+        selectedFolderId = newId + selectedFolderId.slice(folderId.length);
+      }
+      return {
+        folders: insertFolderAt(
+          removeFolderFromTree(s.folders, folderId),
+          targetParentId,
+          rekeyed,
+          insertBeforeFolderId,
+        ),
+        notes: s.notes.map((n) =>
+          noteMoves.has(n.id) ? { ...n, ...noteMoves.get(n.id)! } : n,
+        ),
+        selectedFolderId,
+      };
+    });
   },
 
   updateNote: (id, content) => {

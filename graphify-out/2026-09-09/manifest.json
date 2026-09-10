@@ -110,9 +110,9 @@
     "semantic_hash": "e403436c7d75d25060793823e6eacf0d"
   },
   "src/components/canvas/CanvasNotesSheet.tsx": {
-    "mtime": 1788953931.5138166,
-    "ast_hash": "617dbbe8901b29ca58027e7acd874269",
-    "semantic_hash": ""
+    "mtime": 1782980448.8103428,
+    "ast_hash": "3584b55efc51d7c32b189352dc0388a4",
+    "semantic_hash": "3584b55efc51d7c32b189352dc0388a4"
   },
   "src/components/canvas/CanvasTemplatesPicker.tsx": {
     "mtime": 1782980448.8104305,
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
-    "mtime": 1789039902.4285252,
-    "ast_hash": "4b841d6092e809708649fe90a23af182",
+    "mtime": 1786482574.6756158,
+    "ast_hash": "e585a361ffe947dd757548b7a5e90863",
     "semantic_hash": ""
   },
   "src/components/quicknote/QuickNoteCapture.tsx": {
@@ -255,9 +255,9 @@
     "semantic_hash": "2ea598328ac7a18dda969c9b34f1cd0f"
   },
   "src/components/shared/NamePromptDialog.tsx": {
-    "mtime": 1789036406.5263927,
-    "ast_hash": "e4385b9441cf0428f0b877adb0906e9c",
-    "semantic_hash": ""
+    "mtime": 1782980448.8130734,
+    "ast_hash": "cedf16bd9b6218128ea7f61b8581fbcf",
+    "semantic_hash": "cedf16bd9b6218128ea7f61b8581fbcf"
   },
   "src/components/shared/SearchOverlay.tsx": {
     "mtime": 1782980448.8131547,
@@ -370,8 +370,8 @@
     "semantic_hash": "912ed2887ab8f9be43f625930982407a"
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1789036393.212799,
-    "ast_hash": "eaffe0f91826a9720f9b27e143f87acb",
+    "mtime": 1786482574.682798,
+    "ast_hash": "7743d6978a63184c0ef2e118a67123f4",
     "semantic_hash": ""
   },
   "src/types/index.ts": {

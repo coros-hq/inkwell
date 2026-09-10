@@ -2,9 +2,12 @@ import React, { useState, useEffect, useRef, useLayoutEffect, useCallback } from
 import { Trash2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
 import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
+import rehypeKatex from 'rehype-katex'
 import { remarkHighlight } from '../../lib/remarkHighlight'
+import { remarkMathCodeBlocks } from '../../lib/remarkMathCodeBlocks'
 import { useAppStore } from '../../store/useAppStore'
 import { formatFileSize } from '../../lib/attachments'
 import { navigateToNote } from '../../lib/noteReferences'
@@ -857,8 +860,12 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
           ) : (
             <ReactMarkdown
               key={i}
-              remarkPlugins={[remarkGfm, remarkHighlight]}
-              rehypePlugins={[rehypeHighlight, rehypeRaw]}
+              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkHighlight]}
+              rehypePlugins={[
+                [rehypeHighlight, { ignoreMissing: true }],
+                rehypeRaw,
+                [rehypeKatex, { throwOnError: false, output: 'htmlAndMathml', errorColor: 'var(--katex-error, #cc0000)' }],
+              ]}
               components={mdComponents}
               urlTransform={(url) => {
                 if (url.startsWith('note://')) return url

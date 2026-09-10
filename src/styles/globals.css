@@ -643,3 +643,22 @@ html[data-theme="onyx"] {
   color: hsl(var(--background));
   box-shadow: 0 2px 10px hsl(var(--foreground) / 0.18);
 }
+
+/* ── KaTeX / LaTeX math ──────────────────────────────────────────────────────
+   The stylesheet ships via `import 'katex/dist/katex.min.css'` in App.tsx.
+   These rules adapt it to Inkwell's themes and keep wide equations contained. */
+.katex { font-size: 1.05em; }
+
+/* Display math (from $$…$$ or ```math) — let long formulas scroll rather than
+   push the layout wide. */
+.katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 0;
+}
+
+/* rehype-katex renders parse errors as .katex-error with an inline color;
+   fall back to the theme's destructive tone when the CSS var resolves. */
+.katex-error {
+  color: hsl(var(--destructive, 0 72% 51%));
+}

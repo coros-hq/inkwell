@@ -9,7 +9,7 @@ import { useAppStore } from '../../store/useAppStore'
 import { saveNote } from '../../lib/fs'
 import { cn, glassBg } from '../../lib/utils'
 
-import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin } from '../../lib/editorExtensions'
+import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, mathPreviewField } from '../../lib/editorExtensions'
 import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
 import { useEditorViewRef } from './EditorViewContext'
 import { deleteAttachmentFile, makeAttachmentMarkdown } from '../../lib/attachments'
@@ -85,6 +85,21 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
       },
       '.cm-activeLine': { backgroundColor: 'transparent' },
       '.cm-activeLineGutter': { backgroundColor: 'transparent' },
+      // KaTeX live preview widgets
+      '.cm-math-inline': {
+        cursor: 'text',
+        padding: '0 1px',
+      },
+      '.cm-math-block': {
+        display: 'block',
+        textAlign: 'center',
+        padding: '6px 0',
+        overflowX: 'auto',
+        overflowY: 'hidden',
+      },
+      '.cm-math-block .katex-display': {
+        margin: '0',
+      },
       // ==Highlight== mark
       '.cm-highlight-mark': {
         backgroundColor: 'hsl(47 96% 53% / 0.3)',
@@ -222,7 +237,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         markdown({ base: markdownLanguage, codeLanguages: languages }),
         markdownHighlighting,
         codeHighlighting,
-        ...(liveConceal ? [liveMarkdownPlugin] : []),
+        ...(liveConceal ? [liveMarkdownPlugin, mathPreviewField] : []),
         highlightMarkPlugin,
         tablePlugin,
         createFileEmbedPlugin(vaultPath ?? '', handleRemoveEmbed, useAppStore.getState().notes.find(n => n.id === noteId)?.searchRoot),

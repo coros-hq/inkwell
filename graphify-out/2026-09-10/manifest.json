@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
-    "mtime": 1789039902.4285252,
-    "ast_hash": "4b841d6092e809708649fe90a23af182",
+    "mtime": 1789039312.31909,
+    "ast_hash": "d0c7b6bef3088db283ef18e8dd5ac746",
     "semantic_hash": ""
   },
   "src/components/quicknote/QuickNoteCapture.tsx": {

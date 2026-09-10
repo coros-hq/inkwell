@@ -4,8 +4,10 @@ import { autocompletion } from '@codemirror/autocomplete'
 import type { CompletionContext, CompletionResult } from '@codemirror/autocomplete'
 import { ViewPlugin, Decoration, WidgetType, EditorView } from '@codemirror/view'
 import type { DecorationSet, ViewUpdate } from '@codemirror/view'
-import type { Range } from '@codemirror/state'
+import { StateField } from '@codemirror/state'
+import type { Range, EditorState } from '@codemirror/state'
 import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark'
+import katex from 'katex'
 import { useAppStore } from '../store/useAppStore'
 
 // ─── Syntax Highlight Style ──────────────────────────────────────────────────
@@ -699,6 +701,139 @@ function buildHighlightDecorations(view: EditorView): DecorationSet {
 
   return Decoration.set(marks, true)
 }
+
+// ─── LaTeX / KaTeX Live Preview ──────────────────────────────────────────────
+// Renders math in-place while editing, Obsidian-style:
+//   • inline   $E = mc^2$
+//   • block    $$ ... $$   (may span multiple lines)
+//   • fenced   ```math / ```latex / ```tex / ```katex
+// The raw source is revealed (widget removed) whenever the selection touches
+// that span, so it stays directly editable.
+//
+// This is a StateField, not a ViewPlugin: replacing a line break is only
+// allowed for editor-state decorations, and block math / fenced blocks span
+// multiple lines.
+
+const MATH_FENCE_LANGS = new Set(['math', 'latex', 'tex', 'katex'])
+
+class KatexWidget extends WidgetType {
+  constructor(readonly tex: string, readonly display: boolean) { super() }
+
+  eq(other: KatexWidget) {
+    return other.tex === this.tex && other.display === this.display
+  }
+
+  toDOM() {
+    const el = document.createElement(this.display ? 'div' : 'span')
+    el.className = this.display ? 'cm-math cm-math-block' : 'cm-math cm-math-inline'
+    el.setAttribute('aria-label', this.tex)
+    try {
+      katex.render(this.tex, el, {
+        displayMode: this.display,
+        throwOnError: false,
+        output: 'htmlAndMathml',
+        errorColor: 'currentColor',
+      })
+    } catch {
+      el.textContent = this.tex
+    }
+    return el
+  }
+
+  // Let clicks through so the user can place the cursor inside and edit.
+  ignoreEvent() { return false }
+}
+
+function overlapsSelection(state: EditorState, from: number, to: number): boolean {
+  return state.selection.ranges.some(r => r.from <= to && r.to >= from)
+}
+
+function overlapsAny(ranges: Array<[number, number]>, from: number, to: number): boolean {
+  return ranges.some(([a, b]) => from < b && to > a)
+}
+
+function buildMathDecorations(state: EditorState): DecorationSet {
+  const doc = state.doc
+  const text = doc.toString()
+  const decos: Range<Decoration>[] = []
+
+  // Spans that must never be treated as math: inline code, code blocks, and
+  // the fenced math blocks themselves (handled separately below).
+  const codeRanges: Array<[number, number]> = []
+  const fenceRanges: Array<[number, number]> = []
+
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name === 'InlineCode' || node.name === 'CodeBlock' || node.name === 'CodeText') {
+        codeRanges.push([node.from, node.to])
+        return
+      }
+      if (node.name !== 'FencedCode') return
+
+      const firstLine = doc.lineAt(node.from)
+      const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
+      if (!MATH_FENCE_LANGS.has(info)) {
+        codeRanges.push([node.from, node.to])
+        return
+      }
+      fenceRanges.push([node.from, node.to])
+      if (overlapsSelection(state, node.from, node.to)) return
+
+      const lastLine = doc.lineAt(node.to)
+      const innerFrom = firstLine.to + 1
+      const innerTo = lastLine.number > firstLine.number ? lastLine.from - 1 : node.to
+      const tex = innerFrom < innerTo ? doc.sliceString(innerFrom, innerTo).trim() : ''
+      if (!tex) return
+      decos.push(
+        Decoration.replace({ widget: new KatexWidget(tex, true), block: true })
+          .range(node.from, node.to),
+      )
+    },
+  })
+
+  const skip = (from: number, to: number) =>
+    overlapsAny(codeRanges, from, to) || overlapsAny(fenceRanges, from, to)
+
+  // ── Block:  $$ … $$  (non-greedy, may cross newlines) ──────────────────────
+  const blockRanges: Array<[number, number]> = []
+  const blockRe = /\$\$([^]+?)\$\$/g
+  let m: RegExpExecArray | null
+  while ((m = blockRe.exec(text)) !== null) {
+    const from = m.index
+    const to = from + m[0].length
+    const tex = m[1].trim()
+    if (!tex || skip(from, to)) continue
+    blockRanges.push([from, to])
+    if (overlapsSelection(state, from, to)) continue
+    decos.push(
+      Decoration.replace({ widget: new KatexWidget(tex, true), block: true }).range(from, to),
+    )
+  }
+
+  // ── Inline:  $ … $  (single line, not $$, not preceded by \) ───────────────
+  const inlineRe = /(?<![\\$])\$(?!\s)((?:\\\$|[^$\n])+?)(?<![\s\\])\$(?![\d$])/g
+  while ((m = inlineRe.exec(text)) !== null) {
+    const from = m.index
+    const to = from + m[0].length
+    const tex = m[1].trim()
+    if (!tex || skip(from, to) || overlapsAny(blockRanges, from, to)) continue
+    if (overlapsSelection(state, from, to)) continue
+    decos.push(
+      Decoration.replace({ widget: new KatexWidget(tex, false) }).range(from, to),
+    )
+  }
+
+  return Decoration.set(decos, true)
+}
+
+export const mathPreviewField = StateField.define<DecorationSet>({
+  create: (state) => buildMathDecorations(state),
+  update: (value, tr) => {
+    if (tr.docChanged || tr.selection) return buildMathDecorations(tr.state)
+    return value
+  },
+  provide: (f) => EditorView.decorations.from(f),
+})
 
 // ─── File Embed Plugin ────────────────────────────────────────────────────────
 // Syntax inserted at cursor:  ![[attachments/file.pdf|Display Name|3300]]

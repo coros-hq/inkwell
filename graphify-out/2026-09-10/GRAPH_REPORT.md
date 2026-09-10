@@ -1,11 +1,11 @@
 # Graph Report - inkwell  (2026-09-10)
 
 ## Corpus Check
-- 100 files · ~182,067 words
+- 100 files · ~181,824 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1101 nodes · 2264 edges · 109 communities (69 shown, 40 thin omitted)
+- 1101 nodes · 2264 edges · 111 communities (71 shown, 40 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 63 edges (avg confidence: 0.61)
 - Token cost: 0 input · 0 output
 
@@ -119,6 +119,8 @@
 - [[_COMMUNITY_EditSplitPreview View Modes|Edit/Split/Preview View Modes]]
 - [[_COMMUNITY_CheckboxWidget|CheckboxWidget]]
 - [[_COMMUNITY_ThemeEditor.tsx|ThemeEditor.tsx]]
+- [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
+- [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
 - [[_COMMUNITY_ShellScopeEntryAllowedArgs|ShellScopeEntryAllowedArgs]]
 
 ## God Nodes (most connected - your core abstractions)
@@ -151,7 +153,7 @@
 ## Hyperedges (group relationships)
 - **Excalidraw Iframe Bridge Data Flow** — public_excalidraw_frame_html, public_excalidraw_frame_html_postmessage_protocol, public_excalidraw_frame_html_schedulechange, canvas_feature_design_data_flow, canvas_feature_design_storage_model [INFERRED 0.85]
 
-## Communities (109 total, 40 thin omitted)
+## Communities (111 total, 40 thin omitted)
 
 ### Community 0 - "App Shell & Note Editing"
 Cohesion: 0.08
@@ -218,12 +220,12 @@ Cohesion: 0.05
 Nodes (85): App(), LocalImage(), AppShell(), closeThisWindow(), QuickNoteCapture(), JoinVaultDialog(), Props, VaultSection() (+77 more)
 
 ### Community 16 - "Tauri Desktop Capability Schema"
-Cohesion: 0.12
-Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArg, Target (+8 more)
+Cohesion: 0.13
+Nodes (15): anyOf, description, definitions, Application, Identifier, Number, PermissionEntry, Target (+7 more)
 
 ### Community 17 - "Tauri macOS Capability Schema"
-Cohesion: 0.12
-Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArg, Target (+8 more)
+Cohesion: 0.13
+Nodes (15): anyOf, description, definitions, Application, Identifier, Number, PermissionEntry, Target (+7 more)
 
 ### Community 18 - "Project README & Build Config"
 Cohesion: 0.33
@@ -238,12 +240,12 @@ Cohesion: 0.08
 Nodes (23): activeLineSet(), buildFileEmbedDecorations(), buildLiveMarkdownDecorations(), buildMathDecorations(), buildTableDecorations(), BUILT_IN_ABBREVIATIONS, BulletWidget, codeBlockLineNumbers() (+15 more)
 
 ### Community 21 - "macOS Schema Property Defs"
-Cohesion: 0.14
-Nodes (14): properties, default, description, type, type, default, description, type (+6 more)
+Cohesion: 0.18
+Nodes (11): properties, default, description, type, description, type, description, identifier (+3 more)
 
 ### Community 23 - "Tauri Desktop Schema Properties"
-Cohesion: 0.15
-Nodes (13): properties, Identifier, description, oneOf, type, default, description, type (+5 more)
+Cohesion: 0.18
+Nodes (11): properties, default, description, type, description, type, description, identifier (+3 more)
 
 ### Community 24 - "NPM Dev Dependencies"
 Cohesion: 0.15
@@ -339,7 +341,7 @@ Nodes (5): confirmDeleteFolder(), confirmDeleteFolderById(), confirmDeleteFolder
 
 ### Community 48 - "shortcuts.ts"
 Cohesion: 0.50
-Nodes (4): default, description, type, description
+Nodes (4): default, description, type, local
 
 ### Community 50 - "Default Capability Manifest"
 Cohesion: 0.33
@@ -374,8 +376,8 @@ Cohesion: 0.50
 Nodes (4): description, required, type, Capability
 
 ### Community 58 - "Desktop Shell Scope Args"
-Cohesion: 0.67
-Nodes (3): Identifier, description, oneOf
+Cohesion: 0.50
+Nodes (4): default, description, type, local
 
 ### Community 59 - "Desktop Schema Value Type"
 Cohesion: 0.67
@@ -408,6 +410,14 @@ Nodes (64): AbbreviationsSection(), CustomThemeCard(), FONT_OPTIONS, FONT_SIZE_O
 ### Community 107 - "ThemeEditor.tsx"
 Cohesion: 0.67
 Nodes (3): Value, anyOf, description
+
+### Community 108 - "ShellScopeEntryAllowedArg"
+Cohesion: 0.67
+Nodes (3): ShellScopeEntryAllowedArg, anyOf, description
+
+### Community 109 - "ShellScopeEntryAllowedArg"
+Cohesion: 0.67
+Nodes (3): ShellScopeEntryAllowedArg, anyOf, description
 
 ### Community 112 - "ShellScopeEntryAllowedArgs"
 Cohesion: 0.67

@@ -2,6 +2,9 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { X } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import { remarkMathCodeBlocks } from '../../lib/remarkMathCodeBlocks'
 import { EditorState } from '@codemirror/state'
 import { EditorView, keymap } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
@@ -194,7 +197,10 @@ export function CanvasNotesSheet({ content, onChange, onClose }: Props) {
           <div className="h-full overflow-auto px-6 py-5">
             {content.trim() ? (
               <div className="canvas-notes-preview text-sm text-foreground leading-relaxed">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks]}
+                  rehypePlugins={[[rehypeKatex, { throwOnError: false, output: 'htmlAndMathml' }]]}
+                >{content}</ReactMarkdown>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground/40 italic mt-4">Nothing to preview yet.</p>

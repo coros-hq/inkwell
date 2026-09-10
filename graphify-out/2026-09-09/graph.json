@@ -1048,7 +1048,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_properties_description",
-      "community": 48,
+      "community": 29,
       "norm_label": "description"
     },
     {
@@ -1058,7 +1058,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_description_description",
-      "community": 48,
+      "community": 29,
       "norm_label": "description"
     },
     {
@@ -1068,7 +1068,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_description_default",
-      "community": 48,
+      "community": 29,
       "norm_label": "default"
     },
     {
@@ -1078,7 +1078,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_description_type",
-      "community": 48,
+      "community": 29,
       "norm_label": "type"
     },
     {
@@ -1488,7 +1488,7 @@
       "source_location": "L6481",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_definitions_value",
-      "community": 107,
+      "community": 59,
       "norm_label": "value"
     },
     {
@@ -1498,7 +1498,7 @@
       "source_location": "L6482",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_value_description",
-      "community": 107,
+      "community": 59,
       "norm_label": "description"
     },
     {
@@ -1508,7 +1508,7 @@
       "source_location": "L6483",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_value_anyof",
-      "community": 107,
+      "community": 59,
       "norm_label": "anyof"
     },
     {
@@ -1638,7 +1638,7 @@
       "source_location": "L6620",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_definitions_shellscopeentryallowedargs",
-      "community": 59,
+      "community": 58,
       "norm_label": "shellscopeentryallowedargs"
     },
     {
@@ -1648,7 +1648,7 @@
       "source_location": "L6621",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_shellscopeentryallowedargs_description",
-      "community": 59,
+      "community": 58,
       "norm_label": "description"
     },
     {
@@ -1658,7 +1658,7 @@
       "source_location": "L6622",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_shellscopeentryallowedargs_anyof",
-      "community": 59,
+      "community": 58,
       "norm_label": "anyof"
     },
     {
@@ -1788,7 +1788,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_identifier_description",
-      "community": 58,
+      "community": 21,
       "norm_label": "description"
     },
     {
@@ -1808,7 +1808,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_properties_description",
-      "community": 21,
+      "community": 30,
       "norm_label": "description"
     },
     {
@@ -1818,7 +1818,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_description_description",
-      "community": 21,
+      "community": 30,
       "norm_label": "description"
     },
     {
@@ -1828,7 +1828,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_description_default",
-      "community": 21,
+      "community": 30,
       "norm_label": "default"
     },
     {
@@ -1838,7 +1838,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_description_type",
-      "community": 21,
+      "community": 30,
       "norm_label": "type"
     },
     {
@@ -2228,7 +2228,7 @@
       "source_location": "L2378",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_identifier",
-      "community": 58,
+      "community": 21,
       "norm_label": "identifier"
     },
     {
@@ -2238,7 +2238,7 @@
       "source_location": "L2380",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_identifier_oneof",
-      "community": 58,
+      "community": 21,
       "norm_label": "oneof"
     },
     {
@@ -2368,7 +2368,7 @@
       "source_location": "L6592",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_shellscopeentryallowedarg",
-      "community": 17,
+      "community": 108,
       "norm_label": "shellscopeentryallowedarg"
     },
     {
@@ -2378,7 +2378,7 @@
       "source_location": "L6593",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedarg_description",
-      "community": 17,
+      "community": 108,
       "norm_label": "description"
     },
     {
@@ -2388,7 +2388,7 @@
       "source_location": "L6594",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedarg_anyof",
-      "community": 17,
+      "community": 108,
       "norm_label": "anyof"
     },
     {
@@ -2398,7 +2398,7 @@
       "source_location": "L6620",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_shellscopeentryallowedargs",
-      "community": 112,
+      "community": 17,
       "norm_label": "shellscopeentryallowedargs"
     },
     {
@@ -2408,7 +2408,7 @@
       "source_location": "L6621",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedargs_description",
-      "community": 112,
+      "community": 17,
       "norm_label": "description"
     },
     {
@@ -2418,7 +2418,7 @@
       "source_location": "L6622",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedargs_anyof",
-      "community": 112,
+      "community": 17,
       "norm_label": "anyof"
     },
     {
@@ -3438,7 +3438,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_board_boardview",
-      "community": 29,
+      "community": 42,
       "norm_label": "boardview.tsx"
     },
     {
@@ -3448,7 +3448,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_components_board_boardview_dropindicator",
-      "community": 29,
+      "community": 42,
       "norm_label": "dropindicator"
     },
     {
@@ -3458,7 +3458,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_components_board_boardview_activedrag",
-      "community": 29,
+      "community": 42,
       "norm_label": "activedrag"
     },
     {
@@ -3468,7 +3468,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_components_board_boardview_collisiondetection",
-      "community": 29,
+      "community": 42,
       "norm_label": "collisiondetection()"
     },
     {
@@ -3478,7 +3478,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_components_board_boardview_colgap",
-      "community": 29,
+      "community": 42,
       "norm_label": "colgap()"
     },
     {
@@ -3488,7 +3488,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_components_board_boardview_boardview",
-      "community": 29,
+      "community": 42,
       "norm_label": "boardview()"
     },
     {
@@ -3498,7 +3498,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_board_kanbancolumn",
-      "community": 29,
+      "community": 42,
       "norm_label": "kanbancolumn.tsx"
     },
     {
@@ -3508,7 +3508,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_components_board_kanbancolumn_color_dot",
-      "community": 29,
+      "community": 42,
       "norm_label": "color_dot"
     },
     {
@@ -3518,7 +3518,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_components_board_kanbancolumn_insertline",
-      "community": 29,
+      "community": 42,
       "norm_label": "insertline()"
     },
     {
@@ -3528,7 +3528,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_components_board_kanbancolumn_kanbancolumnprops",
-      "community": 30,
+      "community": 19,
       "norm_label": "kanbancolumnprops"
     },
     {
@@ -3538,7 +3538,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_components_board_kanbancolumn_kanbancolumn",
-      "community": 29,
+      "community": 42,
       "norm_label": "kanbancolumn()"
     },
     {
@@ -3548,7 +3548,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_board_taskcard",
-      "community": 41,
+      "community": 42,
       "norm_label": "taskcard.tsx"
     },
     {
@@ -3558,7 +3558,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_board_taskcard_priority_dot",
-      "community": 41,
+      "community": 42,
       "norm_label": "priority_dot"
     },
     {
@@ -3568,7 +3568,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_board_taskcard_formatdue",
-      "community": 41,
+      "community": 42,
       "norm_label": "formatdue()"
     },
     {
@@ -3578,7 +3578,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_components_board_taskcard_taskcardprops",
-      "community": 41,
+      "community": 19,
       "norm_label": "taskcardprops"
     },
     {
@@ -3588,7 +3588,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_board_taskcard_taskcard",
-      "community": 41,
+      "community": 42,
       "norm_label": "taskcard()"
     },
     {
@@ -3738,27 +3738,27 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_canvas_canvasnotessheet",
-      "community": 2,
+      "community": 47,
       "norm_label": "canvasnotessheet.tsx"
     },
     {
       "label": "Props",
       "file_type": "code",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L20",
+      "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_canvas_canvasnotessheet_props",
-      "community": 2,
+      "community": 47,
       "norm_label": "props"
     },
     {
       "label": "CanvasNotesSheet()",
       "file_type": "code",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L26",
+      "source_location": "L23",
       "_origin": "ast",
       "id": "src_components_canvas_canvasnotessheet_canvasnotessheet",
-      "community": 2,
+      "community": 47,
       "norm_label": "canvasnotessheet()"
     },
     {
@@ -4788,7 +4788,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "src_components_editor_attachmentsbar_attachmentsbar",
-      "community": 14,
+      "community": 47,
       "norm_label": "attachmentsbar()"
     },
     {
@@ -4818,7 +4818,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext",
-      "community": 71,
+      "community": 61,
       "norm_label": "editorviewcontext.tsx"
     },
     {
@@ -4828,7 +4828,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_viewref",
-      "community": 71,
+      "community": 61,
       "norm_label": "viewref"
     },
     {
@@ -4838,7 +4838,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_editorviewcontext",
-      "community": 71,
+      "community": 61,
       "norm_label": "editorviewcontext"
     },
     {
@@ -4848,7 +4848,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_editorviewprovider",
-      "community": 71,
+      "community": 61,
       "norm_label": "editorviewprovider()"
     },
     {
@@ -4858,7 +4858,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_useeditorviewref",
-      "community": 71,
+      "community": 61,
       "norm_label": "useeditorviewref()"
     },
     {
@@ -4918,7 +4918,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_components_editor_markdowneditor_markdowneditor",
-      "community": 52,
+      "community": 61,
       "norm_label": "markdowneditor()"
     },
     {
@@ -4988,7 +4988,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "src_components_editor_mediapanel_mediapanel",
-      "community": 14,
+      "community": 47,
       "norm_label": "mediapanel()"
     },
     {
@@ -5018,7 +5018,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_editor_notesearchbar_notesearchbar",
-      "community": 71,
+      "community": 61,
       "norm_label": "notesearchbar()"
     },
     {
@@ -5198,7 +5198,7 @@
       "source_location": "L516",
       "_origin": "ast",
       "id": "src_components_editor_richpreview_localimage",
-      "community": 15,
+      "community": 2,
       "norm_label": "localimage()"
     },
     {
@@ -5318,7 +5318,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "src_components_editor_sharedialog_sharedialogprops",
-      "community": 19,
+      "community": 2,
       "norm_label": "sharedialogprops"
     },
     {
@@ -5338,7 +5338,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_splitview",
-      "community": 42,
+      "community": 61,
       "norm_label": "splitview.tsx"
     },
     {
@@ -5348,7 +5348,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_editor_splitview_splitviewprops",
-      "community": 42,
+      "community": 61,
       "norm_label": "splitviewprops"
     },
     {
@@ -5358,7 +5358,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_editor_splitview_splitview",
-      "community": 42,
+      "community": 61,
       "norm_label": "splitview()"
     },
     {
@@ -5368,7 +5368,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_structurerail",
-      "community": 42,
+      "community": 61,
       "norm_label": "structurerail.tsx"
     },
     {
@@ -5378,7 +5378,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_editor_structurerail_headingtick",
-      "community": 42,
+      "community": 61,
       "norm_label": "headingtick"
     },
     {
@@ -5388,7 +5388,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_editor_structurerail_parseheadings",
-      "community": 42,
+      "community": 61,
       "norm_label": "parseheadings()"
     },
     {
@@ -5398,7 +5398,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_components_editor_structurerail_structurerail",
-      "community": 42,
+      "community": 61,
       "norm_label": "structurerail()"
     },
     {
@@ -5408,7 +5408,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_layout_appshell",
-      "community": 15,
+      "community": 41,
       "norm_label": "appshell.tsx"
     },
     {
@@ -5428,7 +5428,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_layout_editorpane",
-      "community": 1,
+      "community": 61,
       "norm_label": "editorpane.tsx"
     },
     {
@@ -5438,7 +5438,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_layout_editorpane_editorpane",
-      "community": 1,
+      "community": 41,
       "norm_label": "editorpane()"
     },
     {
@@ -5448,7 +5448,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_layout_notelist",
-      "community": 1,
+      "community": 41,
       "norm_label": "notelist.tsx"
     },
     {
@@ -5458,7 +5458,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_layout_notelist_notelist",
-      "community": 1,
+      "community": 41,
       "norm_label": "notelist()"
     },
     {
@@ -5472,20 +5472,10 @@
       "norm_label": "sidebar.tsx"
     },
     {
-      "label": "snapOverlayToCursor()",
-      "file_type": "code",
-      "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L41",
-      "_origin": "ast",
-      "id": "src_components_layout_sidebar_snapoverlaytocursor",
-      "community": 25,
-      "norm_label": "snapoverlaytocursor()"
-    },
-    {
       "label": "collisionDetection()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L59",
+      "source_location": "L38",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_collisiondetection",
       "community": 25,
@@ -5495,7 +5485,7 @@
       "label": "DragItemData",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L77",
+      "source_location": "L56",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_dragitemdata",
       "community": 25,
@@ -5505,7 +5495,7 @@
       "label": "DropPosition",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L81",
+      "source_location": "L60",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_dropposition",
       "community": 25,
@@ -5515,7 +5505,7 @@
       "label": "DropIndicator",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L83",
+      "source_location": "L62",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_dropindicator",
       "community": 25,
@@ -5525,7 +5515,7 @@
       "label": "folderPadding()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L96",
+      "source_location": "L75",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_folderpadding",
       "community": 25,
@@ -5535,7 +5525,7 @@
       "label": "folderIconOffset()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L100",
+      "source_location": "L79",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_foldericonoffset",
       "community": 25,
@@ -5545,7 +5535,7 @@
       "label": "notePadding()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L103",
+      "source_location": "L82",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_notepadding",
       "community": 25,
@@ -5555,7 +5545,7 @@
       "label": "treeRowClass",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L107",
+      "source_location": "L86",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_treerowclass",
       "community": 25,
@@ -5565,37 +5555,37 @@
       "label": "DropLine()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L112",
+      "source_location": "L91",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_dropline",
-      "community": 29,
+      "community": 42,
       "norm_label": "dropline()"
     },
     {
       "label": "NoteRowProps",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L128",
+      "source_location": "L107",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_noterowprops",
-      "community": 19,
+      "community": 25,
       "norm_label": "noterowprops"
     },
     {
       "label": "NoteRow()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L143",
+      "source_location": "L122",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_noterow",
-      "community": 1,
+      "community": 25,
       "norm_label": "noterow()"
     },
     {
       "label": "FolderRowProps",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L269",
+      "source_location": "L248",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_folderrowprops",
       "community": 25,
@@ -5605,7 +5595,7 @@
       "label": "FolderRow()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L282",
+      "source_location": "L261",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_folderrow",
       "community": 25,
@@ -5615,7 +5605,7 @@
       "label": "Sidebar()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L506",
+      "source_location": "L485",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_sidebar",
       "community": 25,
@@ -5625,7 +5615,7 @@
       "label": "findNotesInFolder()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1332",
+      "source_location": "L1225",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_findnotesinfolder",
       "community": 25,
@@ -5635,7 +5625,7 @@
       "label": "findFolderChildren()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1344",
+      "source_location": "L1237",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_findfolderchildren",
       "community": 25,
@@ -5645,7 +5635,7 @@
       "label": "flatFolders()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1356",
+      "source_location": "L1249",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_flatfolders",
       "community": 25,
@@ -5698,7 +5688,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_quicknote_quicknoteeditor_quicknoteeditorhandle",
-      "community": 52,
+      "community": 15,
       "norm_label": "quicknoteeditorhandle"
     },
     {
@@ -5718,7 +5708,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_components_quicknote_quicknoteeditor_quicknoteeditor",
-      "community": 52,
+      "community": 15,
       "norm_label": "quicknoteeditor"
     },
     {
@@ -5728,7 +5718,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_settings_joinvaultdialog",
-      "community": 15,
+      "community": 73,
       "norm_label": "joinvaultdialog.tsx"
     },
     {
@@ -5738,7 +5728,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_settings_joinvaultdialog_props",
-      "community": 15,
+      "community": 73,
       "norm_label": "props"
     },
     {
@@ -5748,7 +5738,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_settings_joinvaultdialog_joinvaultdialog",
-      "community": 15,
+      "community": 73,
       "norm_label": "joinvaultdialog()"
     },
     {
@@ -5878,7 +5868,7 @@
       "source_location": "L930",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_vaultsection",
-      "community": 15,
+      "community": 73,
       "norm_label": "vaultsection()"
     },
     {
@@ -6058,7 +6048,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_confirmdialog",
-      "community": 29,
+      "community": 47,
       "norm_label": "confirmdialog.tsx"
     },
     {
@@ -6068,7 +6058,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_shared_confirmdialog_confirmdialog",
-      "community": 29,
+      "community": 47,
       "norm_label": "confirmdialog()"
     },
     {
@@ -6078,7 +6068,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_contextmenu",
-      "community": 29,
+      "community": 42,
       "norm_label": "contextmenu.tsx"
     },
     {
@@ -6088,7 +6078,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_shared_contextmenu_contextmenuitem",
-      "community": 29,
+      "community": 42,
       "norm_label": "contextmenuitem"
     },
     {
@@ -6098,7 +6088,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_shared_contextmenu_contextmenuprops",
-      "community": 29,
+      "community": 42,
       "norm_label": "contextmenuprops"
     },
     {
@@ -6108,7 +6098,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_shared_contextmenu_contextmenu",
-      "community": 29,
+      "community": 42,
       "norm_label": "contextmenu()"
     },
     {
@@ -6188,8 +6178,18 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_namepromptdialog",
-      "community": 29,
+      "community": 42,
       "norm_label": "namepromptdialog.tsx"
+    },
+    {
+      "label": "NamePromptDialog()",
+      "file_type": "code",
+      "source_file": "src/components/shared/NamePromptDialog.tsx",
+      "source_location": "L6",
+      "_origin": "ast",
+      "id": "src_components_shared_namepromptdialog_namepromptdialog",
+      "community": 42,
+      "norm_label": "namepromptdialog()"
     },
     {
       "label": "SearchOverlay.tsx",
@@ -6198,7 +6198,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_searchoverlay",
-      "community": 15,
+      "community": 47,
       "norm_label": "searchoverlay.tsx"
     },
     {
@@ -6208,7 +6208,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_shared_searchoverlay_searchoverlay",
-      "community": 15,
+      "community": 47,
       "norm_label": "searchoverlay()"
     },
     {
@@ -6248,7 +6248,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_tagchip",
-      "community": 41,
+      "community": 10,
       "norm_label": "tagchip.tsx"
     },
     {
@@ -6258,7 +6258,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_tagchip_tagchipprops",
-      "community": 41,
+      "community": 10,
       "norm_label": "tagchipprops"
     },
     {
@@ -6268,7 +6268,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_shared_tagchip_tagchip",
-      "community": 41,
+      "community": 10,
       "norm_label": "tagchip()"
     },
     {
@@ -6278,7 +6278,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_themetoggle",
-      "community": 10,
+      "community": 47,
       "norm_label": "themetoggle.tsx"
     },
     {
@@ -6288,7 +6288,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_shared_themetoggle_themetoggle",
-      "community": 10,
+      "community": 47,
       "norm_label": "themetoggle()"
     },
     {
@@ -6298,7 +6298,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_vaultpicker",
-      "community": 15,
+      "community": 73,
       "norm_label": "vaultpicker.tsx"
     },
     {
@@ -6308,7 +6308,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_shared_vaultpicker_vaultpicker",
-      "community": 15,
+      "community": 73,
       "norm_label": "vaultpicker()"
     },
     {
@@ -6418,7 +6418,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_select",
-      "community": 73,
+      "community": 42,
       "norm_label": "select.tsx"
     },
     {
@@ -6428,7 +6428,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_ui_select_selectoption",
-      "community": 73,
+      "community": 42,
       "norm_label": "selectoption"
     },
     {
@@ -6438,7 +6438,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_ui_select_selectprops",
-      "community": 73,
+      "community": 42,
       "norm_label": "selectprops"
     },
     {
@@ -6448,7 +6448,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_components_ui_select_select",
-      "community": 73,
+      "community": 42,
       "norm_label": "select()"
     },
     {
@@ -6618,7 +6618,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_auth_getsession",
-      "community": 15,
+      "community": 73,
       "norm_label": "getsession()"
     },
     {
@@ -6638,7 +6638,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_deleteactions",
-      "community": 47,
+      "community": 41,
       "norm_label": "deleteactions.ts"
     },
     {
@@ -6648,7 +6648,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_deleteactions_findfolderbyid",
-      "community": 47,
+      "community": 41,
       "norm_label": "findfolderbyid()"
     },
     {
@@ -6658,7 +6658,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_lib_deleteactions_countnotesinfolder",
-      "community": 47,
+      "community": 41,
       "norm_label": "countnotesinfolder()"
     },
     {
@@ -6668,7 +6668,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletenote",
-      "community": 1,
+      "community": 41,
       "norm_label": "confirmdeletenote()"
     },
     {
@@ -6678,7 +6678,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletenotes",
-      "community": 1,
+      "community": 41,
       "norm_label": "confirmdeletenotes()"
     },
     {
@@ -6688,7 +6688,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeleteselectednotes",
-      "community": 1,
+      "community": 41,
       "norm_label": "confirmdeleteselectednotes()"
     },
     {
@@ -6698,7 +6698,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletefolder",
-      "community": 47,
+      "community": 41,
       "norm_label": "confirmdeletefolder()"
     },
     {
@@ -6708,7 +6708,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletefolderitem",
-      "community": 47,
+      "community": 41,
       "norm_label": "confirmdeletefolderitem()"
     },
     {
@@ -6718,7 +6718,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletefolderbyid",
-      "community": 47,
+      "community": 41,
       "norm_label": "confirmdeletefolderbyid()"
     },
     {
@@ -7338,7 +7338,7 @@
       "source_location": "L1352",
       "_origin": "ast",
       "id": "src_lib_editorextensions_createfileembedplugin",
-      "community": 52,
+      "community": 61,
       "norm_label": "createfileembedplugin()"
     },
     {
@@ -7708,7 +7708,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_id",
-      "community": 15,
+      "community": 1,
       "norm_label": "id.ts"
     },
     {
@@ -7718,7 +7718,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_id_genid",
-      "community": 15,
+      "community": 1,
       "norm_label": "genid()"
     },
     {
@@ -7818,7 +7818,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_noteselection",
-      "community": 1,
+      "community": 25,
       "norm_label": "noteselection.ts"
     },
     {
@@ -7828,7 +7828,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_noteselection_selectnoteoptions",
-      "community": 1,
+      "community": 25,
       "norm_label": "selectnoteoptions"
     },
     {
@@ -7838,7 +7838,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_noteselection_handlenoteselect",
-      "community": 1,
+      "community": 25,
       "norm_label": "handlenoteselect()"
     },
     {
@@ -7848,7 +7848,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_lib_noteselection_isnoteselected",
-      "community": 1,
+      "community": 25,
       "norm_label": "isnoteselected()"
     },
     {
@@ -7858,7 +7858,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_noteselection_getprimarynoteid",
-      "community": 1,
+      "community": 25,
       "norm_label": "getprimarynoteid()"
     },
     {
@@ -8068,7 +8068,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "src_lib_shortcuts_combomatches",
-      "community": 1,
+      "community": 41,
       "norm_label": "combomatches()"
     },
     {
@@ -8148,7 +8148,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_boardsstate",
-      "community": 30,
+      "community": 19,
       "norm_label": "boardsstate"
     },
     {
@@ -8158,7 +8158,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_synchandle",
-      "community": 30,
+      "community": 19,
       "norm_label": "synchandle"
     },
     {
@@ -8178,7 +8178,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_getsynchandle",
-      "community": 37,
+      "community": 0,
       "norm_label": "getsynchandle()"
     },
     {
@@ -8248,7 +8248,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_closevaultsync",
-      "community": 37,
+      "community": 73,
       "norm_label": "closevaultsync()"
     },
     {
@@ -8268,7 +8268,7 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_pullvaultfromcloud",
-      "community": 15,
+      "community": 73,
       "norm_label": "pullvaultfromcloud()"
     },
     {
@@ -8278,7 +8278,7 @@
       "source_location": "L253",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_resumevaultsyncifshared",
-      "community": 15,
+      "community": 37,
       "norm_label": "resumevaultsyncifshared()"
     },
     {
@@ -8468,7 +8468,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_lib_team_listsharedvaults",
-      "community": 15,
+      "community": 73,
       "norm_label": "listsharedvaults()"
     },
     {
@@ -8628,7 +8628,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_lib_themes_themes",
-      "community": 15,
+      "community": 73,
       "norm_label": "themes"
     },
     {
@@ -8718,7 +8718,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_utils",
-      "community": 29,
+      "community": 42,
       "norm_label": "utils.ts"
     },
     {
@@ -8728,7 +8728,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_utils_cn",
-      "community": 29,
+      "community": 42,
       "norm_label": "cn()"
     },
     {
@@ -8738,7 +8738,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_utils_formatdate",
-      "community": 1,
+      "community": 10,
       "norm_label": "formatdate()"
     },
     {
@@ -8758,7 +8758,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_lib_utils_formatwordcount",
-      "community": 29,
+      "community": 42,
       "norm_label": "formatwordcount()"
     },
     {
@@ -8768,7 +8768,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_utils_getinitials",
-      "community": 29,
+      "community": 42,
       "norm_label": "getinitials()"
     },
     {
@@ -8778,7 +8778,7 @@
       "source_location": "L40",
       "_origin": "ast",
       "id": "src_lib_utils_extracttitlefromcontent",
-      "community": 29,
+      "community": 0,
       "norm_label": "extracttitlefromcontent()"
     },
     {
@@ -8808,7 +8808,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_lib_utils_setcontenttitle",
-      "community": 29,
+      "community": 0,
       "norm_label": "setcontenttitle()"
     },
     {
@@ -8818,7 +8818,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_lib_utils_glassbg",
-      "community": 1,
+      "community": 41,
       "norm_label": "glassbg()"
     },
     {
@@ -8828,7 +8828,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_vault",
-      "community": 15,
+      "community": 1,
       "norm_label": "vault.ts"
     },
     {
@@ -8838,7 +8838,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_lib_vault_ignored_dir_names",
-      "community": 15,
+      "community": 1,
       "norm_label": "ignored_dir_names"
     },
     {
@@ -8848,7 +8848,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_lib_vault_appdata",
-      "community": 30,
+      "community": 19,
       "norm_label": "appdata"
     },
     {
@@ -8858,7 +8858,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_lib_vault_vaultdata",
-      "community": 30,
+      "community": 19,
       "norm_label": "vaultdata"
     },
     {
@@ -8868,7 +8868,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "src_lib_vault_recentvault",
-      "community": 15,
+      "community": 73,
       "norm_label": "recentvault"
     },
     {
@@ -8878,7 +8878,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_lib_vault_frontmattermeta",
-      "community": 15,
+      "community": 1,
       "norm_label": "frontmattermeta"
     },
     {
@@ -8888,7 +8888,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "src_lib_vault_parsefrontmatter",
-      "community": 15,
+      "community": 1,
       "norm_label": "parsefrontmatter()"
     },
     {
@@ -8898,7 +8898,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "src_lib_vault_serializefrontmatter",
-      "community": 15,
+      "community": 1,
       "norm_label": "serializefrontmatter()"
     },
     {
@@ -8908,7 +8908,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "src_lib_vault_fsentry",
-      "community": 15,
+      "community": 1,
       "norm_label": "fsentry"
     },
     {
@@ -8918,7 +8918,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "src_lib_vault_listdir",
-      "community": 15,
+      "community": 1,
       "norm_label": "listdir()"
     },
     {
@@ -8928,7 +8928,7 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "src_lib_vault_extracttitle",
-      "community": 15,
+      "community": 1,
       "norm_label": "extracttitle()"
     },
     {
@@ -8938,7 +8938,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "src_lib_vault_filesearchcache",
-      "community": 15,
+      "community": 1,
       "norm_label": "filesearchcache"
     },
     {
@@ -8948,7 +8948,7 @@
       "source_location": "L155",
       "_origin": "ast",
       "id": "src_lib_vault_clearfilesearchcache",
-      "community": 15,
+      "community": 1,
       "norm_label": "clearfilesearchcache()"
     },
     {
@@ -8958,7 +8958,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "src_lib_vault_findexternalsearchroot",
-      "community": 15,
+      "community": 1,
       "norm_label": "findexternalsearchroot()"
     },
     {
@@ -8968,7 +8968,7 @@
       "source_location": "L185",
       "_origin": "ast",
       "id": "src_lib_vault_findfileinvault",
-      "community": 15,
+      "community": 1,
       "norm_label": "findfileinvault()"
     },
     {
@@ -8978,7 +8978,7 @@
       "source_location": "L214",
       "_origin": "ast",
       "id": "src_lib_vault_readdirectory",
-      "community": 15,
+      "community": 1,
       "norm_label": "readdirectory()"
     },
     {
@@ -8988,7 +8988,7 @@
       "source_location": "L277",
       "_origin": "ast",
       "id": "src_lib_vault_readvaultfs",
-      "community": 15,
+      "community": 1,
       "norm_label": "readvaultfs()"
     },
     {
@@ -8998,7 +8998,7 @@
       "source_location": "L367",
       "_origin": "ast",
       "id": "src_lib_vault_writenotefile",
-      "community": 15,
+      "community": 1,
       "norm_label": "writenotefile()"
     },
     {
@@ -9008,7 +9008,7 @@
       "source_location": "L382",
       "_origin": "ast",
       "id": "src_lib_vault_deletenotefile",
-      "community": 0,
+      "community": 1,
       "norm_label": "deletenotefile()"
     },
     {
@@ -9028,7 +9028,7 @@
       "source_location": "L398",
       "_origin": "ast",
       "id": "src_lib_vault_deletefolderdir",
-      "community": 0,
+      "community": 1,
       "norm_label": "deletefolderdir()"
     },
     {
@@ -9038,7 +9038,7 @@
       "source_location": "L406",
       "_origin": "ast",
       "id": "src_lib_vault_renameitem",
-      "community": 0,
+      "community": 1,
       "norm_label": "renameitem()"
     },
     {
@@ -9048,7 +9048,7 @@
       "source_location": "L414",
       "_origin": "ast",
       "id": "src_lib_vault_emptyappdata",
-      "community": 15,
+      "community": 48,
       "norm_label": "emptyappdata()"
     },
     {
@@ -9058,7 +9058,7 @@
       "source_location": "L418",
       "_origin": "ast",
       "id": "src_lib_vault_readappdata",
-      "community": 15,
+      "community": 48,
       "norm_label": "readappdata()"
     },
     {
@@ -9068,7 +9068,7 @@
       "source_location": "L428",
       "_origin": "ast",
       "id": "src_lib_vault_writeappdata",
-      "community": 15,
+      "community": 48,
       "norm_label": "writeappdata()"
     },
     {
@@ -9078,7 +9078,7 @@
       "source_location": "L444",
       "_origin": "ast",
       "id": "src_lib_vault_teamdata",
-      "community": 15,
+      "community": 1,
       "norm_label": "teamdata"
     },
     {
@@ -9088,7 +9088,7 @@
       "source_location": "L450",
       "_origin": "ast",
       "id": "src_lib_vault_readteamdata",
-      "community": 15,
+      "community": 37,
       "norm_label": "readteamdata()"
     },
     {
@@ -9098,7 +9098,7 @@
       "source_location": "L460",
       "_origin": "ast",
       "id": "src_lib_vault_writeteamdata",
-      "community": 15,
+      "community": 73,
       "norm_label": "writeteamdata()"
     },
     {
@@ -9108,7 +9108,7 @@
       "source_location": "L472",
       "_origin": "ast",
       "id": "src_lib_vault_boardsdata",
-      "community": 30,
+      "community": 19,
       "norm_label": "boardsdata"
     },
     {
@@ -9118,7 +9118,7 @@
       "source_location": "L479",
       "_origin": "ast",
       "id": "src_lib_vault_writeboardsfile",
-      "community": 15,
+      "community": 73,
       "norm_label": "writeboardsfile()"
     },
     {
@@ -9128,7 +9128,7 @@
       "source_location": "L491",
       "_origin": "ast",
       "id": "src_lib_vault_readboardsfile",
-      "community": 15,
+      "community": 1,
       "norm_label": "readboardsfile()"
     },
     {
@@ -9138,7 +9138,7 @@
       "source_location": "L507",
       "_origin": "ast",
       "id": "src_lib_vault_getglobalcanvaspath",
-      "community": 15,
+      "community": 1,
       "norm_label": "getglobalcanvaspath()"
     },
     {
@@ -9148,7 +9148,7 @@
       "source_location": "L513",
       "_origin": "ast",
       "id": "src_lib_vault_getglobalcanvasnotespath",
-      "community": 15,
+      "community": 1,
       "norm_label": "getglobalcanvasnotespath()"
     },
     {
@@ -9158,7 +9158,7 @@
       "source_location": "L519",
       "_origin": "ast",
       "id": "src_lib_vault_writeglobalcanvasfile",
-      "community": 15,
+      "community": 1,
       "norm_label": "writeglobalcanvasfile()"
     },
     {
@@ -9168,7 +9168,7 @@
       "source_location": "L531",
       "_origin": "ast",
       "id": "src_lib_vault_readglobalcanvasfile",
-      "community": 15,
+      "community": 1,
       "norm_label": "readglobalcanvasfile()"
     },
     {
@@ -9178,7 +9178,7 @@
       "source_location": "L541",
       "_origin": "ast",
       "id": "src_lib_vault_writeglobalcanvasnotes",
-      "community": 15,
+      "community": 1,
       "norm_label": "writeglobalcanvasnotes()"
     },
     {
@@ -9188,7 +9188,7 @@
       "source_location": "L553",
       "_origin": "ast",
       "id": "src_lib_vault_readglobalcanvasnotes",
-      "community": 15,
+      "community": 1,
       "norm_label": "readglobalcanvasnotes()"
     },
     {
@@ -9198,7 +9198,7 @@
       "source_location": "L563",
       "_origin": "ast",
       "id": "src_lib_vault_writenotemeta",
-      "community": 15,
+      "community": 48,
       "norm_label": "writenotemeta()"
     },
     {
@@ -9208,7 +9208,7 @@
       "source_location": "L575",
       "_origin": "ast",
       "id": "src_lib_vault_revivedates",
-      "community": 15,
+      "community": 1,
       "norm_label": "revivedates()"
     },
     {
@@ -9218,7 +9218,7 @@
       "source_location": "L583",
       "_origin": "ast",
       "id": "src_lib_vault_findfolderrelpath",
-      "community": 15,
+      "community": 1,
       "norm_label": "findfolderrelpath()"
     },
     {
@@ -9228,7 +9228,7 @@
       "source_location": "L593",
       "_origin": "ast",
       "id": "src_lib_vault_flattenfolders",
-      "community": 15,
+      "community": 1,
       "norm_label": "flattenfolders()"
     },
     {
@@ -9238,7 +9238,7 @@
       "source_location": "L597",
       "_origin": "ast",
       "id": "src_lib_vault_migratefromjson",
-      "community": 15,
+      "community": 1,
       "norm_label": "migratefromjson()"
     },
     {
@@ -9248,7 +9248,7 @@
       "source_location": "L664",
       "_origin": "ast",
       "id": "src_lib_vault_pickvaultdirectory",
-      "community": 15,
+      "community": 73,
       "norm_label": "pickvaultdirectory()"
     },
     {
@@ -9258,7 +9258,7 @@
       "source_location": "L672",
       "_origin": "ast",
       "id": "src_lib_vault_getrecentvaults",
-      "community": 15,
+      "community": 73,
       "norm_label": "getrecentvaults()"
     },
     {
@@ -9268,7 +9268,7 @@
       "source_location": "L679",
       "_origin": "ast",
       "id": "src_lib_vault_addrecentvault",
-      "community": 15,
+      "community": 73,
       "norm_label": "addrecentvault()"
     },
     {
@@ -9278,7 +9278,7 @@
       "source_location": "L687",
       "_origin": "ast",
       "id": "src_lib_vault_removerecentvault",
-      "community": 15,
+      "community": 73,
       "norm_label": "removerecentvault()"
     },
     {
@@ -9308,7 +9308,7 @@
       "source_location": "L748",
       "_origin": "ast",
       "id": "src_lib_vault_externalnoteid",
-      "community": 15,
+      "community": 1,
       "norm_label": "externalnoteid()"
     },
     {
@@ -9318,7 +9318,7 @@
       "source_location": "L752",
       "_origin": "ast",
       "id": "src_lib_vault_readexternalnote",
-      "community": 15,
+      "community": 1,
       "norm_label": "readexternalnote()"
     },
     {
@@ -9328,7 +9328,7 @@
       "source_location": "L780",
       "_origin": "ast",
       "id": "src_lib_vault_pickexternalmarkdownfile",
-      "community": 0,
+      "community": 1,
       "norm_label": "pickexternalmarkdownfile()"
     },
     {
@@ -9338,7 +9338,7 @@
       "source_location": "L793",
       "_origin": "ast",
       "id": "src_lib_vault_addexternalfiletovault",
-      "community": 15,
+      "community": 48,
       "norm_label": "addexternalfiletovault()"
     },
     {
@@ -9348,7 +9348,7 @@
       "source_location": "L800",
       "_origin": "ast",
       "id": "src_lib_vault_removeexternalfilefromvault",
-      "community": 15,
+      "community": 48,
       "norm_label": "removeexternalfilefromvault()"
     },
     {
@@ -9358,7 +9358,7 @@
       "source_location": "L806",
       "_origin": "ast",
       "id": "src_lib_vault_renameexternalfileinvault",
-      "community": 15,
+      "community": 48,
       "norm_label": "renameexternalfileinvault()"
     },
     {
@@ -9425,7 +9425,7 @@
       "label": "Abbreviation",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L150",
+      "source_location": "L145",
       "_origin": "ast",
       "id": "src_store_useappstore_abbreviation",
       "community": 73,
@@ -9435,7 +9435,7 @@
       "label": "loadNoteEditorModes()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L159",
+      "source_location": "L154",
       "_origin": "ast",
       "id": "src_store_useappstore_loadnoteeditormodes",
       "community": 0,
@@ -9445,7 +9445,7 @@
       "label": "ConfirmConfig",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L167",
+      "source_location": "L162",
       "_origin": "ast",
       "id": "src_store_useappstore_confirmconfig",
       "community": 0,
@@ -9455,7 +9455,7 @@
       "label": "AppState",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L176",
+      "source_location": "L171",
       "_origin": "ast",
       "id": "src_store_useappstore_appstate",
       "community": 19,
@@ -9465,7 +9465,7 @@
       "label": "updateFolderNotes()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L354",
+      "source_location": "L349",
       "_origin": "ast",
       "id": "src_store_useappstore_updatefoldernotes",
       "community": 0,
@@ -9475,7 +9475,7 @@
       "label": "findFolderById()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L366",
+      "source_location": "L361",
       "_origin": "ast",
       "id": "src_store_useappstore_findfolderbyid",
       "community": 0,
@@ -9485,7 +9485,7 @@
       "label": "renameFolderInTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L375",
+      "source_location": "L370",
       "_origin": "ast",
       "id": "src_store_useappstore_renamefolderintree",
       "community": 0,
@@ -9495,7 +9495,7 @@
       "label": "toggleFolderById()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L382",
+      "source_location": "L377",
       "_origin": "ast",
       "id": "src_store_useappstore_togglefolderbyid",
       "community": 0,
@@ -9505,7 +9505,7 @@
       "label": "insertFolderIntoTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L389",
+      "source_location": "L384",
       "_origin": "ast",
       "id": "src_store_useappstore_insertfolderintotree",
       "community": 0,
@@ -9515,7 +9515,7 @@
       "label": "addNoteToFolderTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L406",
+      "source_location": "L401",
       "_origin": "ast",
       "id": "src_store_useappstore_addnotetofoldertree",
       "community": 0,
@@ -9525,7 +9525,7 @@
       "label": "removeNoteFromFolderTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L422",
+      "source_location": "L417",
       "_origin": "ast",
       "id": "src_store_useappstore_removenotefromfoldertree",
       "community": 0,
@@ -9535,7 +9535,7 @@
       "label": "insertNoteIntoFolderAt()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L430",
+      "source_location": "L425",
       "_origin": "ast",
       "id": "src_store_useappstore_insertnoteintofolderat",
       "community": 0,
@@ -9545,7 +9545,7 @@
       "label": "insertFolderAt()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L461",
+      "source_location": "L456",
       "_origin": "ast",
       "id": "src_store_useappstore_insertfolderat",
       "community": 0,
@@ -9555,7 +9555,7 @@
       "label": "buildFolderPath()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L502",
+      "source_location": "L497",
       "_origin": "ast",
       "id": "src_store_useappstore_buildfolderpath",
       "community": 0,
@@ -9565,27 +9565,17 @@
       "label": "removeFolderFromTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L507",
+      "source_location": "L502",
       "_origin": "ast",
       "id": "src_store_useappstore_removefolderfromtree",
       "community": 0,
       "norm_label": "removefolderfromtree()"
     },
     {
-      "label": "rekeySubtree()",
-      "file_type": "code",
-      "source_file": "src/store/useAppStore.ts",
-      "source_location": "L522",
-      "_origin": "ast",
-      "id": "src_store_useappstore_rekeysubtree",
-      "community": 0,
-      "norm_label": "rekeysubtree()"
-    },
-    {
       "label": "collectNoteIdsFromFolder()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L555",
+      "source_location": "L511",
       "_origin": "ast",
       "id": "src_store_useappstore_collectnoteidsfromfolder",
       "community": 0,
@@ -9595,7 +9585,7 @@
       "label": "removeNotesFromFolderTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L563",
+      "source_location": "L519",
       "_origin": "ast",
       "id": "src_store_useappstore_removenotesfromfoldertree",
       "community": 0,
@@ -9605,7 +9595,7 @@
       "label": "findFolderPath()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L574",
+      "source_location": "L530",
       "_origin": "ast",
       "id": "src_store_useappstore_findfolderpath",
       "community": 0,
@@ -9615,7 +9605,7 @@
       "label": "isFolderInsideDeleted()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L587",
+      "source_location": "L543",
       "_origin": "ast",
       "id": "src_store_useappstore_isfolderinsidedeleted",
       "community": 0,
@@ -9625,20 +9615,20 @@
       "label": "flushBoards()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L601",
+      "source_location": "L557",
       "_origin": "ast",
       "id": "src_store_useappstore_flushboards",
-      "community": 37,
+      "community": 0,
       "norm_label": "flushboards()"
     },
     {
       "label": "useAppStore",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L625",
+      "source_location": "L581",
       "_origin": "ast",
       "id": "src_store_useappstore_useappstore",
-      "community": 10,
+      "community": 47,
       "norm_label": "useappstore"
     },
     {
@@ -9698,7 +9688,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_types_index_task",
-      "community": 30,
+      "community": 19,
       "norm_label": "task"
     },
     {
@@ -9748,7 +9738,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "src_types_index_board",
-      "community": 30,
+      "community": 19,
       "norm_label": "board"
     },
     {
@@ -9758,7 +9748,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_types_index_boardcolumn",
-      "community": 30,
+      "community": 19,
       "norm_label": "boardcolumn"
     },
     {
@@ -9778,7 +9768,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_types_index_boardtask",
-      "community": 30,
+      "community": 19,
       "norm_label": "boardtask"
     },
     {
@@ -17562,7 +17552,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L26",
+      "source_location": "L23",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_components_canvas_canvasnotessheet_canvasnotessheet",
@@ -17572,7 +17562,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L20",
+      "source_location": "L17",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_components_canvas_canvasnotessheet_props",
@@ -17583,7 +17573,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L14",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_lib_editorextensions",
@@ -17594,7 +17584,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L14",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_lib_editorextensions_highlightmarkplugin",
@@ -17605,7 +17595,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L14",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_lib_editorextensions_markdownhighlighting",
@@ -17616,7 +17606,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L14",
+      "source_location": "L11",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_lib_editorextensions_tableplugin",
@@ -17627,29 +17617,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "src_components_canvas_canvasnotessheet",
-      "target": "src_lib_remarkmathcodeblocks",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L7",
-      "weight": 1.0,
-      "source": "src_components_canvas_canvasnotessheet",
-      "target": "src_lib_remarkmathcodeblocks_remarkmathcodeblocks",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L12",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_lib_utils",
@@ -17660,7 +17628,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L12",
+      "source_location": "L9",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_lib_utils_cn",
@@ -17671,7 +17639,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L13",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_store_useappstore",
@@ -17682,7 +17650,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L13",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet",
       "target": "src_store_useappstore_useappstore",
@@ -17700,23 +17668,12 @@
       "confidence_score": 1.0
     },
     {
-      "relation": "indirect_call",
-      "context": "collection",
-      "confidence": "INFERRED",
-      "confidence_score": 0.8,
-      "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L201",
-      "weight": 1.0,
-      "source": "src_components_canvas_canvasnotessheet_canvasnotessheet",
-      "target": "src_lib_remarkmathcodeblocks_remarkmathcodeblocks"
-    },
-    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L154",
+      "source_location": "L151",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet_canvasnotessheet",
       "target": "src_lib_utils_cn"
@@ -17727,7 +17684,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/canvas/CanvasNotesSheet.tsx",
-      "source_location": "L28",
+      "source_location": "L25",
       "weight": 1.0,
       "source": "src_components_canvas_canvasnotessheet_canvasnotessheet",
       "target": "src_store_useappstore_useappstore"
@@ -23020,6 +22977,17 @@
       "confidence_score": 1.0
     },
     {
+      "relation": "imports",
+      "context": "import",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/layout/AppShell.tsx",
+      "source_location": "L11",
+      "weight": 1.0,
+      "source": "src_components_layout_appshell",
+      "target": "src_components_shared_namepromptdialog_namepromptdialog",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -23989,7 +23957,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L59",
+      "source_location": "L38",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_collisiondetection",
@@ -23999,7 +23967,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L77",
+      "source_location": "L56",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_dragitemdata",
@@ -24009,7 +23977,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L83",
+      "source_location": "L62",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_dropindicator",
@@ -24019,7 +23987,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L112",
+      "source_location": "L91",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_dropline",
@@ -24029,7 +23997,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L81",
+      "source_location": "L60",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_dropposition",
@@ -24039,7 +24007,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1344",
+      "source_location": "L1237",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_findfolderchildren",
@@ -24049,7 +24017,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1332",
+      "source_location": "L1225",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_findnotesinfolder",
@@ -24059,7 +24027,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1356",
+      "source_location": "L1249",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_flatfolders",
@@ -24069,7 +24037,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L100",
+      "source_location": "L79",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_foldericonoffset",
@@ -24079,7 +24047,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L96",
+      "source_location": "L75",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_folderpadding",
@@ -24089,7 +24057,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L282",
+      "source_location": "L261",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_folderrow",
@@ -24099,7 +24067,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L269",
+      "source_location": "L248",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_folderrowprops",
@@ -24109,7 +24077,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L103",
+      "source_location": "L82",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_notepadding",
@@ -24119,7 +24087,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L143",
+      "source_location": "L122",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_noterow",
@@ -24129,7 +24097,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L128",
+      "source_location": "L107",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_noterowprops",
@@ -24139,7 +24107,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L506",
+      "source_location": "L485",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_sidebar",
@@ -24149,17 +24117,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L41",
-      "weight": 1.0,
-      "source": "src_components_layout_sidebar",
-      "target": "src_components_layout_sidebar_snapoverlaytocursor",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L107",
+      "source_location": "L86",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_treerowclass",
@@ -24192,7 +24150,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L65",
+      "source_location": "L44",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_shared_contextmenu",
@@ -24203,7 +24161,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L65",
+      "source_location": "L44",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_shared_contextmenu_contextmenu",
@@ -24214,7 +24172,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L64",
+      "source_location": "L43",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_shared_themetoggle",
@@ -24225,7 +24183,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L64",
+      "source_location": "L43",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_shared_themetoggle_themetoggle",
@@ -24236,7 +24194,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L68",
+      "source_location": "L47",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_lib_deleteactions",
@@ -24247,7 +24205,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L68",
+      "source_location": "L47",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_lib_deleteactions_confirmdeletefolderitem",
@@ -24258,7 +24216,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L68",
+      "source_location": "L47",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_lib_deleteactions_confirmdeletenote",
@@ -24269,7 +24227,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L68",
+      "source_location": "L47",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_lib_deleteactions_confirmdeleteselectednotes",
@@ -24280,7 +24238,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L73",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_lib_noteselection",
@@ -24291,7 +24249,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L73",
+      "source_location": "L52",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_lib_noteselection_handlenoteselect",
@@ -24302,7 +24260,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L67",
+      "source_location": "L46",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_lib_utils",
@@ -24313,7 +24271,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L67",
+      "source_location": "L46",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_lib_utils_cn",
@@ -24324,7 +24282,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L67",
+      "source_location": "L46",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_lib_utils_glassbg",
@@ -24335,7 +24293,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L63",
+      "source_location": "L42",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_store_useappstore",
@@ -24346,7 +24304,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L63",
+      "source_location": "L42",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_store_useappstore_useappstore",
@@ -24357,7 +24315,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L66",
+      "source_location": "L45",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_types_index",
@@ -24368,7 +24326,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L66",
+      "source_location": "L45",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_types_index_folder",
@@ -24379,29 +24337,18 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L66",
+      "source_location": "L45",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_types_index_note",
       "confidence_score": 1.0
     },
     {
-      "relation": "indirect_call",
-      "context": "collection",
-      "confidence": "INFERRED",
-      "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1286",
-      "weight": 1.0,
-      "source": "src_components_layout_sidebar_sidebar",
-      "target": "src_components_layout_sidebar_snapoverlaytocursor",
-      "confidence_score": 0.5
-    },
-    {
       "relation": "calls",
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L101",
+      "source_location": "L80",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_foldericonoffset",
       "target": "src_components_layout_sidebar_folderpadding",
@@ -24412,7 +24359,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L312",
+      "source_location": "L291",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_folderrow",
       "target": "src_components_layout_sidebar_folderpadding",
@@ -24423,7 +24370,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L104",
+      "source_location": "L83",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_notepadding",
       "target": "src_components_layout_sidebar_foldericonoffset",
@@ -24434,7 +24381,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L476",
+      "source_location": "L455",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_folderrow",
       "target": "src_components_layout_sidebar_notepadding",
@@ -24446,7 +24393,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L115",
+      "source_location": "L94",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_dropline",
       "target": "src_lib_utils_cn"
@@ -24456,7 +24403,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L129",
+      "source_location": "L108",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_noterowprops",
       "target": "src_types_index_note",
@@ -24468,7 +24415,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L202",
+      "source_location": "L181",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_noterow",
       "target": "src_lib_noteselection_handlenoteselect"
@@ -24479,7 +24426,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L193",
+      "source_location": "L172",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_noterow",
       "target": "src_lib_utils_cn"
@@ -24490,7 +24437,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L490",
+      "source_location": "L469",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_folderrow",
       "target": "src_lib_deleteactions_confirmdeletenote"
@@ -24501,7 +24448,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L357",
+      "source_location": "L336",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_folderrow",
       "target": "src_lib_utils_cn"
@@ -24512,7 +24459,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L295",
+      "source_location": "L274",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_folderrow",
       "target": "src_store_useappstore_useappstore"
@@ -24522,7 +24469,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L847",
+      "source_location": "L780",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_findfolderchildren",
@@ -24533,7 +24480,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L818",
+      "source_location": "L751",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_findnotesinfolder",
@@ -24544,7 +24491,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L625",
+      "source_location": "L608",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_flatfolders",
@@ -24556,7 +24503,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L877",
+      "source_location": "L809",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_deleteactions_confirmdeletefolderitem"
@@ -24567,7 +24514,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L899",
+      "source_location": "L831",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_deleteactions_confirmdeletenote"
@@ -24578,7 +24525,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L576",
+      "source_location": "L555",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_deleteactions_confirmdeleteselectednotes"
@@ -24589,7 +24536,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L963",
+      "source_location": "L871",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_utils_cn"
@@ -24600,7 +24547,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L968",
+      "source_location": "L876",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_utils_glassbg"
@@ -24611,7 +24558,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L532",
+      "source_location": "L511",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_store_useappstore_useappstore"
@@ -27808,6 +27755,16 @@
       "target": "src_lib_utils_cn"
     },
     {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/components/shared/NamePromptDialog.tsx",
+      "source_location": "L6",
+      "weight": 1.0,
+      "source": "src_components_shared_namepromptdialog",
+      "target": "src_components_shared_namepromptdialog_namepromptdialog",
+      "confidence_score": 1.0
+    },
+    {
       "relation": "imports_from",
       "context": "import",
       "confidence": "EXTRACTED",
@@ -27850,6 +27807,28 @@
       "source": "src_components_shared_namepromptdialog",
       "target": "src_store_useappstore_useappstore",
       "confidence_score": 1.0
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/shared/NamePromptDialog.tsx",
+      "source_location": "L31",
+      "weight": 1.0,
+      "source": "src_components_shared_namepromptdialog_namepromptdialog",
+      "target": "src_lib_utils_cn"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/shared/NamePromptDialog.tsx",
+      "source_location": "L7",
+      "weight": 1.0,
+      "source": "src_components_shared_namepromptdialog_namepromptdialog",
+      "target": "src_store_useappstore_useappstore"
     },
     {
       "relation": "contains",
@@ -31352,7 +31331,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L621",
+      "source_location": "L577",
       "weight": 1.0,
       "source": "src_store_useappstore_flushboards",
       "target": "src_lib_sync_yjssync_getsynchandle",
@@ -31495,7 +31474,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L622",
+      "source_location": "L578",
       "weight": 1.0,
       "source": "src_store_useappstore_flushboards",
       "target": "src_lib_sync_yjssync_pushlocalboardsstate",
@@ -32016,7 +31995,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L198",
+      "source_location": "L193",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_lib_themes_customtheme",
@@ -33085,7 +33064,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L250",
+      "source_location": "L245",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_lib_vault_vaultdata",
@@ -33547,7 +33526,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L616",
+      "source_location": "L572",
       "weight": 1.0,
       "source": "src_store_useappstore_flushboards",
       "target": "src_lib_vault_writeboardsfile",
@@ -33743,7 +33722,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L150",
+      "source_location": "L145",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_abbreviation",
@@ -33753,7 +33732,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L406",
+      "source_location": "L401",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_addnotetofoldertree",
@@ -33763,7 +33742,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L176",
+      "source_location": "L171",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_appstate",
@@ -33773,7 +33752,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L502",
+      "source_location": "L497",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_buildfolderpath",
@@ -33783,7 +33762,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L555",
+      "source_location": "L511",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_collectnoteidsfromfolder",
@@ -33793,7 +33772,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L167",
+      "source_location": "L162",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_confirmconfig",
@@ -33803,7 +33782,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L366",
+      "source_location": "L361",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_findfolderbyid",
@@ -33813,7 +33792,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L574",
+      "source_location": "L530",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_findfolderpath",
@@ -33823,7 +33802,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L601",
+      "source_location": "L557",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_flushboards",
@@ -33833,7 +33812,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L461",
+      "source_location": "L456",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_insertfolderat",
@@ -33843,7 +33822,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L389",
+      "source_location": "L384",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_insertfolderintotree",
@@ -33853,7 +33832,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L430",
+      "source_location": "L425",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_insertnoteintofolderat",
@@ -33863,7 +33842,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L587",
+      "source_location": "L543",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_isfolderinsidedeleted",
@@ -33873,7 +33852,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L159",
+      "source_location": "L154",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_loadnoteeditormodes",
@@ -33893,17 +33872,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L522",
-      "weight": 1.0,
-      "source": "src_store_useappstore",
-      "target": "src_store_useappstore_rekeysubtree",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/store/useAppStore.ts",
-      "source_location": "L507",
+      "source_location": "L502",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_removefolderfromtree",
@@ -33913,7 +33882,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L422",
+      "source_location": "L417",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_removenotefromfoldertree",
@@ -33923,7 +33892,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L563",
+      "source_location": "L519",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_removenotesfromfoldertree",
@@ -33933,7 +33902,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L375",
+      "source_location": "L370",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_renamefolderintree",
@@ -33953,7 +33922,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L382",
+      "source_location": "L377",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_togglefolderbyid",
@@ -33963,7 +33932,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L354",
+      "source_location": "L349",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_updatefoldernotes",
@@ -33973,7 +33942,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L625",
+      "source_location": "L581",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_useappstore",
@@ -34137,7 +34106,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L181",
+      "source_location": "L176",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_activeview",
@@ -34148,7 +34117,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L299",
+      "source_location": "L294",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_attachment",
@@ -34159,7 +34128,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L303",
+      "source_location": "L298",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_board",
@@ -34170,7 +34139,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L304",
+      "source_location": "L299",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_boardcolumn",
@@ -34181,7 +34150,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L322",
+      "source_location": "L317",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_boardtask",
@@ -34192,7 +34161,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L189",
+      "source_location": "L184",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_editormode",
@@ -34203,7 +34172,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L178",
+      "source_location": "L173",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_folder",
@@ -34214,7 +34183,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L297",
+      "source_location": "L292",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_linkeditem",
@@ -34225,7 +34194,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L179",
+      "source_location": "L174",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_note",
@@ -34236,7 +34205,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L180",
+      "source_location": "L175",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_task",
@@ -34247,7 +34216,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L594",
+      "source_location": "L550",
       "weight": 1.0,
       "source": "src_store_useappstore_isfolderinsidedeleted",
       "target": "src_store_useappstore_findfolderpath",
