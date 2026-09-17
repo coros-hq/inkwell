@@ -1,8 +1,8 @@
 import type { Shape } from './canvasTypes'
-import { uid } from './canvasTypes'
+import { uid, TEMPLATE_PLACEHOLDER_COLOR } from './canvasTypes'
 import type { TemplateCategory } from './canvasTemplates'
 
-const C  = '#f8fafc'
+const C  = TEMPLATE_PLACEHOLDER_COLOR
 const FN = 'Inter, system-ui, sans-serif'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

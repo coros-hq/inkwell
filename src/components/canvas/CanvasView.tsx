@@ -1,17 +1,21 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { StickyNote } from 'lucide-react'
+import { StickyNote, Keyboard, X } from 'lucide-react'
+import rough from 'roughjs'
+import type { RoughCanvas } from 'roughjs/bin/canvas'
+import type { Drawable } from 'roughjs/bin/core'
 import { useAppStore } from '../../store/useAppStore'
 import { CanvasToolbar, FONT_SANS } from './CanvasToolbar'
 import { CanvasNotesSheet } from './CanvasNotesSheet'
 import { CanvasTemplatesPicker } from './CanvasTemplatesPicker'
 import { CanvasCategoryPanel } from './CanvasCategoryPanel'
 import type { DiagramTemplate, TemplateCategory } from './canvasTemplates'
-import { uid, hitTest, shapeBounds } from './canvasTypes'
-import type { Shape, Tool, Point, PathShape, RectShape, EllipseShape, LineShape, ArrowShape, TextShape } from './canvasTypes'
+import { uid, hitTest, shapeBounds, recolorTemplateShapes } from './canvasTypes'
+import type { Shape, Tool, Point, PathShape, RectShape, EllipseShape, LineShape, ArrowShape, TextShape, BoundText, StickyShape } from './canvasTypes'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 type ResizeHandle = 'tl' | 'tr' | 'bl' | 'br'
+type NotesTarget = 'global' | { kind: 'shape'; id: string } | { kind: 'group'; groupId: string }
 
 // ── Pure helpers ───────────────────────────────────────────────────────────────
 
@@ -44,13 +48,14 @@ function offsetShapes(shapes: Shape[], dx: number, dy: number): Shape[] {
       case 'line':    return { ...s, x1: (s as LineShape).x1 + dx, y1: (s as LineShape).y1 + dy, x2: (s as LineShape).x2 + dx, y2: (s as LineShape).y2 + dy }
       case 'arrow': { const a = s as ArrowShape; return { ...a, x1: a.x1+dx, y1: a.y1+dy, x2: a.x2+dx, y2: a.y2+dy, ...(a.cpx !== undefined ? { cpx: a.cpx+dx, cpy: a.cpy!+dy } : {}) } }
       case 'text':    return { ...s, x: (s as TextShape).x + dx, y: (s as TextShape).y + dy }
+      case 'sticky':  return { ...s, x: (s as StickyShape).x + dx, y: (s as StickyShape).y + dy }
       default:        return s
     }
   })
 }
 
-function getHandleAt(shape: Shape, wp: Point, threshold: number): ResizeHandle | null {
-  const b = shapeBounds(shape), pad = 6
+function getHandleAt(b: { x: number; y: number; w: number; h: number }, wp: Point, threshold: number): ResizeHandle | null {
+  const pad = 6
   const handles: [ResizeHandle, number, number][] = [
     ['tl', b.x - pad,       b.y - pad],
     ['tr', b.x + b.w + pad, b.y - pad],
@@ -66,6 +71,7 @@ function applyBoundsToShape(s: Shape, nb: { x: number; y: number; w: number; h: 
   const { x, y, w, h } = nb
   switch (s.type) {
     case 'rect':    return { ...(s as RectShape),    x, y, w, h }
+    case 'sticky':  return { ...(s as StickyShape),  x, y, w, h }
     case 'ellipse': return { ...(s as EllipseShape), cx: x + w / 2, cy: y + h / 2, rx: w / 2, ry: h / 2 }
     case 'path': {
       const b = shapeBounds(s), sx = b.w > 1 ? w / b.w : 1, sy = b.h > 1 ? h / b.h : 1
@@ -97,6 +103,7 @@ function offsetShape(s: Shape, dx: number, dy: number): Shape {
     case 'line':    return { ...(s as LineShape),    x1: (s as LineShape).x1  + dx, y1: (s as LineShape).y1  + dy, x2: (s as LineShape).x2  + dx, y2: (s as LineShape).y2  + dy }
     case 'arrow': { const a = s as ArrowShape; return { ...a, x1: a.x1+dx, y1: a.y1+dy, x2: a.x2+dx, y2: a.y2+dy, ...(a.cpx !== undefined ? { cpx: a.cpx+dx, cpy: a.cpy!+dy } : {}) } }
     case 'text':    return { ...(s as TextShape),    x:  (s as TextShape).x   + dx, y:  (s as TextShape).y   + dy }
+    case 'sticky':  return { ...(s as StickyShape),  x:  (s as StickyShape).x + dx, y:  (s as StickyShape).y + dy }
   }
 }
 
@@ -129,10 +136,54 @@ function ctxFont(t: TextShape): string {
   return `${t.italic ? 'italic ' : ''}${t.bold ? 'bold ' : ''}${t.size}px ${t.fontFamily ?? FONT_SANS}`
 }
 
-function drawShape(ctx: CanvasRenderingContext2D, s: Shape) {
+/** Stable small int from a shape id, used as roughjs's seed so jitter doesn't reshuffle every re-render */
+function seedFromId(id: string): number {
+  let h = 0
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
+  return Math.abs(h) % 2 ** 31 || 1
+}
+
+function roughOptions(s: Shape) {
+  return {
+    stroke: s.color,
+    strokeWidth: s.width,
+    fill: s.fill === 'none' ? undefined : s.fill,
+    fillStyle: 'hachure' as const,
+    roughness: 1,
+    seed: seedFromId(s.id),
+    // A single clean stroke per edge — roughjs's default second overlapping
+    // pass is what creates the gap/overshoot look at corners.
+    disableMultiStroke: true,
+    disableMultiStrokeFill: true,
+  }
+}
+
+type RoughCache = Map<string, { key: string; drawables: Drawable[] }>
+
+// roughjs's generator methods build a "Drawable" (the randomized sketchy path
+// description) but don't draw it; rc.draw() replays it onto the canvas. Generation
+// re-runs the seeded-noise math over every point and is the expensive part, so we
+// cache the Drawable per shape and only rebuild it when the shape's own data
+// (geometry/color/style) actually changes — draws (called every render, including
+// mid-drag/pan/zoom) then just replay cached ops instead of regenerating.
+function cachedRoughDraw(rc: RoughCanvas, cache: RoughCache, s: Shape, build: () => Drawable[]) {
+  const key = JSON.stringify(s)
+  const hit = cache.get(s.id)
+  const drawables = hit && hit.key === key ? hit.drawables : build()
+  if (!hit || hit.key !== key) cache.set(s.id, { key, drawables })
+  drawables.forEach(d => rc.draw(d))
+}
+
+const STICKY_TEXT_COLOR    = '#1e293b'
+const DEFAULT_STICKY_COLOR = '#fbbf24'
+const STICKY_DEFAULT_W     = 160
+const STICKY_DEFAULT_H     = 40
+
+function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | null, sketchy?: boolean, roughCache?: RoughCache | null) {
   ctx.save()
   ctx.strokeStyle = s.color; ctx.fillStyle = s.fill === 'none' ? 'transparent' : s.fill
   ctx.lineWidth = s.width; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+  const useRough = sketchy && rc && roughCache
   switch (s.type) {
     case 'path': {
       const { pts } = s as PathShape
@@ -146,16 +197,28 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape) {
     }
     case 'rect': {
       const r = s as RectShape
+      if (useRough) {
+        cachedRoughDraw(rc, roughCache, s, () => [rc.generator.rectangle(r.x, r.y, r.w, r.h, roughOptions(s))])
+        break
+      }
       ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, r.radius ?? 3)
       if (s.fill !== 'none') ctx.fill(); ctx.stroke(); break
     }
     case 'ellipse': {
       const e = s as EllipseShape
+      if (useRough) {
+        cachedRoughDraw(rc, roughCache, s, () => [rc.generator.ellipse(e.cx, e.cy, Math.max(1, Math.abs(e.rx)) * 2, Math.max(1, Math.abs(e.ry)) * 2, roughOptions(s))])
+        break
+      }
       ctx.beginPath(); ctx.ellipse(e.cx, e.cy, Math.max(1, Math.abs(e.rx)), Math.max(1, Math.abs(e.ry)), 0, 0, Math.PI * 2)
       if (s.fill !== 'none') ctx.fill(); ctx.stroke(); break
     }
     case 'line': {
       const l = s as LineShape
+      if (useRough) {
+        cachedRoughDraw(rc, roughCache, s, () => [rc.generator.line(l.x1, l.y1, l.x2, l.y2, roughOptions(s))])
+        break
+      }
       ctx.beginPath(); ctx.moveTo(l.x1, l.y1); ctx.lineTo(l.x2, l.y2); ctx.stroke(); break
     }
     case 'arrow': {
@@ -166,29 +229,134 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape) {
       // Tangent at endpoint = direction from CP → endpoint
       const angle = Math.atan2(a.y2 - cpy, a.x2 - cpx)
       const H = Math.max(14, a.width * 5)
+      const shaftEndX = a.x2 - H * 0.8 * Math.cos(angle)
+      const shaftEndY = a.y2 - H * 0.8 * Math.sin(angle)
+      const headP1: [number, number] = [a.x2 - H * Math.cos(angle - Math.PI / 6), a.y2 - H * Math.sin(angle - Math.PI / 6)]
+      const headP2: [number, number] = [a.x2 - H * Math.cos(angle + Math.PI / 6), a.y2 - H * Math.sin(angle + Math.PI / 6)]
+      if (useRough) {
+        cachedRoughDraw(rc, roughCache, s, () => [
+          rc.generator.path(`M ${a.x1} ${a.y1} Q ${cpx} ${cpy}, ${shaftEndX} ${shaftEndY}`, { ...roughOptions(s), fill: undefined }),
+          rc.generator.polygon([[a.x2, a.y2], headP1, headP2], {
+            stroke: a.color, strokeWidth: 0.5, fill: a.color, fillStyle: 'solid',
+            roughness: 1.4, seed: seedFromId(s.id), disableMultiStroke: true, disableMultiStrokeFill: true,
+          }),
+        ])
+        break
+      }
       // Shaft: quadratic bezier, ending slightly before tip so head fits
       ctx.beginPath(); ctx.moveTo(a.x1, a.y1)
-      ctx.quadraticCurveTo(cpx, cpy, a.x2 - H * 0.8 * Math.cos(angle), a.y2 - H * 0.8 * Math.sin(angle))
+      ctx.quadraticCurveTo(cpx, cpy, shaftEndX, shaftEndY)
       ctx.stroke()
       // Arrowhead
       ctx.fillStyle = a.color; ctx.strokeStyle = a.color; ctx.lineWidth = 0.5
       ctx.beginPath(); ctx.moveTo(a.x2, a.y2)
-      ctx.lineTo(a.x2 - H * Math.cos(angle - Math.PI / 6), a.y2 - H * Math.sin(angle - Math.PI / 6))
-      ctx.lineTo(a.x2 - H * Math.cos(angle + Math.PI / 6), a.y2 - H * Math.sin(angle + Math.PI / 6))
+      ctx.lineTo(headP1[0], headP1[1])
+      ctx.lineTo(headP2[0], headP2[1])
       ctx.closePath(); ctx.fill(); ctx.stroke(); break
     }
     case 'text': {
       const t = s as TextShape; ctx.font = ctxFont(t); ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y); break
     }
+    case 'sticky': {
+      // Always a clean flat card with a soft drop shadow — a sticky note is a UI
+      // element, not a hand-drawn shape, so it's exempt from the sketchy toggle.
+      const st = s as StickyShape
+      ctx.save()
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.28)'
+      ctx.shadowBlur = 8
+      ctx.shadowOffsetY = 3
+      ctx.fillStyle = st.color
+      ctx.beginPath(); ctx.roundRect(st.x, st.y, st.w, st.h, 3); ctx.fill()
+      ctx.restore()
+      // Text is always a fixed dark ink for reliable contrast against the palette's light/mid-tone swatches
+      ctx.font = `13px ${FONT_SANS}`; ctx.fillStyle = STICKY_TEXT_COLOR
+      ctx.textAlign = 'left'; ctx.textBaseline = 'top'
+      const pad  = 8
+      const lines = wrapCanvasText(ctx, st.text, Math.max(st.w - pad * 2, 10))
+      const lineH = 13 * 1.3
+      let y = st.y + pad
+      for (const line of lines) { ctx.fillText(line, st.x + pad, y); y += lineH }
+      break
+    }
   }
   ctx.restore()
 }
 
-/** Single-shape selection: dashed box + corner resize handles */
-function drawSingleSelection(ctx: CanvasRenderingContext2D, s: Shape) {
-  const b = shapeBounds(s), pad = 6
+/** Word-wrap (paragraph-aware) text to fit within maxWidth, using ctx's current font */
+function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
+  const lines: string[] = []
+  for (const paragraph of text.split('\n')) {
+    if (paragraph === '') { lines.push(''); continue }
+    const words = paragraph.split(' ')
+    let cur = ''
+    for (const w of words) {
+      const test = cur ? cur + ' ' + w : w
+      if (ctx.measureText(test).width > maxWidth && cur) { lines.push(cur); cur = w }
+      else cur = test
+    }
+    if (cur) lines.push(cur)
+  }
+  return lines
+}
+
+/** Text bound to a rect/ellipse container: centered, wrapped to the shape's current bounds */
+function drawBoundText(ctx: CanvasRenderingContext2D, s: RectShape | EllipseShape) {
+  const bt = s.boundText
+  if (!bt) return
+  const b = shapeBounds(s), pad = 8
+  const maxW = Math.max(b.w - pad * 2, 10)
   ctx.save()
-  if (s.type !== 'text') {
+  ctx.font = `${bt.italic ? 'italic ' : ''}${bt.bold ? 'bold ' : ''}${bt.size}px ${bt.fontFamily}`
+  ctx.fillStyle = bt.color
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+  const lines  = wrapCanvasText(ctx, bt.text, maxW)
+  const lineH  = bt.size * 1.25
+  const totalH = lines.length * lineH
+  let y = b.y + b.h / 2 - totalH / 2 + lineH / 2
+  for (const line of lines) { ctx.fillText(line, b.x + b.w / 2, y); y += lineH }
+  ctx.restore()
+}
+
+const SHAPE_TYPE_LABELS: Record<Shape['type'], string> = {
+  path: 'Path', rect: 'Rectangle', ellipse: 'Ellipse', line: 'Line', arrow: 'Arrow', text: 'Text', sticky: 'Sticky note',
+}
+
+/** Friendly label for a shape's notes-panel title: its bound-text label if it has one, else its type */
+function shapeLabel(s: Shape): string {
+  if ((s.type === 'rect' || s.type === 'ellipse') && s.boundText?.text) return s.boundText.text.slice(0, 20)
+  return SHAPE_TYPE_LABELS[s.type]
+}
+
+const NOTE_BADGE_RADIUS = 7
+
+/** World-space center of a shape's note badge — offset past the top-right resize
+ * handle's hit radius so the two never overlap when the shape is selected. */
+function noteBadgePos(s: Shape): Point {
+  const b = shapeBounds(s)
+  return { x: b.x + b.w + 16, y: b.y - 16 }
+}
+
+/** Small document-icon badge shown on any shape that has an attached note */
+function drawNoteBadge(ctx: CanvasRenderingContext2D, s: Shape) {
+  const { x, y } = noteBadgePos(s)
+  ctx.save()
+  ctx.fillStyle = '#a78bfa'
+  ctx.beginPath(); ctx.arc(x, y, NOTE_BADGE_RADIUS, 0, Math.PI * 2); ctx.fill()
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 1
+  // Tiny "lines of text" glyph inside the badge
+  ctx.beginPath()
+  ctx.moveTo(x - 3, y - 2); ctx.lineTo(x + 3, y - 2)
+  ctx.moveTo(x - 3, y);     ctx.lineTo(x + 3, y)
+  ctx.moveTo(x - 3, y + 2); ctx.lineTo(x + 1, y + 2)
+  ctx.stroke()
+  ctx.restore()
+}
+
+/** Dashed box + corner resize handles around an arbitrary bounds rect */
+function drawHandles(ctx: CanvasRenderingContext2D, b: { x: number; y: number; w: number; h: number }, hideBox = false) {
+  const pad = 6
+  ctx.save()
+  if (!hideBox) {
     ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 1.5
     ctx.setLineDash([4, 3])
     ctx.strokeRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2)
@@ -205,16 +373,15 @@ function drawSingleSelection(ctx: CanvasRenderingContext2D, s: Shape) {
   ctx.restore()
 }
 
-/** Multi-shape selection: dashed box around union bounds, no handles */
+/** Single-shape selection: dashed box + corner resize handles (text shapes get no box, just handles-less) */
+function drawSingleSelection(ctx: CanvasRenderingContext2D, s: Shape) {
+  drawHandles(ctx, shapeBounds(s), s.type === 'text')
+}
+
+/** Multi-shape selection: dashed box + corner resize handles around union bounds */
 function drawMultiSelection(ctx: CanvasRenderingContext2D, shapes: Shape[]) {
   if (shapes.length < 2) return
-  const b = unionBounds(shapes), pad = 6
-  ctx.save()
-  ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 1.5
-  ctx.setLineDash([4, 3])
-  ctx.strokeRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2)
-  ctx.setLineDash([])
-  ctx.restore()
+  drawHandles(ctx, unionBounds(shapes))
 }
 
 /** Rubber-band selection rectangle */
@@ -266,13 +433,48 @@ const DEFAULT_COLOR_LIGHT = '#000000'
 const DEFAULT_WIDTH  = 2
 const DEFAULT_RADIUS = 8
 
+const SHORTCUT_GROUPS: { title: string; items: [string, string][] }[] = [
+  {
+    title: 'Tools',
+    items: [
+      ['V', 'Select'], ['P', 'Pen'], ['R', 'Rectangle'], ['E', 'Ellipse'],
+      ['L', 'Line'], ['A', 'Arrow'], ['T', 'Text'], ['Esc', 'Back to select'],
+    ],
+  },
+  {
+    title: 'Canvas',
+    items: [
+      ['Space + drag', 'Pan'], ['⌘/Ctrl + scroll', 'Zoom'],
+      ['⇧1', 'Zoom to fit all'], ['⇧2', 'Zoom to fit selection'], ['⇧0', 'Reset zoom'],
+      ['Double-click', 'Edit text (standalone or inside a shape)'],
+    ],
+  },
+  {
+    title: 'Selection',
+    items: [
+      ['⌘/Ctrl + A', 'Select all'], ['⇧ + click', 'Add/remove from selection'],
+      ['Delete / Backspace', 'Delete selected'], ['Arrow keys', 'Nudge (⇧ for 10px)'],
+      ['⌘/Ctrl + D', 'Duplicate'], ['⌘/Ctrl + C / X / V', 'Copy / cut / paste'],
+      ['⌘/Ctrl + G', 'Group'], ['⌘/Ctrl + ⇧ + G', 'Ungroup'],
+      ['⌘/Ctrl + ⇧ + ]', 'Bring to front'], ['⌘/Ctrl + ⇧ + [', 'Send to back'],
+    ],
+  },
+  {
+    title: 'History & panels',
+    items: [
+      ['⌘/Ctrl + Z', 'Undo'], ['⌘/Ctrl + ⇧ + Z', 'Redo'], ['⌘/Ctrl + /', 'Toggle notes'],
+    ],
+  },
+]
+
 export function CanvasView() {
   const { vaultPath, theme, canvasLinkedVaultPath } = useAppStore()
   const defaultColor = theme === 'light' ? DEFAULT_COLOR_LIGHT : DEFAULT_COLOR_DARK
 
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const textRef      = useRef<HTMLInputElement>(null)
+  const textRef      = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLDivElement>(null)
+  const rafIdRef      = useRef<number | null>(null)
 
   // ── React state ──────────────────────────────────────────────────────────────
   const [tool,              setTool]              = useState<Tool>('pen')
@@ -290,16 +492,26 @@ export function CanvasView() {
   // Multi-selection: a Set of shape ids
   const [selectedIds,       setSelectedIds]       = useState<Set<string>>(new Set())
   const [selectedShapeType, setSelectedShapeType] = useState<string | null>(null)
-  const [textInput,         setTextInput]         = useState<{ sx: number; sy: number; wx: number; wy: number; editingId?: string; initialValue?: string } | null>(null)
+  const [selectionHasBoundText, setSelectionHasBoundText] = useState(false)
+  const [textInput,         setTextInput]         = useState<{ sx: number; sy: number; wx: number; wy: number; editingId?: string; containerId?: string; stickyId?: string; isNewSticky?: boolean; boxW?: number; boxH?: number; initialValue?: string } | null>(null)
   const [spacePan,          setSpacePan]          = useState(false)
   const [cursor,            setCursorState]       = useState<string>('crosshair')
   const [showNotes,         setShowNotes]         = useState(false)
   const [notesContent,      setNotesContent]      = useState('')
+  const [notesTarget,       setNotesTarget]       = useState<NotesTarget>('global')
+  const [shapeNoteDraft,    setShapeNoteDraft]    = useState('')
   const [showTemplates,     setShowTemplates]     = useState(false)
   const [categoryPanel,     setCategoryPanel]     = useState<TemplateCategory | null>(null)
+  const [sketchy,           setSketchy]           = useState(true)
+  const [showGrid,          setShowGrid]          = useState(true)
+  const [showShortcuts,     setShowShortcuts]     = useState(false)
 
   // ── Canvas content refs ──────────────────────────────────────────────────────
-  const shapesRef      = useRef<Shape[]>([])
+  const shapesRef       = useRef<Shape[]>([])
+  const sketchyRef       = useRef(true)
+  const showGridRef      = useRef(true)
+  const roughCanvasRef   = useRef<RoughCanvas | null>(null)
+  const roughCacheRef    = useRef<RoughCache>(new Map())
   const historyRef     = useRef<Shape[][]>([])
   const futureRef      = useRef<Shape[][]>([])
   const selectedIdsRef = useRef<Set<string>>(new Set())   // mirrors selectedIds state
@@ -330,6 +542,7 @@ export function CanvasView() {
   const shiftRef        = useRef(false)
   const saveTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null)
   const notesTimerRef   = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const shapeNoteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Drag (move selected)
   const isDraggingRef   = useRef(false)
@@ -343,8 +556,14 @@ export function CanvasView() {
 
   // Editing text shape id (hidden from canvas while input is open)
   const editingIdRef         = useRef<string | null>(null)
+  // Editing container (bound-text) shape id — shape still renders, only its bound text is hidden
+  const editingContainerIdRef = useRef<string | null>(null)
 
-  // Resize (single selection only)
+  // Mirrors of notes state, read inside the selection-sync effect without adding them as deps
+  const notesTargetRef = useRef<NotesTarget>('global')
+  const showNotesRef   = useRef(false)
+
+  // Resize (single or multi selection)
   const resizingRef          = useRef<ResizeHandle | null>(null)
   const resizeStartBoundsRef = useRef<{ x: number; y: number; w: number; h: number } | null>(null)
   const resizeStartPtRef     = useRef<Point>({ x: 0, y: 0 })
@@ -354,6 +573,13 @@ export function CanvasView() {
   // Arrow bend (control point drag)
   const isBendingRef  = useRef(false)
   const bendPreRef    = useRef<Shape[] | null>(null)
+
+  // Clipboard (in-app only) + last known mouse world position (for paste placement)
+  const clipboardRef      = useRef<Shape[] | null>(null)
+  const lastMouseWorldRef = useRef<Point>({ x: 0, y: 0 })
+
+  // Keyboard nudge (arrow keys) — coalesced into one undo step per burst
+  const nudgePreRef = useRef<Shape[] | null>(null)
 
   // Sync tool pref refs
   useEffect(() => { toolRef.current       = tool       }, [tool])
@@ -394,12 +620,20 @@ export function CanvasView() {
     setSelectedShapeType(null)
   }, [])
 
+  // Placing a sticky is independent of whatever happens to be selected — clear
+  // the selection on entering the tool so the toolbar's selection-context row
+  // (note/corner/font controls for the old selection) doesn't linger and so a
+  // sticky click can never be mistaken for acting on the previously-selected shape.
+  useEffect(() => {
+    if (tool === 'sticky') clearSelection()
+  }, [tool, clearSelection])
+
   // When selection changes, sync toolbar to the single selected shape (if any)
   useEffect(() => {
-    if (selectedIds.size !== 1) { setSelectedShapeType(null); return }
+    if (selectedIds.size !== 1) { setSelectedShapeType(null); setSelectionHasBoundText(false); return }
     const id    = [...selectedIds][0]
     const shape = shapesRef.current.find(s => s.id === id)
-    if (!shape) { setSelectedShapeType(null); return }
+    if (!shape) { setSelectedShapeType(null); setSelectionHasBoundText(false); return }
     setSelectedShapeType(shape.type)
     setColor(shape.color);       colorRef.current = shape.color
     setFill(shape.fill);         fillRef.current  = shape.fill
@@ -414,6 +648,39 @@ export function CanvasView() {
       const b  = t.bold ?? false;           setBold(b);        boldRef.current       = b
       const it = t.italic ?? false;         setItalic(it);     italicRef.current     = it
     }
+    if ((shape.type === 'rect' || shape.type === 'ellipse') && shape.boundText) {
+      const bt = shape.boundText
+      setSelectionHasBoundText(true)
+      setFontSize(bt.size);       fontSizeRef.current   = bt.size
+      setFontFamily(bt.fontFamily); fontFamilyRef.current = bt.fontFamily
+      setBold(bt.bold);           boldRef.current       = bt.bold
+      setItalic(bt.italic);       italicRef.current     = bt.italic
+    } else {
+      setSelectionHasBoundText(false)
+    }
+  }, [selectedIds])
+
+  // If the notes panel is open and scoped to a shape/group, follow the selection:
+  // switch to the newly-selected shape/group's note, or close if selection is
+  // now empty or ambiguous (spans shapes outside one group). Global notes
+  // (notesTarget === 'global') are untouched by selection changes.
+  useEffect(() => {
+    if (!showNotesRef.current || notesTargetRef.current === 'global') return
+    const ids = [...selectedIds]
+    const shapes = shapesRef.current.filter(s => ids.includes(s.id))
+    if (shapes.length === 1) {
+      const shape = shapes[0]
+      setNotesTarget(shape.groupId ? { kind: 'group', groupId: shape.groupId } : { kind: 'shape', id: shape.id })
+    } else if (shapes.length > 1) {
+      const groupIds = new Set(shapes.map(s => s.groupId).filter(Boolean))
+      if (groupIds.size === 1 && shapes.every(s => s.groupId)) {
+        setNotesTarget({ kind: 'group', groupId: [...groupIds][0] as string })
+      } else {
+        setShowNotes(false); setNotesTarget('global')
+      }
+    } else {
+      setShowNotes(false); setNotesTarget('global')
+    }
   }, [selectedIds])
 
   // ── Render ───────────────────────────────────────────────────────────────────
@@ -427,7 +694,10 @@ export function CanvasView() {
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
     ctx.fillStyle = getCSSColor('--background', '#111')
     ctx.fillRect(0, 0, cssW, cssH)
-    drawDotGrid(ctx, cssW, cssH, panRef.current, zoomRef.current)
+    if (showGridRef.current) drawDotGrid(ctx, cssW, cssH, panRef.current, zoomRef.current)
+
+    if (!roughCanvasRef.current) roughCanvasRef.current = rough.canvas(canvas)
+    const rc = roughCanvasRef.current
 
     ctx.save()
     ctx.translate(panRef.current.x, panRef.current.y)
@@ -435,9 +705,21 @@ export function CanvasView() {
 
     for (const s of shapesRef.current) {
       if (editingIdRef.current && s.id === editingIdRef.current) continue
-      drawShape(ctx, s)
+      drawShape(ctx, s, rc, sketchyRef.current, roughCacheRef.current)
+      if ((s.type === 'rect' || s.type === 'ellipse') && s.boundText && editingContainerIdRef.current !== s.id) {
+        drawBoundText(ctx, s)
+      }
+      if (s.note) drawNoteBadge(ctx, s)
     }
-    if (drawingRef.current) drawShape(ctx, drawingRef.current)
+    if (drawingRef.current) drawShape(ctx, drawingRef.current, rc, sketchyRef.current, roughCacheRef.current)
+
+    // Drop cached rough drawables for shapes that no longer exist
+    if (roughCacheRef.current.size) {
+      const liveIds = new Set(shapesRef.current.map(sh => sh.id))
+      for (const id of roughCacheRef.current.keys()) {
+        if (!liveIds.has(id)) roughCacheRef.current.delete(id)
+      }
+    }
 
     // Draw dashed group bounding boxes for any visible groups
     const allGroupIds = new Set(shapesRef.current.map(s => s.groupId).filter(Boolean) as string[])
@@ -498,6 +780,22 @@ export function CanvasView() {
   }, [])
 
   useEffect(() => { render() }, [theme, render])
+  useEffect(() => { sketchyRef.current = sketchy; render() }, [sketchy, render])
+  useEffect(() => { showGridRef.current = showGrid; render() }, [showGrid, render])
+  useEffect(() => { notesTargetRef.current = notesTarget }, [notesTarget])
+  useEffect(() => { showNotesRef.current = showNotes }, [showNotes])
+
+  // Seed the shape/group note draft whenever the notes panel's target changes
+  useEffect(() => {
+    if (notesTarget === 'global') return
+    if (notesTarget.kind === 'shape') {
+      const shape = shapesRef.current.find(s => s.id === notesTarget.id)
+      setShapeNoteDraft(shape?.note ?? '')
+    } else {
+      const shape = shapesRef.current.find(s => s.groupId === notesTarget.groupId && s.note)
+      setShapeNoteDraft(shape?.note ?? '')
+    }
+  }, [notesTarget])
 
   // ── Canvas sizing ────────────────────────────────────────────────────────────
 
@@ -559,6 +857,24 @@ export function CanvasView() {
     }, 600)
   }, [canvasLinkedVaultPath])
 
+  // Shape/group-scoped note edits: same debounce-and-write shape as global notes above,
+  // but write into the shape(s) themselves (persisted via the regular canvas.json save
+  // path) rather than a separate file. Not pushed onto the undo stack — matches how
+  // global notes edits aren't undo-tracked either.
+  const handleShapeNoteChange = useCallback((text: string) => {
+    setShapeNoteDraft(text)
+    if (shapeNoteTimerRef.current) clearTimeout(shapeNoteTimerRef.current)
+    shapeNoteTimerRef.current = setTimeout(() => {
+      const target = notesTargetRef.current
+      if (target === 'global') return
+      shapesRef.current = shapesRef.current.map(s => {
+        if (target.kind === 'shape') return s.id === target.id ? { ...s, note: text } : s
+        return s.groupId === target.groupId ? { ...s, note: text, noteShared: true } : s
+      })
+      scheduleSave(); render()
+    }, 600)
+  }, [scheduleSave, render])
+
   // ── History ──────────────────────────────────────────────────────────────────
 
   const commit = useCallback((next: Shape[]) => {
@@ -614,7 +930,7 @@ export function CanvasView() {
     const cssW = canvas.width  / DPR
     const cssH = canvas.height / DPR
 
-    const rawShapes = tpl.create()
+    const rawShapes = recolorTemplateShapes(tpl.create(), defaultColor)
     const bs   = rawShapes.map(shapeBounds)
     const minX = Math.min(...bs.map(b => b.x))
     const minY = Math.min(...bs.map(b => b.y))
@@ -648,11 +964,12 @@ export function CanvasView() {
     render()
     // Open the category panel for the loaded template's category
     setCategoryPanel(tpl.category)
-  }, [commit, clearSelection, render])
+  }, [commit, clearSelection, render, defaultColor])
 
   // Append shapes from the category panel (no viewport pan, just append + offset)
-  const addCanvasShapes = useCallback((newShapes: Shape[]) => {
-    if (!newShapes.length) return
+  const addCanvasShapes = useCallback((rawNewShapes: Shape[]) => {
+    if (!rawNewShapes.length) return
+    const newShapes = recolorTemplateShapes(rawNewShapes, defaultColor)
     const bs   = newShapes.map(shapeBounds)
     const minX = Math.min(...bs.map(b => b.x))
     let offsetted = newShapes
@@ -665,7 +982,7 @@ export function CanvasView() {
     commit([...shapesRef.current, ...offsetted])
     clearSelection()
     render()
-  }, [commit, clearSelection, render])
+  }, [commit, clearSelection, render, defaultColor])
 
   // ── Group / Ungroup ──────────────────────────────────────────────────────────
 
@@ -696,6 +1013,51 @@ export function CanvasView() {
     }))
   }, [commit])
 
+  // ── Notes: shape/group targeting ─────────────────────────────────────────────
+
+  const openShapeNote = useCallback((id: string) => {
+    const shape = shapesRef.current.find(s => s.id === id)
+    if (!shape) return
+    setNotesTarget(shape.groupId ? { kind: 'group', groupId: shape.groupId } : { kind: 'shape', id })
+    setShowNotes(true)
+  }, [])
+
+  const openGroupNote = useCallback((groupId: string) => {
+    setNotesTarget({ kind: 'group', groupId })
+    setShowNotes(true)
+  }, [])
+
+  // Toolbar "Add note" action: works for a single shape, an already-uniform
+  // group selection, or an ungrouped multi-selection (which it groups first,
+  // so the shared note has somewhere to live — same reasoning as ⌘G elsewhere).
+  const addNoteToSelection = useCallback(() => {
+    const ids = [...selectedIdsRef.current]
+    if (!ids.length) return
+    const shapes = shapesRef.current.filter(s => ids.includes(s.id))
+    if (shapes.length === 1) { openShapeNote(shapes[0].id); return }
+    const groupIds = new Set(shapes.map(s => s.groupId).filter(Boolean))
+    if (groupIds.size === 1 && shapes.every(s => s.groupId)) {
+      openGroupNote([...groupIds][0] as string)
+      return
+    }
+    const gid = uid()
+    commit(shapesRef.current.map(s => ids.includes(s.id) ? { ...s, groupId: gid } : s))
+    openGroupNote(gid)
+  }, [commit, openShapeNote, openGroupNote])
+
+  // Promote a sticky's freeform text into a full note (one-directional, explicit —
+  // triggered only by the toolbar button, never automatically). The on-canvas
+  // sticky text is left as-is; from this point the two are independent.
+  const promoteStickyToNote = useCallback(() => {
+    const ids = [...selectedIdsRef.current]
+    if (ids.length !== 1) return
+    const shape = shapesRef.current.find(s => s.id === ids[0])
+    if (!shape || shape.type !== 'sticky' || shape.note) return
+    const sticky = shape as StickyShape
+    commit(shapesRef.current.map(s => s.id === sticky.id ? { ...s, note: sticky.text } : s))
+    openShapeNote(sticky.id)
+  }, [commit, openShapeNote])
+
   // ── Coord ────────────────────────────────────────────────────────────────────
 
   const toWorld = useCallback((e: { clientX: number; clientY: number }): Point => {
@@ -719,15 +1081,19 @@ export function CanvasView() {
     const wp = toWorld(e)
 
     if (toolRef.current === 'select') {
-      // 1. Resize handle (only for single selection)
-      if (selectedIdsRef.current.size === 1) {
-        const [id]  = [...selectedIdsRef.current]
-        const shape = shapesRef.current.find(s => s.id === id)
-        if (shape) {
-          const handle = getHandleAt(shape, wp, 10 / zoomRef.current)
+      // 0. Note badge — clickable regardless of current selection
+      const badgeHit = shapesRef.current.find(s => s.note && Math.hypot(wp.x - noteBadgePos(s).x, wp.y - noteBadgePos(s).y) < NOTE_BADGE_RADIUS + 4 / zoomRef.current)
+      if (badgeHit) { openShapeNote(badgeHit.id); return }
+
+      // 1. Resize handle (single shape's bounds, or union bounds for a multi-selection)
+      if (selectedIdsRef.current.size >= 1) {
+        const selShapes = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
+        if (selShapes.length) {
+          const bounds = selShapes.length === 1 ? shapeBounds(selShapes[0]) : unionBounds(selShapes)
+          const handle = getHandleAt(bounds, wp, 10 / zoomRef.current)
           if (handle) {
             resizingRef.current          = handle
-            resizeStartBoundsRef.current = shapeBounds(shape)
+            resizeStartBoundsRef.current = bounds
             resizeStartPtRef.current     = wp
             resizePreRef.current         = [...shapesRef.current]
             updateCursor(handle === 'tl' || handle === 'br' ? 'nwse-resize' : 'nesw-resize')
@@ -795,6 +1161,16 @@ export function CanvasView() {
       return
     }
 
+    if (toolRef.current === 'sticky') {
+      const rect = containerRef.current!.getBoundingClientRect()
+      const sx = e.clientX - rect.left, sy = e.clientY - rect.top
+      setTextInput({
+        sx, sy, wx: wp.x, wy: wp.y, isNewSticky: true,
+        boxW: STICKY_DEFAULT_W * zoomRef.current, boxH: STICKY_DEFAULT_H * zoomRef.current,
+      })
+      return
+    }
+
     isDrawingRef.current = true; startPtRef.current = wp
     const base = { id: uid(), color: colorRef.current, fill: fillRef.current, width: widthRef.current }
     switch (toolRef.current) {
@@ -804,7 +1180,7 @@ export function CanvasView() {
       case 'line':    drawingRef.current = { ...base, type: 'line',    x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y }; break
       case 'arrow':   drawingRef.current = { ...base, type: 'arrow',   x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y }; break
     }
-  }, [toWorld, render, setSelection, clearSelection, updateCursor])
+  }, [toWorld, render, setSelection, clearSelection, updateCursor, openShapeNote])
 
   const onMouseMove = useCallback((e: React.MouseEvent) => {
     if (isPanningRef.current) {
@@ -813,9 +1189,10 @@ export function CanvasView() {
     }
 
     const wp = toWorld(e)
+    lastMouseWorldRef.current = wp
 
-    // Resize (single selection)
-    if (resizingRef.current && resizeStartBoundsRef.current && selectedIdsRef.current.size === 1) {
+    // Resize (single shape, or proportional group-resize for a multi-selection)
+    if (resizingRef.current && resizeStartBoundsRef.current && selectedIdsRef.current.size >= 1) {
       const sb = resizeStartBoundsRef.current
       const dx = wp.x - resizeStartPtRef.current.x, dy = wp.y - resizeStartPtRef.current.y
       const MIN = 20
@@ -827,8 +1204,24 @@ export function CanvasView() {
         case 'br': nb = normalizeRect(sb.x,       sb.y,      sb.x + sb.w + dx, sb.y + sb.h + dy); break
       }
       nb.w = Math.max(nb.w, MIN); nb.h = Math.max(nb.h, MIN)
-      const [id] = [...selectedIdsRef.current]
-      shapesRef.current = shapesRef.current.map(s => s.id === id ? applyBoundsToShape(s, nb) as Shape : s)
+      if (selectedIdsRef.current.size === 1) {
+        const [id] = [...selectedIdsRef.current]
+        shapesRef.current = shapesRef.current.map(s => s.id === id ? applyBoundsToShape(s, nb) as Shape : s)
+      } else {
+        // Proportional group resize: scale each selected shape's own bounds against the group's start bounds
+        const sx = nb.w / Math.max(sb.w, 1), sy = nb.h / Math.max(sb.h, 1)
+        shapesRef.current = shapesRef.current.map(s => {
+          if (!selectedIdsRef.current.has(s.id)) return s
+          const b = shapeBounds(s)
+          const shapeNb = {
+            x: nb.x + (b.x - sb.x) * sx,
+            y: nb.y + (b.y - sb.y) * sy,
+            w: Math.max(b.w * sx, 1),
+            h: Math.max(b.h * sy, 1),
+          }
+          return applyBoundsToShape(s, shapeNb) as Shape
+        })
+      }
       render(); return
     }
 
@@ -892,11 +1285,11 @@ export function CanvasView() {
       render(); return
     }
 
-    // Cursor: handle hover for single selection
-    if (toolRef.current === 'select' && selectedIdsRef.current.size === 1) {
-      const [id] = [...selectedIdsRef.current]
-      const shape = shapesRef.current.find(s => s.id === id)
-      if (shape) {
+    // Cursor: handle hover for the current selection (single shape or multi-selection bounds)
+    if (toolRef.current === 'select' && selectedIdsRef.current.size >= 1) {
+      const selShapes = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
+      if (selShapes.length === 1) {
+        const shape = selShapes[0]
         // Arrow bend handle
         if (shape.type === 'arrow') {
           const a = shape as ArrowShape
@@ -906,7 +1299,12 @@ export function CanvasView() {
             updateCursor('grab'); return
           }
         }
-        const handle = getHandleAt(shape, wp, 10 / zoomRef.current)
+        const handle = getHandleAt(shapeBounds(shape), wp, 10 / zoomRef.current)
+        updateCursor(handle ? (handle === 'tl' || handle === 'br' ? 'nwse-resize' : 'nesw-resize') : 'default')
+        return
+      }
+      if (selShapes.length > 1) {
+        const handle = getHandleAt(unionBounds(selShapes), wp, 10 / zoomRef.current)
         updateCursor(handle ? (handle === 'tl' || handle === 'br' ? 'nwse-resize' : 'nesw-resize') : 'default')
         return
       }
@@ -1009,25 +1407,68 @@ export function CanvasView() {
     const hit = [...shapesRef.current].reverse().find(
       s => s.type === 'text' && hitTest(s, wp.x, wp.y)
     ) as TextShape | undefined
-    if (!hit) return
+    if (hit) {
+      e.preventDefault()
+
+      // Sync toolbar settings to the shape
+      setFontSize(hit.size);                          fontSizeRef.current   = hit.size
+      setFontFamily(hit.fontFamily ?? FONT_SANS);     fontFamilyRef.current = hit.fontFamily ?? FONT_SANS
+      setBold(hit.bold ?? false);                     boldRef.current       = hit.bold ?? false
+      setItalic(hit.italic ?? false);                 italicRef.current     = hit.italic ?? false
+      setColor(hit.color);                            colorRef.current      = hit.color
+
+      // Convert world position to container-relative screen coords
+      // hit.y is baseline; position input so its visual baseline lines up
+      const sx          = hit.x * zoomRef.current + panRef.current.x
+      const syBaseline  = hit.y * zoomRef.current + panRef.current.y
+      const screenSize  = hit.size * zoomRef.current
+      const sy          = syBaseline - screenSize + Math.min(hit.size, 32)
+
+      setTextInput({ sx, sy, wx: hit.x, wy: hit.y - hit.size, editingId: hit.id, initialValue: hit.text })
+      setTool('text'); toolRef.current = 'text'
+      return
+    }
+
+    // Double-click a sticky note → re-edit its text
+    const hitSticky = [...shapesRef.current].reverse().find(
+      s => s.type === 'sticky' && hitTest(s, wp.x, wp.y)
+    ) as StickyShape | undefined
+    if (hitSticky) {
+      e.preventDefault()
+      const b  = shapeBounds(hitSticky)
+      const sx = b.x * zoomRef.current + panRef.current.x
+      const sy = b.y * zoomRef.current + panRef.current.y
+      setTextInput({
+        sx, sy, wx: b.x, wy: b.y,
+        stickyId: hitSticky.id,
+        boxW: b.w * zoomRef.current, boxH: b.h * zoomRef.current,
+        initialValue: hitSticky.text,
+      })
+      return
+    }
+
+    // Double-click inside a rect/ellipse → edit its bound (container) text
+    const hitContainer = [...shapesRef.current].reverse().find(
+      s => (s.type === 'rect' || s.type === 'ellipse') && hitTest(s, wp.x, wp.y)
+    ) as RectShape | EllipseShape | undefined
+    if (!hitContainer) return
     e.preventDefault()
 
-    // Sync toolbar settings to the shape
-    setFontSize(hit.size);                          fontSizeRef.current   = hit.size
-    setFontFamily(hit.fontFamily ?? FONT_SANS);     fontFamilyRef.current = hit.fontFamily ?? FONT_SANS
-    setBold(hit.bold ?? false);                     boldRef.current       = hit.bold ?? false
-    setItalic(hit.italic ?? false);                 italicRef.current     = hit.italic ?? false
-    setColor(hit.color);                            colorRef.current      = hit.color
+    const bt = hitContainer.boundText
+    setFontSize(bt?.size ?? 16);              fontSizeRef.current   = bt?.size ?? 16
+    setFontFamily(bt?.fontFamily ?? FONT_SANS); fontFamilyRef.current = bt?.fontFamily ?? FONT_SANS
+    setBold(bt?.bold ?? false);               boldRef.current       = bt?.bold ?? false
+    setItalic(bt?.italic ?? false);           italicRef.current     = bt?.italic ?? false
 
-    // Convert world position to container-relative screen coords
-    // hit.y is baseline; position input so its visual baseline lines up
-    const sx          = hit.x * zoomRef.current + panRef.current.x
-    const syBaseline  = hit.y * zoomRef.current + panRef.current.y
-    const screenSize  = hit.size * zoomRef.current
-    const sy          = syBaseline - screenSize + Math.min(hit.size, 32)
-
-    setTextInput({ sx, sy, wx: hit.x, wy: hit.y - hit.size, editingId: hit.id, initialValue: hit.text })
-    setTool('text'); toolRef.current = 'text'
+    const b  = shapeBounds(hitContainer)
+    const sx = b.x * zoomRef.current + panRef.current.x
+    const sy = b.y * zoomRef.current + panRef.current.y
+    setTextInput({
+      sx, sy, wx: b.x, wy: b.y,
+      containerId: hitContainer.id,
+      boxW: b.w * zoomRef.current, boxH: b.h * zoomRef.current,
+      initialValue: bt?.text ?? '',
+    })
   }, [toWorld])
 
   // ── Wheel ────────────────────────────────────────────────────────────────────
@@ -1054,19 +1495,111 @@ export function CanvasView() {
     zoomRef.current = newZ; setZoomState(newZ); render()
   }, [render])
 
+  // Fit the given shapes (default: everything) into the viewport, same math loadTemplate uses
+  const zoomToFit = useCallback((shapes?: Shape[]) => {
+    const targets = shapes ?? shapesRef.current
+    if (!targets.length) return
+    const canvas = canvasRef.current!, DPR = window.devicePixelRatio || 1
+    const cssW = canvas.width / DPR, cssH = canvas.height / DPR
+    const b = unionBounds(targets), pad = 80
+    const newZoom = Math.max(0.1, Math.min((cssW - pad * 2) / b.w, (cssH - pad * 2) / b.h, 3))
+    zoomRef.current = newZoom; setZoomState(newZoom)
+    panRef.current = { x: cssW / 2 - (b.x + b.w / 2) * newZoom, y: cssH / 2 - (b.y + b.h / 2) * newZoom }
+    render()
+  }, [render])
+
+  const resetZoom = useCallback(() => {
+    const canvas = canvasRef.current!, DPR = window.devicePixelRatio || 1
+    const cssW = canvas.width / DPR, cssH = canvas.height / DPR
+    const oldZ = zoomRef.current, newZ = 1
+    panRef.current = { x: cssW / 2 - (cssW / 2 - panRef.current.x) * (newZ / oldZ), y: cssH / 2 - (cssH / 2 - panRef.current.y) * (newZ / oldZ) }
+    zoomRef.current = newZ; setZoomState(newZ); render()
+  }, [render])
+
+  // ── Layer order ──────────────────────────────────────────────────────────────
+
+  const bringToFront = useCallback(() => {
+    if (!selectedIdsRef.current.size) return
+    const sel  = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
+    const rest = shapesRef.current.filter(s => !selectedIdsRef.current.has(s.id))
+    commit([...rest, ...sel])
+  }, [commit])
+
+  const sendToBack = useCallback(() => {
+    if (!selectedIdsRef.current.size) return
+    const sel  = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
+    const rest = shapesRef.current.filter(s => !selectedIdsRef.current.has(s.id))
+    commit([...sel, ...rest])
+  }, [commit])
+
+  // ── Clipboard (in-app) ───────────────────────────────────────────────────────
+
+  const copySelected = useCallback(() => {
+    if (!selectedIdsRef.current.size) return
+    clipboardRef.current = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
+  }, [])
+
+  const pasteClipboard = useCallback(() => {
+    if (!clipboardRef.current?.length) return
+    const b  = unionBounds(clipboardRef.current)
+    const target = lastMouseWorldRef.current
+    const dx = target.x - (b.x + b.w / 2), dy = target.y - (b.y + b.h / 2)
+    const copies = offsetShapes(clipboardRef.current.map(s => ({ ...s, id: uid() })), dx, dy)
+    commit([...shapesRef.current, ...copies])
+    setSelection(new Set(copies.map(c => c.id)))
+  }, [commit, setSelection])
+
   // ── Keyboard ─────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const TOOL_KEYS: Record<string, Tool> = { v: 'select', p: 'pen', r: 'rect', e: 'ellipse', l: 'line', a: 'arrow', t: 'text' }
+    const TOOL_KEYS: Record<string, Tool> = { v: 'select', p: 'pen', r: 'rect', e: 'ellipse', l: 'line', a: 'arrow', t: 'text', s: 'sticky' }
     const down = (ev: KeyboardEvent) => {
       shiftRef.current = ev.shiftKey
-      const inInput = (ev.target as Element).closest('input, textarea, .cm-editor')
+      const inInput = (ev.target as Element).closest('input, textarea, .cm-editor, [contenteditable="true"]')
 
       if (ev.code === 'Space' && !inInput) { ev.preventDefault(); isSpaceRef.current = true; setSpacePan(true); updateCursor('grab') }
       if (!inInput && (ev.metaKey || ev.ctrlKey) && !ev.shiftKey && ev.key === 'z') { ev.preventDefault(); undo() }
       if (!inInput && (ev.metaKey || ev.ctrlKey) && ev.shiftKey  && ev.key === 'z') { ev.preventDefault(); redo() }
       if (!inInput && (ev.metaKey || ev.ctrlKey) && !ev.shiftKey && ev.key === 'g') { ev.preventDefault(); groupSelected() }
       if (!inInput && (ev.metaKey || ev.ctrlKey) && ev.shiftKey  && ev.key === 'g') { ev.preventDefault(); ungroupSelected() }
+
+      // Layer order: ⌘⇧] bring to front, ⌘⇧[ send to back
+      if (!inInput && (ev.metaKey || ev.ctrlKey) && ev.shiftKey && ev.key === ']') { ev.preventDefault(); bringToFront() }
+      if (!inInput && (ev.metaKey || ev.ctrlKey) && ev.shiftKey && ev.key === '[') { ev.preventDefault(); sendToBack() }
+
+      // Clipboard: ⌘C copy, ⌘X cut, ⌘V paste
+      if (!inInput && (ev.metaKey || ev.ctrlKey) && ev.key === 'c') { ev.preventDefault(); copySelected() }
+      if (!inInput && (ev.metaKey || ev.ctrlKey) && ev.key === 'x') {
+        ev.preventDefault()
+        if (selectedIdsRef.current.size > 0) {
+          copySelected()
+          commit(shapesRef.current.filter(s => !selectedIdsRef.current.has(s.id)))
+          clearSelection()
+        }
+      }
+      if (!inInput && (ev.metaKey || ev.ctrlKey) && ev.key === 'v') { ev.preventDefault(); pasteClipboard() }
+
+      // Zoom: Shift+1 fit all, Shift+2 fit selection, Shift+0 reset to 100%
+      if (!inInput && ev.shiftKey && !ev.metaKey && !ev.ctrlKey && ev.key === '1') { ev.preventDefault(); zoomToFit() }
+      if (!inInput && ev.shiftKey && !ev.metaKey && !ev.ctrlKey && ev.key === '2') {
+        ev.preventDefault()
+        const sel = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
+        zoomToFit(sel.length ? sel : undefined)
+      }
+      if (!inInput && ev.shiftKey && !ev.metaKey && !ev.ctrlKey && ev.key === '0') { ev.preventDefault(); resetZoom() }
+
+      // Arrow-key nudge (coalesced into one undo step per burst, finalized on keyup)
+      if (!inInput && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown' || ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') && selectedIdsRef.current.size > 0) {
+        ev.preventDefault()
+        const step = ev.shiftKey ? 10 : 1
+        const [dx, dy] = ev.key === 'ArrowUp'   ? [0, -step]
+                       : ev.key === 'ArrowDown' ? [0, step]
+                       : ev.key === 'ArrowLeft' ? [-step, 0]
+                       : [step, 0]
+        if (!nudgePreRef.current) nudgePreRef.current = [...shapesRef.current]
+        shapesRef.current = shapesRef.current.map(s => selectedIdsRef.current.has(s.id) ? offsetShape(s, dx, dy) as Shape : s)
+        render()
+      }
 
       if (!inInput) {
         // Delete all selected
@@ -1079,6 +1612,7 @@ export function CanvasView() {
         // Escape → select tool + clear
         if (ev.key === 'Escape') {
           setTextInput(null); setTool('select'); toolRef.current = 'select'
+          setShowShortcuts(false)
           clearSelection(); render()
         }
         // ⌘D duplicate all selected
@@ -1113,20 +1647,63 @@ export function CanvasView() {
         isSpaceRef.current = false; setSpacePan(false)
         updateCursor(toolRef.current === 'select' ? 'default' : 'crosshair')
       }
+      // Finalize a nudge burst into a single undo step once the arrow key is released
+      if ((ev.key === 'ArrowUp' || ev.key === 'ArrowDown' || ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') && nudgePreRef.current) {
+        historyRef.current = [...historyRef.current, nudgePreRef.current]
+        futureRef.current = []; nudgePreRef.current = null
+        setCanUndo(true); setCanRedo(false); scheduleSave()
+      }
     }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
-  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor])
+  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor, groupSelected, ungroupSelected, bringToFront, sendToBack, copySelected, pasteClipboard, zoomToFit, resetZoom, scheduleSave])
 
-  // Sync editingIdRef so render can skip the shape being edited
+  // Sync editingIdRef/editingContainerIdRef so render can skip the shape/text being edited
   useEffect(() => {
-    editingIdRef.current = textInput?.editingId ?? null
+    editingIdRef.current          = textInput?.editingId   ?? null
+    editingContainerIdRef.current = textInput?.containerId ?? null
     render()
   }, [textInput, render])
 
-  // Focus text input
+  // Focus text input. For contentEditable divs (container/sticky text), .focus()
+  // alone doesn't render a visible caret until the user types — a Selection/Range
+  // has to be explicitly placed inside, unlike a plain <input>/<textarea>.
   useEffect(() => {
-    if (textInput) { const id = setTimeout(() => textRef.current?.focus(), 0); return () => clearTimeout(id) }
+    if (!textInput) return
+    // Two nested rAFs instead of setTimeout(0): the element needs a layout pass
+    // committed (position/size from the inline styles) before focus+selection are
+    // applied, or the browser can register the focus/caret before it has anything
+    // laid out to paint against — leaving no visible caret until the next repaint,
+    // which normally only happens on the first keystroke.
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        const el = textRef.current
+        if (!el) return
+        // Force a synchronous reflow first — WebKit (Tauri's macOS webview) can still
+        // register focus/selection against stale layout even after two rAFs without
+        // an explicit style read forcing it to catch up.
+        void el.offsetHeight
+        el.focus()
+        if (el instanceof HTMLDivElement) {
+          // A genuinely empty contentEditable (new text, no child nodes at all) has
+          // no line box for the browser to draw a caret against — a lone zero-width
+          // space gives it one without being visible or affecting the real content.
+          // Stripped back out in commitText before the value is used.
+          if (!el.firstChild) el.appendChild(document.createTextNode('​'))
+          const range = document.createRange()
+          range.selectNodeContents(el)
+          range.collapse(false)
+          const sel = window.getSelection()
+          sel?.removeAllRanges()
+          sel?.addRange(range)
+        }
+      })
+      rafIdRef.current = raf2
+    })
+    rafIdRef.current = raf1
+    return () => {
+      if (rafIdRef.current != null) cancelAnimationFrame(rafIdRef.current)
+    }
   }, [textInput])
 
   // Cursor sync with tool
@@ -1138,10 +1715,77 @@ export function CanvasView() {
 
   const commitText = useCallback(() => {
     if (!textInput) return
-    const val = textRef.current?.value?.trim()
-    const { editingId } = textInput
+    const { editingId, containerId, stickyId, isNewSticky } = textInput
+    const isDivMode = !!(containerId || stickyId || isNewSticky)
+    const rawVal = isDivMode
+      ? (textRef.current as HTMLDivElement | null)?.innerText
+      : (textRef.current as HTMLInputElement | null)?.value
+    // Strip the zero-width space the focus effect seeds into empty contentEditable
+    // divs so the browser has a caret to draw — never part of the real content.
+    const val = rawVal?.replace(/​/g, '').trim()
     setTextInput(null)
     const size = fontSizeRef.current
+    if (stickyId || isNewSticky) {
+      if (!val) {
+        // Empty edit of an existing sticky → delete it; empty new sticky → discard
+        if (stickyId) commit(shapesRef.current.filter(s => s.id !== stickyId))
+        return
+      }
+      const existing = stickyId ? shapesRef.current.find(s => s.id === stickyId) as StickyShape | undefined : undefined
+      const w = existing?.w ?? STICKY_DEFAULT_W
+      let neededH = existing?.h ?? STICKY_DEFAULT_H
+      const ctx = canvasRef.current?.getContext('2d')
+      if (ctx) {
+        ctx.save()
+        ctx.font = `13px ${FONT_SANS}`
+        const lines = wrapCanvasText(ctx, val, Math.max(w - 16, 10))
+        ctx.restore()
+        neededH = Math.max(neededH, lines.length * 13 * 1.3 + 16)
+      }
+      if (stickyId) {
+        commit(shapesRef.current.map(s => s.id === stickyId ? { ...s, text: val, h: neededH } as Shape : s))
+      } else {
+        commit([...shapesRef.current, {
+          id: uid(), type: 'sticky',
+          x: textInput.wx, y: textInput.wy,
+          w: STICKY_DEFAULT_W, h: neededH,
+          text: val, color: DEFAULT_STICKY_COLOR, fill: 'none', width: 1,
+        } as StickyShape])
+      }
+      return
+    }
+    if (containerId) {
+      if (!val) {
+        // Empty → strip bound text from the container
+        commit(shapesRef.current.map(s => {
+          if (s.id !== containerId || (s.type !== 'rect' && s.type !== 'ellipse')) return s
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { boundText: _bt, ...rest } = s
+          return rest as Shape
+        }))
+      } else {
+        const ctx = canvasRef.current?.getContext('2d')
+        commit(shapesRef.current.map(s => {
+          if (s.id !== containerId || (s.type !== 'rect' && s.type !== 'ellipse')) return s
+          const boundText: BoundText = {
+            text: val, size, fontFamily: fontFamilyRef.current,
+            bold: boldRef.current, italic: italicRef.current, color: colorRef.current,
+          }
+          const withText = { ...s, boundText } as RectShape | EllipseShape
+          if (!ctx) return withText
+          const b = shapeBounds(withText)
+          const pad = 8
+          ctx.save()
+          ctx.font = `${boundText.italic ? 'italic ' : ''}${boundText.bold ? 'bold ' : ''}${boundText.size}px ${boundText.fontFamily}`
+          const lines  = wrapCanvasText(ctx, boundText.text, Math.max(b.w - pad * 2, 10))
+          ctx.restore()
+          const neededH = lines.length * boundText.size * 1.25 + pad * 2
+          if (neededH <= b.h) return withText
+          return applyBoundsToShape(withText, { ...b, h: neededH }) as Shape
+        }))
+      }
+      return
+    }
     if (editingId) {
       // Editing an existing shape
       if (!val) {
@@ -1176,14 +1820,27 @@ export function CanvasView() {
     ))
   }, [commit])
 
+  // Font patches: TextShapes get top-level fields; rect/ellipse containers with
+  // bound text get their boundText sub-object patched instead (top-level
+  // fontFamily/size/bold/italic don't mean anything on those shapes).
+  const applyFontPatch = useCallback((patch: Partial<Pick<BoundText, 'size' | 'fontFamily' | 'bold' | 'italic'>>) => {
+    if (selectedIdsRef.current.size === 0) return
+    commit(shapesRef.current.map(s => {
+      if (!selectedIdsRef.current.has(s.id)) return s
+      if (s.type === 'text') return { ...s, ...patch } as Shape
+      if ((s.type === 'rect' || s.type === 'ellipse') && s.boundText) return { ...s, boundText: { ...s.boundText, ...patch } } as Shape
+      return s
+    }))
+  }, [commit])
+
   const handleColor      = useCallback((c: string) => { setColor(c); colorRef.current = c; if (fillRef.current !== 'none') { const t = c + '28'; setFill(t); fillRef.current = t }; applyToSelected({ color: c }) }, [applyToSelected])
   const handleFill       = useCallback((f: string) => { setFill(f); fillRef.current = f; applyToSelected({ fill: f }) }, [applyToSelected])
   const handleWidth      = useCallback((w: number) => { setStrokeWidth(w); widthRef.current = w; applyToSelected({ width: w }) }, [applyToSelected])
   const handleRadius     = useCallback((r: number) => { setRadius(r); radiusRef.current = r; applyToSelected({ radius: r } as Partial<RectShape>) }, [applyToSelected])
-  const handleFontSize   = useCallback((s: number) => { setFontSize(s); fontSizeRef.current = s; applyToSelected({ size: s } as Partial<TextShape>) }, [applyToSelected])
-  const handleFontFamily = useCallback((f: string) => { setFontFamily(f); fontFamilyRef.current = f; applyToSelected({ fontFamily: f } as Partial<TextShape>) }, [applyToSelected])
-  const handleBold       = useCallback((b: boolean) => { setBold(b); boldRef.current = b; applyToSelected({ bold: b } as Partial<TextShape>) }, [applyToSelected])
-  const handleItalic     = useCallback((i: boolean) => { setItalic(i); italicRef.current = i; applyToSelected({ italic: i } as Partial<TextShape>) }, [applyToSelected])
+  const handleFontSize   = useCallback((s: number) => { setFontSize(s); fontSizeRef.current = s; applyFontPatch({ size: s }) }, [applyFontPatch])
+  const handleFontFamily = useCallback((f: string) => { setFontFamily(f); fontFamilyRef.current = f; applyFontPatch({ fontFamily: f }) }, [applyFontPatch])
+  const handleBold       = useCallback((b: boolean) => { setBold(b); boldRef.current = b; applyFontPatch({ bold: b }) }, [applyFontPatch])
+  const handleItalic     = useCallback((i: boolean) => { setItalic(i); italicRef.current = i; applyFontPatch({ italic: i }) }, [applyFontPatch])
 
   // ── JSX ──────────────────────────────────────────────────────────────────────
 
@@ -1192,6 +1849,17 @@ export function CanvasView() {
       Open a vault first.
     </div>
   )
+
+  const selShapesForToolbar = [...selectedIds].map(id => shapesRef.current.find(s => s.id === id)).filter(Boolean) as Shape[]
+  const canAddNote       = selShapesForToolbar.length > 0
+  const hasNoteOnSelection = selShapesForToolbar.some(s => s.note)
+  const canPromoteSticky = selShapesForToolbar.length === 1 && selShapesForToolbar[0].type === 'sticky' && !selShapesForToolbar[0].note
+
+  const notesPanelTitle = notesTarget === 'global'
+    ? 'Diagram Notes'
+    : notesTarget.kind === 'shape'
+      ? `Note — ${(() => { const s = shapesRef.current.find(sh => sh.id === notesTarget.id); return s ? shapeLabel(s) : 'Shape' })()}`
+      : `Note — Group (${shapesRef.current.filter(s => s.groupId === notesTarget.groupId).length} shapes)`
 
   return (
     <div className="flex-1 h-full overflow-hidden flex flex-row">
@@ -1217,12 +1885,17 @@ export function CanvasView() {
           zoom={zoom} canUndo={canUndo} canRedo={canRedo}
           radius={radius} fontSize={fontSize} fontFamily={fontFamily} bold={bold} italic={italic}
           selectedShapeType={selectedShapeType}
+          hasBoundText={selectionHasBoundText || !!textInput?.containerId}
           onTool={setTool} onColor={handleColor} onFill={handleFill} onWidth={handleWidth}
           onRadius={handleRadius} onFontSize={handleFontSize} onFontFamily={handleFontFamily}
           onBold={handleBold} onItalic={handleItalic}
           onUndo={undo} onRedo={redo} onZoom={handleZoom}
           onTemplates={() => setShowTemplates(v => !v)}
           showTemplates={showTemplates}
+          sketchy={sketchy} onSketchy={() => setSketchy(v => !v)}
+          showGrid={showGrid} onToggleGrid={() => setShowGrid(v => !v)}
+          canAddNote={canAddNote} hasNote={hasNoteOnSelection} canPromoteSticky={canPromoteSticky}
+          onAddNote={addNoteToSelection} onPromoteSticky={promoteStickyToNote}
         />
 
         {/* Template picker */}
@@ -1242,9 +1915,57 @@ export function CanvasView() {
           />
         )}
 
+        {/* Shortcuts dropdown — top-right, next to the notes button */}
+        <button
+          onClick={() => setShowShortcuts(v => !v)}
+          title="Keyboard shortcuts"
+          className={`absolute top-3 right-14 z-20 w-8 h-8 flex items-center justify-center rounded-lg border transition-colors shadow-sm ${
+            showShortcuts
+              ? 'bg-accent text-white border-accent'
+              : 'bg-surface border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+          }`}
+        >
+          <Keyboard size={14} />
+        </button>
+        {showShortcuts && (
+          <>
+            {/* Click-outside backdrop */}
+            <div className="fixed inset-0 z-20" onClick={() => setShowShortcuts(false)} />
+            <div className="absolute top-14 right-14 z-30 w-80 max-h-[70vh] flex flex-col bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0 border-b border-border">
+                <p className="text-sm font-semibold text-foreground">Keyboard shortcuts</p>
+                <button
+                  onClick={() => setShowShortcuts(false)}
+                  className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+
+              {/* Groups — scrollable */}
+              <div className="overflow-y-auto px-4 py-3">
+                {SHORTCUT_GROUPS.map(group => (
+                  <div key={group.title} className="mb-4 last:mb-0">
+                    <div className="text-[10px] font-semibold text-accent tracking-wider uppercase mb-2">{group.title}</div>
+                    <div className="flex flex-col gap-1.5">
+                      {group.items.map(([keys, label]) => (
+                        <div key={label} className="flex items-center justify-between gap-3">
+                          <span className="text-[12px] text-foreground/90">{label}</span>
+                          <kbd className="shrink-0 px-1.5 py-0.5 rounded-md border border-border bg-muted text-foreground/70 font-mono text-[10px] shadow-sm">{keys}</kbd>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
         {/* Notes toggle button — top-right of canvas area */}
         <button
-          onClick={() => setShowNotes(v => !v)}
+          onClick={() => { setNotesTarget('global'); setShowNotes(v => !v) }}
           title="Toggle diagram notes (⌘/)"
           className={`absolute top-3 right-3 z-20 w-8 h-8 flex items-center justify-center rounded-lg border transition-colors shadow-sm ${
             showNotes
@@ -1256,9 +1977,58 @@ export function CanvasView() {
         </button>
 
         {/* Text input overlay */}
-        {textInput && (
+        {textInput && textInput.containerId ? (
+          // contentEditable (not textarea) so flexbox can center the text both
+          // horizontally and vertically inside the shape while typing.
+          <div
+            ref={textRef as React.RefObject<HTMLDivElement>}
+            contentEditable
+            suppressContentEditableWarning
+            className="absolute bg-transparent outline-none pointer-events-auto overflow-hidden flex items-center justify-center text-center"
+            style={{
+              left: textInput.sx, top: textInput.sy,
+              width: textInput.boxW, height: textInput.boxH,
+              padding: '8px', boxSizing: 'border-box',
+              fontSize, fontFamily, fontWeight: bold ? 'bold' : 'normal', fontStyle: italic ? 'italic' : 'normal',
+              color, caretColor: color, zIndex: 50, lineHeight: 1.25,
+              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); commitText() }
+              if (e.key === 'Escape') { e.preventDefault(); commitText() }
+            }}
+            onBlur={commitText}
+          >
+            {textInput.initialValue ?? ''}
+          </div>
+        ) : textInput && (textInput.stickyId || textInput.isNewSticky) ? (
+          <div
+            ref={textRef as React.RefObject<HTMLDivElement>}
+            contentEditable
+            suppressContentEditableWarning
+            className="absolute outline-none pointer-events-auto overflow-hidden rounded-md"
+            style={{
+              left: textInput.sx, top: textInput.sy,
+              width: textInput.boxW, height: textInput.boxH,
+              padding: '8px', boxSizing: 'border-box',
+              fontSize: 13, fontFamily: FONT_SANS,
+              color: STICKY_TEXT_COLOR, caretColor: STICKY_TEXT_COLOR, zIndex: 50, lineHeight: 1.3,
+              whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+              background: textInput.stickyId
+                ? (shapesRef.current.find(s => s.id === textInput.stickyId) as StickyShape | undefined)?.color ?? DEFAULT_STICKY_COLOR
+                : DEFAULT_STICKY_COLOR,
+            }}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); commitText() }
+              if (e.key === 'Escape') { e.preventDefault(); commitText() }
+            }}
+            onBlur={commitText}
+          >
+            {textInput.initialValue ?? ''}
+          </div>
+        ) : textInput && (
           <input
-            ref={textRef}
+            ref={textRef as React.RefObject<HTMLInputElement>}
             className="absolute bg-transparent outline-none pointer-events-auto"
             style={{
               left: textInput.sx, top: textInput.sy - Math.min(fontSize, 32),
@@ -1267,7 +2037,7 @@ export function CanvasView() {
               color, caretColor: color, borderBottom: `1.5px solid ${color}`, minWidth: 80, zIndex: 50,
             }}
             defaultValue={textInput?.initialValue ?? ''}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitText() }; if (e.key === 'Escape') setTextInput(null) }}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitText() }; if (e.key === 'Escape') { e.preventDefault(); commitText() } }}
             onBlur={commitText}
           />
         )}
@@ -1281,9 +2051,10 @@ export function CanvasView() {
         {/* Keep mounted so CodeMirror state isn't lost when toggling */}
         <div className="h-full" style={{ width: '100%', visibility: showNotes ? 'visible' : 'hidden' }}>
           <CanvasNotesSheet
-            content={notesContent}
-            onChange={handleNotesChange}
-            onClose={() => setShowNotes(false)}
+            title={notesPanelTitle}
+            content={notesTarget === 'global' ? notesContent : shapeNoteDraft}
+            onChange={notesTarget === 'global' ? handleNotesChange : handleShapeNoteChange}
+            onClose={() => { setShowNotes(false); setNotesTarget('global') }}
           />
         </div>
       </div>

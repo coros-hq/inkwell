@@ -55,6 +55,7 @@
     "rehype-raw": "^7.0.0",
     "remark-gfm": "^4.0.1",
     "remark-math": "^6.0.0",
+    "roughjs": "^4.6.6",
     "tailwind-merge": "^3.6.0",
     "unist-util-visit": "^5.1.0",
     "yjs": "^13.6.31",

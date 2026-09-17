@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/settings/SettingsDialog.tsx": {
-    "mtime": 1789481809.0876288,
-    "ast_hash": "74e68caf7335b92133a9bbe6e4c61765",
+    "mtime": 1789421700.7357023,
+    "ast_hash": "024963b07edfba72c05c8ed574970fea",
     "semantic_hash": ""
   },
   "src/components/settings/ThemeEditor.tsx": {
@@ -370,8 +370,8 @@
     "semantic_hash": "912ed2887ab8f9be43f625930982407a"
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1789481770.4043305,
-    "ast_hash": "74e2e8c531ac2ee793441966d2b3f4b4",
+    "mtime": 1789481278.1003435,
+    "ast_hash": "86caceee5eddee0513a9f023d1909b6f",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -795,8 +795,8 @@
     "semantic_hash": ""
   },
   "src/lib/gitSync.ts": {
-    "mtime": 1789481746.2642193,
-    "ast_hash": "a4bf4e79df3a112789cb1e7bc80fdcb3",
+    "mtime": 1789481267.3878124,
+    "ast_hash": "9f6e0ae1176ddbcba001d09033766b20",
     "semantic_hash": ""
   },
   "src/lib/selfWriteRegistry.ts": {

@@ -1608,7 +1608,7 @@
       "source_location": "L6592",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_definitions_shellscopeentryallowedarg",
-      "community": 42,
+      "community": 16,
       "norm_label": "shellscopeentryallowedarg"
     },
     {
@@ -1618,7 +1618,7 @@
       "source_location": "L6593",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_shellscopeentryallowedarg_description",
-      "community": 42,
+      "community": 16,
       "norm_label": "description"
     },
     {
@@ -1628,7 +1628,7 @@
       "source_location": "L6594",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_shellscopeentryallowedarg_anyof",
-      "community": 42,
+      "community": 16,
       "norm_label": "anyof"
     },
     {
@@ -1638,7 +1638,7 @@
       "source_location": "L6620",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_definitions_shellscopeentryallowedargs",
-      "community": 16,
+      "community": 115,
       "norm_label": "shellscopeentryallowedargs"
     },
     {
@@ -1648,7 +1648,7 @@
       "source_location": "L6621",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_shellscopeentryallowedargs_description",
-      "community": 16,
+      "community": 115,
       "norm_label": "description"
     },
     {
@@ -1658,7 +1658,7 @@
       "source_location": "L6622",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_shellscopeentryallowedargs_anyof",
-      "community": 16,
+      "community": 115,
       "norm_label": "anyof"
     },
     {
@@ -2188,7 +2188,7 @@
       "source_location": "L116",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_urls_items",
-      "community": 44,
+      "community": 35,
       "norm_label": "items"
     },
     {
@@ -3418,7 +3418,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_app",
-      "community": 15,
+      "community": 112,
       "norm_label": "app.tsx"
     },
     {
@@ -3428,7 +3428,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_app_app",
-      "community": 15,
+      "community": 112,
       "norm_label": "app()"
     },
     {
@@ -3488,7 +3488,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_components_board_boardview_boardview",
-      "community": 25,
+      "community": 29,
       "norm_label": "boardview()"
     },
     {
@@ -3528,7 +3528,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_components_board_kanbancolumn_kanbancolumnprops",
-      "community": 29,
+      "community": 58,
       "norm_label": "kanbancolumnprops"
     },
     {
@@ -3578,7 +3578,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_components_board_taskcard_taskcardprops",
-      "community": 29,
+      "community": 58,
       "norm_label": "taskcardprops"
     },
     {
@@ -3598,7 +3598,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer",
-      "community": 25,
+      "community": 10,
       "norm_label": "taskdrawer.tsx"
     },
     {
@@ -3608,7 +3608,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer_status_labels",
-      "community": 25,
+      "community": 10,
       "norm_label": "status_labels"
     },
     {
@@ -3618,7 +3618,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer_status_colors",
-      "community": 25,
+      "community": 10,
       "norm_label": "status_colors"
     },
     {
@@ -3628,7 +3628,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer_priority_colors",
-      "community": 25,
+      "community": 10,
       "norm_label": "priority_colors"
     },
     {
@@ -3638,7 +3638,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer_priority_dot",
-      "community": 25,
+      "community": 10,
       "norm_label": "priority_dot"
     },
     {
@@ -3648,7 +3648,7 @@
       "source_location": "L42",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer_priority_text",
-      "community": 25,
+      "community": 10,
       "norm_label": "priority_text"
     },
     {
@@ -3658,7 +3658,7 @@
       "source_location": "L50",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer_sectionheader",
-      "community": 25,
+      "community": 10,
       "norm_label": "sectionheader()"
     },
     {
@@ -3668,7 +3668,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer_boardtaskdrawer",
-      "community": 25,
+      "community": 29,
       "norm_label": "boardtaskdrawer()"
     },
     {
@@ -3678,7 +3678,7 @@
       "source_location": "L569",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer_oldtaskdrawer",
-      "community": 25,
+      "community": 29,
       "norm_label": "oldtaskdrawer()"
     },
     {
@@ -3688,7 +3688,7 @@
       "source_location": "L734",
       "_origin": "ast",
       "id": "src_components_board_taskdrawer_taskdrawer",
-      "community": 25,
+      "community": 10,
       "norm_label": "taskdrawer()"
     },
     {
@@ -3738,7 +3738,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_canvas_canvasnotessheet",
-      "community": 2,
+      "community": 52,
       "norm_label": "canvasnotessheet.tsx"
     },
     {
@@ -3748,7 +3748,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_components_canvas_canvasnotessheet_props",
-      "community": 2,
+      "community": 52,
       "norm_label": "props"
     },
     {
@@ -3758,7 +3758,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_components_canvas_canvasnotessheet_canvasnotessheet",
-      "community": 2,
+      "community": 29,
       "norm_label": "canvasnotessheet()"
     },
     {
@@ -4788,7 +4788,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "src_components_editor_attachmentsbar_attachmentsbar",
-      "community": 25,
+      "community": 29,
       "norm_label": "attachmentsbar()"
     },
     {
@@ -4798,7 +4798,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_conflictbanner",
-      "community": 25,
+      "community": 29,
       "norm_label": "conflictbanner.tsx"
     },
     {
@@ -4808,7 +4808,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_editor_conflictbanner_conflictbanner",
-      "community": 25,
+      "community": 29,
       "norm_label": "conflictbanner()"
     },
     {
@@ -4818,7 +4818,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_editortoolbar",
-      "community": 0,
+      "community": 71,
       "norm_label": "editortoolbar.tsx"
     },
     {
@@ -4828,7 +4828,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_editor_editortoolbar_editortoolbar",
-      "community": 0,
+      "community": 71,
       "norm_label": "editortoolbar()"
     },
     {
@@ -4838,7 +4838,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext",
-      "community": 0,
+      "community": 42,
       "norm_label": "editorviewcontext.tsx"
     },
     {
@@ -4848,7 +4848,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_viewref",
-      "community": 0,
+      "community": 42,
       "norm_label": "viewref"
     },
     {
@@ -4858,7 +4858,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_editorviewcontext",
-      "community": 0,
+      "community": 42,
       "norm_label": "editorviewcontext"
     },
     {
@@ -4868,7 +4868,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_editorviewprovider",
-      "community": 0,
+      "community": 42,
       "norm_label": "editorviewprovider()"
     },
     {
@@ -4878,7 +4878,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_useeditorviewref",
-      "community": 0,
+      "community": 42,
       "norm_label": "useeditorviewref()"
     },
     {
@@ -4888,7 +4888,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_linkspanel",
-      "community": 25,
+      "community": 1,
       "norm_label": "linkspanel.tsx"
     },
     {
@@ -4898,7 +4898,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_editor_linkspanel_linkspanelprops",
-      "community": 25,
+      "community": 1,
       "norm_label": "linkspanelprops"
     },
     {
@@ -4908,7 +4908,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_editor_linkspanel_linkspanel",
-      "community": 25,
+      "community": 1,
       "norm_label": "linkspanel()"
     },
     {
@@ -4918,7 +4918,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_markdowneditor",
-      "community": 0,
+      "community": 52,
       "norm_label": "markdowneditor.tsx"
     },
     {
@@ -4928,7 +4928,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_components_editor_markdowneditor_markdowneditorprops",
-      "community": 0,
+      "community": 52,
       "norm_label": "markdowneditorprops"
     },
     {
@@ -4938,7 +4938,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_components_editor_markdowneditor_markdowneditor",
-      "community": 0,
+      "community": 71,
       "norm_label": "markdowneditor()"
     },
     {
@@ -5008,7 +5008,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "src_components_editor_mediapanel_mediapanel",
-      "community": 25,
+      "community": 29,
       "norm_label": "mediapanel()"
     },
     {
@@ -5018,7 +5018,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_notesearchbar",
-      "community": 0,
+      "community": 42,
       "norm_label": "notesearchbar.tsx"
     },
     {
@@ -5028,7 +5028,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_editor_notesearchbar_notesearchbarprops",
-      "community": 0,
+      "community": 42,
       "norm_label": "notesearchbarprops"
     },
     {
@@ -5038,7 +5038,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_editor_notesearchbar_notesearchbar",
-      "community": 0,
+      "community": 42,
       "norm_label": "notesearchbar()"
     },
     {
@@ -5218,7 +5218,7 @@
       "source_location": "L516",
       "_origin": "ast",
       "id": "src_components_editor_richpreview_localimage",
-      "community": 2,
+      "community": 14,
       "norm_label": "localimage()"
     },
     {
@@ -5358,7 +5358,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_splitview",
-      "community": 25,
+      "community": 42,
       "norm_label": "splitview.tsx"
     },
     {
@@ -5368,7 +5368,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_editor_splitview_splitviewprops",
-      "community": 25,
+      "community": 42,
       "norm_label": "splitviewprops"
     },
     {
@@ -5378,7 +5378,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_editor_splitview_splitview",
-      "community": 25,
+      "community": 29,
       "norm_label": "splitview()"
     },
     {
@@ -5388,7 +5388,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_structurerail",
-      "community": 25,
+      "community": 42,
       "norm_label": "structurerail.tsx"
     },
     {
@@ -5398,7 +5398,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_editor_structurerail_headingtick",
-      "community": 25,
+      "community": 42,
       "norm_label": "headingtick"
     },
     {
@@ -5408,7 +5408,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_editor_structurerail_parseheadings",
-      "community": 25,
+      "community": 42,
       "norm_label": "parseheadings()"
     },
     {
@@ -5418,7 +5418,7 @@
       "source_location": "L44",
       "_origin": "ast",
       "id": "src_components_editor_structurerail_structurerail",
-      "community": 25,
+      "community": 42,
       "norm_label": "structurerail()"
     },
     {
@@ -5428,7 +5428,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_layout_appshell",
-      "community": 25,
+      "community": 112,
       "norm_label": "appshell.tsx"
     },
     {
@@ -5438,7 +5438,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_components_layout_appshell_appshell",
-      "community": 25,
+      "community": 112,
       "norm_label": "appshell()"
     },
     {
@@ -5448,7 +5448,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_layout_editorpane",
-      "community": 25,
+      "community": 1,
       "norm_label": "editorpane.tsx"
     },
     {
@@ -5458,7 +5458,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_layout_editorpane_editorpane",
-      "community": 25,
+      "community": 1,
       "norm_label": "editorpane()"
     },
     {
@@ -5468,7 +5468,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_layout_notelist",
-      "community": 25,
+      "community": 1,
       "norm_label": "notelist.tsx"
     },
     {
@@ -5478,7 +5478,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_layout_notelist_notelist",
-      "community": 25,
+      "community": 1,
       "norm_label": "notelist()"
     },
     {
@@ -5678,7 +5678,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_quicknote_quicknotecapture",
-      "community": 15,
+      "community": 112,
       "norm_label": "quicknotecapture.tsx"
     },
     {
@@ -5688,7 +5688,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_quicknote_quicknotecapture_closethiswindow",
-      "community": 15,
+      "community": 112,
       "norm_label": "closethiswindow()"
     },
     {
@@ -5698,7 +5698,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_components_quicknote_quicknotecapture_quicknotecapture",
-      "community": 15,
+      "community": 112,
       "norm_label": "quicknotecapture()"
     },
     {
@@ -5708,7 +5708,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_quicknote_quicknoteeditor",
-      "community": 0,
+      "community": 52,
       "norm_label": "quicknoteeditor.tsx"
     },
     {
@@ -5718,7 +5718,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_quicknote_quicknoteeditor_quicknoteeditorhandle",
-      "community": 0,
+      "community": 112,
       "norm_label": "quicknoteeditorhandle"
     },
     {
@@ -5728,7 +5728,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_quicknote_quicknoteeditor_quicknoteeditorprops",
-      "community": 0,
+      "community": 52,
       "norm_label": "quicknoteeditorprops"
     },
     {
@@ -5738,7 +5738,7 @@
       "source_location": "L32",
       "_origin": "ast",
       "id": "src_components_quicknote_quicknoteeditor_quicknoteeditor",
-      "community": 0,
+      "community": 112,
       "norm_label": "quicknoteeditor"
     },
     {
@@ -5748,7 +5748,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_settings_joinvaultdialog",
-      "community": 73,
+      "community": 41,
       "norm_label": "joinvaultdialog.tsx"
     },
     {
@@ -5758,7 +5758,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_settings_joinvaultdialog_props",
-      "community": 73,
+      "community": 41,
       "norm_label": "props"
     },
     {
@@ -5768,7 +5768,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_settings_joinvaultdialog_joinvaultdialog",
-      "community": 73,
+      "community": 41,
       "norm_label": "joinvaultdialog()"
     },
     {
@@ -5785,7 +5785,7 @@
       "label": "Section",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L29",
+      "source_location": "L28",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_section",
       "community": 73,
@@ -5795,7 +5795,7 @@
       "label": "FONT_OPTIONS",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L33",
+      "source_location": "L32",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_font_options",
       "community": 73,
@@ -5805,7 +5805,7 @@
       "label": "FONT_SIZE_OPTIONS",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L41",
+      "source_location": "L40",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_font_size_options",
       "community": 73,
@@ -5815,7 +5815,7 @@
       "label": "LINE_HEIGHT_OPTIONS",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L48",
+      "source_location": "L47",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_line_height_options",
       "community": 73,
@@ -5825,7 +5825,7 @@
       "label": "NAV_ITEMS",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L57",
+      "source_location": "L56",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_nav_items",
       "community": 73,
@@ -5835,17 +5835,17 @@
       "label": "SettingsDialog()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L73",
+      "source_location": "L72",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_settingsdialog",
-      "community": 25,
+      "community": 29,
       "norm_label": "settingsdialog()"
     },
     {
       "label": "ThemeCard()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L546",
+      "source_location": "L545",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_themecard",
       "community": 73,
@@ -5855,17 +5855,17 @@
       "label": "ShortcutsSection()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L638",
+      "source_location": "L637",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_shortcutssection",
-      "community": 73,
+      "community": 47,
       "norm_label": "shortcutssection()"
     },
     {
       "label": "TRIGGER_OPTIONS",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L738",
+      "source_location": "L737",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_trigger_options",
       "community": 73,
@@ -5875,7 +5875,7 @@
       "label": "AbbreviationsSection()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L740",
+      "source_location": "L739",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_abbreviationssection",
       "community": 73,
@@ -5885,27 +5885,27 @@
       "label": "formatVaultDate()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L927",
+      "source_location": "L926",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_formatvaultdate",
-      "community": 73,
+      "community": 41,
       "norm_label": "formatvaultdate()"
     },
     {
       "label": "VaultSection()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L937",
+      "source_location": "L936",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_vaultsection",
-      "community": 73,
+      "community": 41,
       "norm_label": "vaultsection()"
     },
     {
       "label": "GitBranchSection()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1183",
+      "source_location": "L1182",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_gitbranchsection",
       "community": 30,
@@ -5915,17 +5915,17 @@
       "label": "SyncSection()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1355",
+      "source_location": "L1354",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_syncsection",
-      "community": 25,
+      "community": 29,
       "norm_label": "syncsection()"
     },
     {
       "label": "TeamSection()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1512",
+      "source_location": "L1471",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_teamsection",
       "community": 73,
@@ -5935,7 +5935,7 @@
       "label": "CustomThemeCard()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1764",
+      "source_location": "L1723",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_customthemecard",
       "community": 73,
@@ -5945,7 +5945,7 @@
       "label": "ToggleSwitch()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1838",
+      "source_location": "L1797",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_toggleswitch",
       "community": 73,
@@ -5955,7 +5955,7 @@
       "label": "SettingRow()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1859",
+      "source_location": "L1818",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_settingrow",
       "community": 73,
@@ -5965,7 +5965,7 @@
       "label": "AboutLink()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1875",
+      "source_location": "L1834",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_aboutlink",
       "community": 73,
@@ -6088,7 +6088,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_confirmdialog",
-      "community": 25,
+      "community": 29,
       "norm_label": "confirmdialog.tsx"
     },
     {
@@ -6098,7 +6098,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_shared_confirmdialog_confirmdialog",
-      "community": 25,
+      "community": 29,
       "norm_label": "confirmdialog()"
     },
     {
@@ -6108,7 +6108,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_contextmenu",
-      "community": 25,
+      "community": 29,
       "norm_label": "contextmenu.tsx"
     },
     {
@@ -6118,7 +6118,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_shared_contextmenu_contextmenuitem",
-      "community": 25,
+      "community": 29,
       "norm_label": "contextmenuitem"
     },
     {
@@ -6128,7 +6128,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_components_shared_contextmenu_contextmenuprops",
-      "community": 25,
+      "community": 29,
       "norm_label": "contextmenuprops"
     },
     {
@@ -6138,7 +6138,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_shared_contextmenu_contextmenu",
-      "community": 25,
+      "community": 29,
       "norm_label": "contextmenu()"
     },
     {
@@ -6188,7 +6188,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_markdownfield",
-      "community": 0,
+      "community": 71,
       "norm_label": "markdownfield.tsx"
     },
     {
@@ -6198,7 +6198,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_components_shared_markdownfield_markdownfieldprops",
-      "community": 0,
+      "community": 71,
       "norm_label": "markdownfieldprops"
     },
     {
@@ -6208,7 +6208,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "src_components_shared_markdownfield_markdownfield",
-      "community": 0,
+      "community": 71,
       "norm_label": "markdownfield()"
     },
     {
@@ -6218,7 +6218,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_namepromptdialog",
-      "community": 25,
+      "community": 29,
       "norm_label": "namepromptdialog.tsx"
     },
     {
@@ -6228,7 +6228,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_searchoverlay",
-      "community": 25,
+      "community": 112,
       "norm_label": "searchoverlay.tsx"
     },
     {
@@ -6238,7 +6238,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_shared_searchoverlay_searchoverlay",
-      "community": 25,
+      "community": 112,
       "norm_label": "searchoverlay()"
     },
     {
@@ -6248,7 +6248,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_signindialog",
-      "community": 73,
+      "community": 48,
       "norm_label": "signindialog.tsx"
     },
     {
@@ -6258,7 +6258,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_shared_signindialog_props",
-      "community": 73,
+      "community": 48,
       "norm_label": "props"
     },
     {
@@ -6268,7 +6268,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_shared_signindialog_signindialog",
-      "community": 73,
+      "community": 48,
       "norm_label": "signindialog()"
     },
     {
@@ -6278,7 +6278,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_tagchip",
-      "community": 25,
+      "community": 10,
       "norm_label": "tagchip.tsx"
     },
     {
@@ -6288,7 +6288,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_tagchip_tagchipprops",
-      "community": 25,
+      "community": 10,
       "norm_label": "tagchipprops"
     },
     {
@@ -6298,7 +6298,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_shared_tagchip_tagchip",
-      "community": 25,
+      "community": 10,
       "norm_label": "tagchip()"
     },
     {
@@ -6328,7 +6328,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_vaultpicker",
-      "community": 73,
+      "community": 41,
       "norm_label": "vaultpicker.tsx"
     },
     {
@@ -6338,7 +6338,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_shared_vaultpicker_vaultpicker",
-      "community": 73,
+      "community": 41,
       "norm_label": "vaultpicker()"
     },
     {
@@ -6348,7 +6348,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_datepicker",
-      "community": 25,
+      "community": 38,
       "norm_label": "datepicker.tsx"
     },
     {
@@ -6358,7 +6358,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_ui_datepicker_days",
-      "community": 25,
+      "community": 38,
       "norm_label": "days"
     },
     {
@@ -6368,7 +6368,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_ui_datepicker_months",
-      "community": 25,
+      "community": 38,
       "norm_label": "months"
     },
     {
@@ -6378,7 +6378,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_ui_datepicker_getdaysinmonth",
-      "community": 25,
+      "community": 38,
       "norm_label": "getdaysinmonth()"
     },
     {
@@ -6388,7 +6388,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_ui_datepicker_getfirstdayofmonth",
-      "community": 25,
+      "community": 38,
       "norm_label": "getfirstdayofmonth()"
     },
     {
@@ -6398,7 +6398,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_components_ui_datepicker_issameday",
-      "community": 25,
+      "community": 38,
       "norm_label": "issameday()"
     },
     {
@@ -6408,7 +6408,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_components_ui_datepicker_calendarprops",
-      "community": 25,
+      "community": 38,
       "norm_label": "calendarprops"
     },
     {
@@ -6418,7 +6418,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_components_ui_datepicker_calendar",
-      "community": 25,
+      "community": 38,
       "norm_label": "calendar()"
     },
     {
@@ -6428,7 +6428,7 @@
       "source_location": "L125",
       "_origin": "ast",
       "id": "src_components_ui_datepicker_datepickerprops",
-      "community": 25,
+      "community": 38,
       "norm_label": "datepickerprops"
     },
     {
@@ -6438,7 +6438,7 @@
       "source_location": "L132",
       "_origin": "ast",
       "id": "src_components_ui_datepicker_datepicker",
-      "community": 25,
+      "community": 10,
       "norm_label": "datepicker()"
     },
     {
@@ -6538,7 +6538,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_attachments_makeattachmentmarkdown",
-      "community": 0,
+      "community": 71,
       "norm_label": "makeattachmentmarkdown()"
     },
     {
@@ -6608,7 +6608,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_auth",
-      "community": 73,
+      "community": 48,
       "norm_label": "auth.ts"
     },
     {
@@ -6618,7 +6618,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_lib_auth_signup",
-      "community": 73,
+      "community": 48,
       "norm_label": "signup()"
     },
     {
@@ -6628,7 +6628,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_lib_auth_signin",
-      "community": 73,
+      "community": 48,
       "norm_label": "signin()"
     },
     {
@@ -6638,7 +6638,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_lib_auth_signout",
-      "community": 73,
+      "community": 48,
       "norm_label": "signout()"
     },
     {
@@ -6648,7 +6648,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_auth_getsession",
-      "community": 73,
+      "community": 41,
       "norm_label": "getsession()"
     },
     {
@@ -6658,7 +6658,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_lib_auth_onauthstatechange",
-      "community": 73,
+      "community": 48,
       "norm_label": "onauthstatechange()"
     },
     {
@@ -6668,7 +6668,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_deleteactions",
-      "community": 25,
+      "community": 1,
       "norm_label": "deleteactions.ts"
     },
     {
@@ -6678,7 +6678,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_deleteactions_findfolderbyid",
-      "community": 25,
+      "community": 1,
       "norm_label": "findfolderbyid()"
     },
     {
@@ -6688,7 +6688,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_lib_deleteactions_countnotesinfolder",
-      "community": 25,
+      "community": 1,
       "norm_label": "countnotesinfolder()"
     },
     {
@@ -6698,7 +6698,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletenote",
-      "community": 25,
+      "community": 1,
       "norm_label": "confirmdeletenote()"
     },
     {
@@ -6708,7 +6708,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletenotes",
-      "community": 25,
+      "community": 1,
       "norm_label": "confirmdeletenotes()"
     },
     {
@@ -6718,7 +6718,7 @@
       "source_location": "L58",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeleteselectednotes",
-      "community": 25,
+      "community": 1,
       "norm_label": "confirmdeleteselectednotes()"
     },
     {
@@ -6728,7 +6728,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletefolder",
-      "community": 25,
+      "community": 1,
       "norm_label": "confirmdeletefolder()"
     },
     {
@@ -6738,7 +6738,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletefolderitem",
-      "community": 25,
+      "community": 1,
       "norm_label": "confirmdeletefolderitem()"
     },
     {
@@ -6748,7 +6748,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletefolderbyid",
-      "community": 25,
+      "community": 1,
       "norm_label": "confirmdeletefolderbyid()"
     },
     {
@@ -6778,7 +6778,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_lib_editorextensions_markdownhighlighting",
-      "community": 0,
+      "community": 52,
       "norm_label": "markdownhighlighting"
     },
     {
@@ -6798,7 +6798,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "src_lib_editorextensions_codehighlighting",
-      "community": 20,
+      "community": 52,
       "norm_label": "codehighlighting"
     },
     {
@@ -6828,7 +6828,7 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "src_lib_editorextensions_autocompletetheme",
-      "community": 0,
+      "community": 52,
       "norm_label": "autocompletetheme"
     },
     {
@@ -6888,7 +6888,7 @@
       "source_location": "L343",
       "_origin": "ast",
       "id": "src_lib_editorextensions_tryabbreviationreplace",
-      "community": 0,
+      "community": 52,
       "norm_label": "tryabbreviationreplace()"
     },
     {
@@ -6898,7 +6898,7 @@
       "source_location": "L368",
       "_origin": "ast",
       "id": "src_lib_editorextensions_slashcommandcompletion",
-      "community": 0,
+      "community": 52,
       "norm_label": "slashcommandcompletion"
     },
     {
@@ -6978,7 +6978,7 @@
       "source_location": "L463",
       "_origin": "ast",
       "id": "src_lib_editorextensions_concealed_mark_nodes",
-      "community": 1,
+      "community": 20,
       "norm_label": "concealed_mark_nodes"
     },
     {
@@ -6988,7 +6988,7 @@
       "source_location": "L470",
       "_origin": "ast",
       "id": "src_lib_editorextensions_bulletwidget",
-      "community": 41,
+      "community": 20,
       "norm_label": "bulletwidget"
     },
     {
@@ -6998,7 +6998,7 @@
       "source_location": "L471",
       "_origin": "ast",
       "id": "src_lib_editorextensions_bulletwidget_todom",
-      "community": 41,
+      "community": 20,
       "norm_label": ".todom()"
     },
     {
@@ -7008,7 +7008,7 @@
       "source_location": "L477",
       "_origin": "ast",
       "id": "src_lib_editorextensions_bulletwidget_ignoreevent",
-      "community": 41,
+      "community": 20,
       "norm_label": ".ignoreevent()"
     },
     {
@@ -7058,7 +7058,7 @@
       "source_location": "L492",
       "_origin": "ast",
       "id": "src_lib_editorextensions_activelineset",
-      "community": 1,
+      "community": 20,
       "norm_label": "activelineset()"
     },
     {
@@ -7068,7 +7068,7 @@
       "source_location": "L505",
       "_origin": "ast",
       "id": "src_lib_editorextensions_decorateblocklines",
-      "community": 1,
+      "community": 20,
       "norm_label": "decorateblocklines()"
     },
     {
@@ -7078,7 +7078,7 @@
       "source_location": "L524",
       "_origin": "ast",
       "id": "src_lib_editorextensions_buildlivemarkdowndecorations",
-      "community": 1,
+      "community": 20,
       "norm_label": "buildlivemarkdowndecorations()"
     },
     {
@@ -7088,7 +7088,7 @@
       "source_location": "L591",
       "_origin": "ast",
       "id": "src_lib_editorextensions_livemarkdownplugin",
-      "community": 20,
+      "community": 52,
       "norm_label": "livemarkdownplugin"
     },
     {
@@ -7098,7 +7098,7 @@
       "source_location": "L608",
       "_origin": "ast",
       "id": "src_lib_editorextensions_istablerow",
-      "community": 38,
+      "community": 20,
       "norm_label": "istablerow()"
     },
     {
@@ -7108,7 +7108,7 @@
       "source_location": "L614",
       "_origin": "ast",
       "id": "src_lib_editorextensions_isseparatorrow",
-      "community": 38,
+      "community": 20,
       "norm_label": "isseparatorrow()"
     },
     {
@@ -7128,7 +7128,7 @@
       "source_location": "L624",
       "_origin": "ast",
       "id": "src_lib_editorextensions_codeblocklinenumbers",
-      "community": 38,
+      "community": 20,
       "norm_label": "codeblocklinenumbers()"
     },
     {
@@ -7138,7 +7138,7 @@
       "source_location": "L637",
       "_origin": "ast",
       "id": "src_lib_editorextensions_buildtabledecorations",
-      "community": 38,
+      "community": 20,
       "norm_label": "buildtabledecorations()"
     },
     {
@@ -7148,7 +7148,7 @@
       "source_location": "L727",
       "_origin": "ast",
       "id": "src_lib_editorextensions_tableplugin",
-      "community": 0,
+      "community": 52,
       "norm_label": "tableplugin"
     },
     {
@@ -7158,7 +7158,7 @@
       "source_location": "L742",
       "_origin": "ast",
       "id": "src_lib_editorextensions_highlightmarkplugin",
-      "community": 0,
+      "community": 52,
       "norm_label": "highlightmarkplugin"
     },
     {
@@ -7178,7 +7178,7 @@
       "source_location": "L789",
       "_origin": "ast",
       "id": "src_lib_editorextensions_math_fence_langs",
-      "community": 10,
+      "community": 20,
       "norm_label": "math_fence_langs"
     },
     {
@@ -7238,7 +7238,7 @@
       "source_location": "L819",
       "_origin": "ast",
       "id": "src_lib_editorextensions_overlapsselection",
-      "community": 10,
+      "community": 20,
       "norm_label": "overlapsselection()"
     },
     {
@@ -7248,7 +7248,7 @@
       "source_location": "L823",
       "_origin": "ast",
       "id": "src_lib_editorextensions_overlapsany",
-      "community": 10,
+      "community": 20,
       "norm_label": "overlapsany()"
     },
     {
@@ -7258,7 +7258,7 @@
       "source_location": "L827",
       "_origin": "ast",
       "id": "src_lib_editorextensions_buildmathdecorations",
-      "community": 10,
+      "community": 20,
       "norm_label": "buildmathdecorations()"
     },
     {
@@ -7268,7 +7268,7 @@
       "source_location": "L901",
       "_origin": "ast",
       "id": "src_lib_editorextensions_mathpreviewfield",
-      "community": 20,
+      "community": 52,
       "norm_label": "mathpreviewfield"
     },
     {
@@ -7418,7 +7418,7 @@
       "source_location": "L1424",
       "_origin": "ast",
       "id": "src_lib_editorextensions_createfileembedplugin",
-      "community": 0,
+      "community": 71,
       "norm_label": "createfileembedplugin()"
     },
     {
@@ -7428,7 +7428,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_editorformatting",
-      "community": 0,
+      "community": 71,
       "norm_label": "editorformatting.ts"
     },
     {
@@ -7438,7 +7438,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_editorformatting_applyinlineformat",
-      "community": 0,
+      "community": 71,
       "norm_label": "applyinlineformat()"
     },
     {
@@ -7448,7 +7448,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_editorformatting_applyblockformat",
-      "community": 0,
+      "community": 71,
       "norm_label": "applyblockformat()"
     },
     {
@@ -7458,7 +7458,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "src_lib_editorformatting_insertatcursor",
-      "community": 0,
+      "community": 71,
       "norm_label": "insertatcursor()"
     },
     {
@@ -7468,7 +7468,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_lib_editorformatting_formataction",
-      "community": 0,
+      "community": 71,
       "norm_label": "formataction"
     },
     {
@@ -7478,7 +7478,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_lib_editorformatting_format_toolbar_items",
-      "community": 0,
+      "community": 71,
       "norm_label": "format_toolbar_items"
     },
     {
@@ -7488,7 +7488,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "src_lib_editorformatting_applyformataction",
-      "community": 0,
+      "community": 71,
       "norm_label": "applyformataction()"
     },
     {
@@ -7588,7 +7588,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_fs",
-      "community": 0,
+      "community": 52,
       "norm_label": "fs.ts"
     },
     {
@@ -7598,7 +7598,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_fs_savenote",
-      "community": 0,
+      "community": 52,
       "norm_label": "savenote()"
     },
     {
@@ -7608,7 +7608,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_fs_readnote",
-      "community": 0,
+      "community": 52,
       "norm_label": "readnote()"
     },
     {
@@ -7618,7 +7618,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_lib_fs_buildfrontmatter",
-      "community": 0,
+      "community": 52,
       "norm_label": "buildfrontmatter()"
     },
     {
@@ -7742,20 +7742,10 @@
       "norm_label": "gitinit()"
     },
     {
-      "label": "setGitRemote()",
-      "file_type": "code",
-      "source_file": "src/lib/gitSync.ts",
-      "source_location": "L122",
-      "_origin": "ast",
-      "id": "src_lib_gitsync_setgitremote",
-      "community": 59,
-      "norm_label": "setgitremote()"
-    },
-    {
       "label": "gitStatus()",
       "file_type": "code",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L134",
+      "source_location": "L120",
       "_origin": "ast",
       "id": "src_lib_gitsync_gitstatus",
       "community": 59,
@@ -7765,7 +7755,7 @@
       "label": "gitAddAll()",
       "file_type": "code",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L138",
+      "source_location": "L124",
       "_origin": "ast",
       "id": "src_lib_gitsync_gitaddall",
       "community": 59,
@@ -7775,7 +7765,7 @@
       "label": "gitCommit()",
       "file_type": "code",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L142",
+      "source_location": "L128",
       "_origin": "ast",
       "id": "src_lib_gitsync_gitcommit",
       "community": 59,
@@ -7785,7 +7775,7 @@
       "label": "gitHasRemoteBranch()",
       "file_type": "code",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L151",
+      "source_location": "L137",
       "_origin": "ast",
       "id": "src_lib_gitsync_githasremotebranch",
       "community": 59,
@@ -7795,7 +7785,7 @@
       "label": "gitPull()",
       "file_type": "code",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L168",
+      "source_location": "L154",
       "_origin": "ast",
       "id": "src_lib_gitsync_gitpull",
       "community": 59,
@@ -7805,7 +7795,7 @@
       "label": "gitPush()",
       "file_type": "code",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L186",
+      "source_location": "L172",
       "_origin": "ast",
       "id": "src_lib_gitsync_gitpush",
       "community": 59,
@@ -7815,7 +7805,7 @@
       "label": "gitRemoteUrl()",
       "file_type": "code",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L190",
+      "source_location": "L176",
       "_origin": "ast",
       "id": "src_lib_gitsync_gitremoteurl",
       "community": 59,
@@ -7825,7 +7815,7 @@
       "label": "gitCurrentBranch()",
       "file_type": "code",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L203",
+      "source_location": "L189",
       "_origin": "ast",
       "id": "src_lib_gitsync_gitcurrentbranch",
       "community": 59,
@@ -8018,7 +8008,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_images",
-      "community": 0,
+      "community": 71,
       "norm_label": "images.ts"
     },
     {
@@ -8028,7 +8018,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_lib_images_mime_ext",
-      "community": 0,
+      "community": 71,
       "norm_label": "mime_ext"
     },
     {
@@ -8038,7 +8028,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_lib_images_saveclipboardimage",
-      "community": 0,
+      "community": 71,
       "norm_label": "saveclipboardimage()"
     },
     {
@@ -8208,7 +8198,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension",
-      "community": 0,
+      "community": 109,
       "norm_label": "searchhighlightextension.ts"
     },
     {
@@ -8218,7 +8208,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_searchhighlightspec",
-      "community": 0,
+      "community": 109,
       "norm_label": "searchhighlightspec"
     },
     {
@@ -8228,7 +8218,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_setsearchhighlights",
-      "community": 0,
+      "community": 109,
       "norm_label": "setsearchhighlights"
     },
     {
@@ -8238,7 +8228,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_matchdeco",
-      "community": 0,
+      "community": 109,
       "norm_label": "matchdeco"
     },
     {
@@ -8248,7 +8238,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_activedeco",
-      "community": 0,
+      "community": 109,
       "norm_label": "activedeco"
     },
     {
@@ -8258,7 +8248,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_searchhighlightfield",
-      "community": 0,
+      "community": 109,
       "norm_label": "searchhighlightfield"
     },
     {
@@ -8268,7 +8258,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_searchhighlighttheme",
-      "community": 0,
+      "community": 109,
       "norm_label": "searchhighlighttheme"
     },
     {
@@ -8278,7 +8268,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_searchhighlightextension",
-      "community": 0,
+      "community": 109,
       "norm_label": "searchhighlightextension"
     },
     {
@@ -8288,7 +8278,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_selfwriteregistry",
-      "community": 14,
+      "community": 110,
       "norm_label": "selfwriteregistry.ts"
     },
     {
@@ -8298,7 +8288,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_selfwriteregistry_recentwrites",
-      "community": 14,
+      "community": 110,
       "norm_label": "recentwrites"
     },
     {
@@ -8318,7 +8308,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_lib_selfwriteregistry_isselfwrite",
-      "community": 14,
+      "community": 110,
       "norm_label": "isselfwrite()"
     },
     {
@@ -8328,7 +8318,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_shortcuts",
-      "community": 73,
+      "community": 47,
       "norm_label": "shortcuts.ts"
     },
     {
@@ -8338,7 +8328,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_shortcuts_shortcutdef",
-      "community": 73,
+      "community": 47,
       "norm_label": "shortcutdef"
     },
     {
@@ -8348,7 +8338,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_shortcuts_shortcut_defs",
-      "community": 73,
+      "community": 47,
       "norm_label": "shortcut_defs"
     },
     {
@@ -8358,7 +8348,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_shortcuts_default_shortcuts",
-      "community": 73,
+      "community": 47,
       "norm_label": "default_shortcuts"
     },
     {
@@ -8368,7 +8358,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_shortcuts_loadshortcuts",
-      "community": 73,
+      "community": 47,
       "norm_label": "loadshortcuts()"
     },
     {
@@ -8378,7 +8368,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_lib_shortcuts_saveshortcuts",
-      "community": 73,
+      "community": 47,
       "norm_label": "saveshortcuts()"
     },
     {
@@ -8388,7 +8378,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_shortcuts_eventtocombo",
-      "community": 73,
+      "community": 47,
       "norm_label": "eventtocombo()"
     },
     {
@@ -8398,7 +8388,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "src_lib_shortcuts_combomatches",
-      "community": 25,
+      "community": 1,
       "norm_label": "combomatches()"
     },
     {
@@ -8408,7 +8398,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_lib_shortcuts_hasmodifier",
-      "community": 73,
+      "community": 47,
       "norm_label": "hasmodifier()"
     },
     {
@@ -8418,7 +8408,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_lib_shortcuts_mod_symbols",
-      "community": 73,
+      "community": 47,
       "norm_label": "mod_symbols"
     },
     {
@@ -8428,7 +8418,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_lib_shortcuts_mod_labels",
-      "community": 73,
+      "community": 47,
       "norm_label": "mod_labels"
     },
     {
@@ -8438,7 +8428,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "src_lib_shortcuts_formatcombo",
-      "community": 73,
+      "community": 47,
       "norm_label": "formatcombo()"
     },
     {
@@ -8448,7 +8438,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_supabase",
-      "community": 73,
+      "community": 48,
       "norm_label": "supabase.ts"
     },
     {
@@ -8458,7 +8448,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_supabase_supabase",
-      "community": 73,
+      "community": 48,
       "norm_label": "supabase"
     },
     {
@@ -8578,7 +8568,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_closevaultsync",
-      "community": 73,
+      "community": 37,
       "norm_label": "closevaultsync()"
     },
     {
@@ -8598,7 +8588,7 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_pullvaultfromcloud",
-      "community": 73,
+      "community": 41,
       "norm_label": "pullvaultfromcloud()"
     },
     {
@@ -8608,7 +8598,7 @@
       "source_location": "L253",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_resumevaultsyncifshared",
-      "community": 25,
+      "community": 37,
       "norm_label": "resumevaultsyncifshared()"
     },
     {
@@ -8788,7 +8778,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_lib_team_sharedvault",
-      "community": 73,
+      "community": 41,
       "norm_label": "sharedvault"
     },
     {
@@ -8798,7 +8788,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_lib_team_listsharedvaults",
-      "community": 73,
+      "community": 41,
       "norm_label": "listsharedvaults()"
     },
     {
@@ -8918,7 +8908,7 @@
       "source_location": "L151",
       "_origin": "ast",
       "id": "src_lib_themeutils_applycustomthemevars",
-      "community": 15,
+      "community": 112,
       "norm_label": "applycustomthemevars()"
     },
     {
@@ -8928,7 +8918,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "src_lib_themeutils_clearcustomthemevars",
-      "community": 15,
+      "community": 112,
       "norm_label": "clearcustomthemevars()"
     },
     {
@@ -8938,7 +8928,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_themes",
-      "community": 15,
+      "community": 73,
       "norm_label": "themes.ts"
     },
     {
@@ -8948,7 +8938,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_themes_themedef",
-      "community": 15,
+      "community": 73,
       "norm_label": "themedef"
     },
     {
@@ -8958,7 +8948,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_lib_themes_themes",
-      "community": 25,
+      "community": 112,
       "norm_label": "themes"
     },
     {
@@ -8968,7 +8958,7 @@
       "source_location": "L88",
       "_origin": "ast",
       "id": "src_lib_themes_isdarktheme",
-      "community": 25,
+      "community": 112,
       "norm_label": "isdarktheme()"
     },
     {
@@ -8978,7 +8968,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_lib_themes_dark_themes",
-      "community": 15,
+      "community": 73,
       "norm_label": "dark_themes"
     },
     {
@@ -8988,7 +8978,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_lib_themes_light_themes",
-      "community": 15,
+      "community": 73,
       "norm_label": "light_themes"
     },
     {
@@ -8998,7 +8988,7 @@
       "source_location": "L96",
       "_origin": "ast",
       "id": "src_lib_themes_customtheme",
-      "community": 15,
+      "community": 73,
       "norm_label": "customtheme"
     },
     {
@@ -9008,7 +8998,7 @@
       "source_location": "L113",
       "_origin": "ast",
       "id": "src_lib_themes_loadcustomthemes",
-      "community": 15,
+      "community": 112,
       "norm_label": "loadcustomthemes()"
     },
     {
@@ -9018,7 +9008,7 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "src_lib_themes_persistcustomthemes",
-      "community": 15,
+      "community": 73,
       "norm_label": "persistcustomthemes()"
     },
     {
@@ -9048,7 +9038,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_utils",
-      "community": 25,
+      "community": 29,
       "norm_label": "utils.ts"
     },
     {
@@ -9058,7 +9048,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_utils_cn",
-      "community": 25,
+      "community": 29,
       "norm_label": "cn()"
     },
     {
@@ -9068,7 +9058,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_utils_formatdate",
-      "community": 25,
+      "community": 1,
       "norm_label": "formatdate()"
     },
     {
@@ -9088,7 +9078,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_lib_utils_formatwordcount",
-      "community": 25,
+      "community": 29,
       "norm_label": "formatwordcount()"
     },
     {
@@ -9098,7 +9088,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_utils_getinitials",
-      "community": 25,
+      "community": 29,
       "norm_label": "getinitials()"
     },
     {
@@ -9128,7 +9118,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "src_lib_utils_slugifytitle",
-      "community": 30,
+      "community": 14,
       "norm_label": "slugifytitle()"
     },
     {
@@ -9148,7 +9138,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_lib_utils_glassbg",
-      "community": 25,
+      "community": 1,
       "norm_label": "glassbg()"
     },
     {
@@ -9198,7 +9188,7 @@
       "source_location": "L86",
       "_origin": "ast",
       "id": "src_lib_vault_recentvault",
-      "community": 15,
+      "community": 112,
       "norm_label": "recentvault"
     },
     {
@@ -9348,7 +9338,7 @@
       "source_location": "L399",
       "_origin": "ast",
       "id": "src_lib_vault_createfolderdir",
-      "community": 15,
+      "community": 14,
       "norm_label": "createfolderdir()"
     },
     {
@@ -9378,7 +9368,7 @@
       "source_location": "L423",
       "_origin": "ast",
       "id": "src_lib_vault_emptyappdata",
-      "community": 14,
+      "community": 108,
       "norm_label": "emptyappdata()"
     },
     {
@@ -9388,7 +9378,7 @@
       "source_location": "L427",
       "_origin": "ast",
       "id": "src_lib_vault_readappdata",
-      "community": 14,
+      "community": 108,
       "norm_label": "readappdata()"
     },
     {
@@ -9398,7 +9388,7 @@
       "source_location": "L437",
       "_origin": "ast",
       "id": "src_lib_vault_writeappdata",
-      "community": 14,
+      "community": 108,
       "norm_label": "writeappdata()"
     },
     {
@@ -9418,7 +9408,7 @@
       "source_location": "L460",
       "_origin": "ast",
       "id": "src_lib_vault_readteamdata",
-      "community": 14,
+      "community": 37,
       "norm_label": "readteamdata()"
     },
     {
@@ -9428,7 +9418,7 @@
       "source_location": "L470",
       "_origin": "ast",
       "id": "src_lib_vault_writeteamdata",
-      "community": 73,
+      "community": 41,
       "norm_label": "writeteamdata()"
     },
     {
@@ -9448,7 +9438,7 @@
       "source_location": "L490",
       "_origin": "ast",
       "id": "src_lib_vault_writeboardsfile",
-      "community": 73,
+      "community": 41,
       "norm_label": "writeboardsfile()"
     },
     {
@@ -9528,7 +9518,7 @@
       "source_location": "L575",
       "_origin": "ast",
       "id": "src_lib_vault_writenotemeta",
-      "community": 14,
+      "community": 108,
       "norm_label": "writenotemeta()"
     },
     {
@@ -9578,7 +9568,7 @@
       "source_location": "L676",
       "_origin": "ast",
       "id": "src_lib_vault_pickvaultdirectory",
-      "community": 73,
+      "community": 41,
       "norm_label": "pickvaultdirectory()"
     },
     {
@@ -9588,7 +9578,7 @@
       "source_location": "L684",
       "_origin": "ast",
       "id": "src_lib_vault_getrecentvaults",
-      "community": 73,
+      "community": 41,
       "norm_label": "getrecentvaults()"
     },
     {
@@ -9598,7 +9588,7 @@
       "source_location": "L691",
       "_origin": "ast",
       "id": "src_lib_vault_addrecentvault",
-      "community": 73,
+      "community": 41,
       "norm_label": "addrecentvault()"
     },
     {
@@ -9608,7 +9598,7 @@
       "source_location": "L699",
       "_origin": "ast",
       "id": "src_lib_vault_removerecentvault",
-      "community": 73,
+      "community": 41,
       "norm_label": "removerecentvault()"
     },
     {
@@ -9618,7 +9608,7 @@
       "source_location": "L705",
       "_origin": "ast",
       "id": "src_lib_vault_getlastvaultpath",
-      "community": 15,
+      "community": 112,
       "norm_label": "getlastvaultpath()"
     },
     {
@@ -9628,7 +9618,7 @@
       "source_location": "L716",
       "_origin": "ast",
       "id": "src_lib_vault_savequicknote",
-      "community": 15,
+      "community": 14,
       "norm_label": "savequicknote()"
     },
     {
@@ -9668,7 +9658,7 @@
       "source_location": "L805",
       "_origin": "ast",
       "id": "src_lib_vault_addexternalfiletovault",
-      "community": 14,
+      "community": 108,
       "norm_label": "addexternalfiletovault()"
     },
     {
@@ -9678,7 +9668,7 @@
       "source_location": "L812",
       "_origin": "ast",
       "id": "src_lib_vault_removeexternalfilefromvault",
-      "community": 14,
+      "community": 108,
       "norm_label": "removeexternalfilefromvault()"
     },
     {
@@ -9688,7 +9678,7 @@
       "source_location": "L818",
       "_origin": "ast",
       "id": "src_lib_vault_renameexternalfileinvault",
-      "community": 14,
+      "community": 108,
       "norm_label": "renameexternalfileinvault()"
     },
     {
@@ -9698,7 +9688,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_vaultwatcher",
-      "community": 14,
+      "community": 110,
       "norm_label": "vaultwatcher.ts"
     },
     {
@@ -9708,7 +9698,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_vaultwatcher_vaultwatcherhandle",
-      "community": 14,
+      "community": 110,
       "norm_label": "vaultwatcherhandle"
     },
     {
@@ -9718,7 +9708,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_vaultwatcher_fswatchevent",
-      "community": 14,
+      "community": 110,
       "norm_label": "fswatchevent"
     },
     {
@@ -9728,7 +9718,7 @@
       "source_location": "L21",
       "_origin": "ast",
       "id": "src_lib_vaultwatcher_noop_handle",
-      "community": 14,
+      "community": 110,
       "norm_label": "noop_handle"
     },
     {
@@ -9738,7 +9728,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_lib_vaultwatcher_startvaultwatcher",
-      "community": 25,
+      "community": 110,
       "norm_label": "startvaultwatcher()"
     },
     {
@@ -9748,7 +9738,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_main",
-      "community": 15,
+      "community": 112,
       "norm_label": "main.tsx"
     },
     {
@@ -9758,7 +9748,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_main_isquicknote",
-      "community": 15,
+      "community": 112,
       "norm_label": "isquicknote"
     },
     {
@@ -9775,7 +9765,7 @@
       "label": "syncVibrancy()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L67",
+      "source_location": "L66",
       "_origin": "ast",
       "id": "src_store_useappstore_syncvibrancy",
       "community": 8,
@@ -9785,7 +9775,7 @@
       "label": "writeActiveVaultFile()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L75",
+      "source_location": "L74",
       "_origin": "ast",
       "id": "src_store_useappstore_writeactivevaultfile",
       "community": 8,
@@ -9795,7 +9785,7 @@
       "label": "NamePromptConfig",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L153",
+      "source_location": "L152",
       "_origin": "ast",
       "id": "src_store_useappstore_namepromptconfig",
       "community": 8,
@@ -9805,7 +9795,7 @@
       "label": "Abbreviation",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L167",
+      "source_location": "L166",
       "_origin": "ast",
       "id": "src_store_useappstore_abbreviation",
       "community": 73,
@@ -9815,7 +9805,7 @@
       "label": "loadNoteEditorModes()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L176",
+      "source_location": "L175",
       "_origin": "ast",
       "id": "src_store_useappstore_loadnoteeditormodes",
       "community": 8,
@@ -9825,7 +9815,7 @@
       "label": "ConfirmConfig",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L184",
+      "source_location": "L183",
       "_origin": "ast",
       "id": "src_store_useappstore_confirmconfig",
       "community": 8,
@@ -9835,7 +9825,7 @@
       "label": "AppState",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L193",
+      "source_location": "L192",
       "_origin": "ast",
       "id": "src_store_useappstore_appstate",
       "community": 58,
@@ -9845,7 +9835,7 @@
       "label": "updateFolderNotes()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L401",
+      "source_location": "L397",
       "_origin": "ast",
       "id": "src_store_useappstore_updatefoldernotes",
       "community": 8,
@@ -9855,7 +9845,7 @@
       "label": "findFolderById()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L413",
+      "source_location": "L409",
       "_origin": "ast",
       "id": "src_store_useappstore_findfolderbyid",
       "community": 8,
@@ -9865,7 +9855,7 @@
       "label": "renameFolderInTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L422",
+      "source_location": "L418",
       "_origin": "ast",
       "id": "src_store_useappstore_renamefolderintree",
       "community": 8,
@@ -9875,7 +9865,7 @@
       "label": "toggleFolderById()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L429",
+      "source_location": "L425",
       "_origin": "ast",
       "id": "src_store_useappstore_togglefolderbyid",
       "community": 8,
@@ -9885,7 +9875,7 @@
       "label": "insertFolderIntoTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L436",
+      "source_location": "L432",
       "_origin": "ast",
       "id": "src_store_useappstore_insertfolderintotree",
       "community": 8,
@@ -9895,7 +9885,7 @@
       "label": "addNoteToFolderTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L453",
+      "source_location": "L449",
       "_origin": "ast",
       "id": "src_store_useappstore_addnotetofoldertree",
       "community": 8,
@@ -9905,7 +9895,7 @@
       "label": "removeNoteFromFolderTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L469",
+      "source_location": "L465",
       "_origin": "ast",
       "id": "src_store_useappstore_removenotefromfoldertree",
       "community": 8,
@@ -9915,7 +9905,7 @@
       "label": "insertNoteIntoFolderAt()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L477",
+      "source_location": "L473",
       "_origin": "ast",
       "id": "src_store_useappstore_insertnoteintofolderat",
       "community": 8,
@@ -9925,7 +9915,7 @@
       "label": "insertFolderAt()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L508",
+      "source_location": "L504",
       "_origin": "ast",
       "id": "src_store_useappstore_insertfolderat",
       "community": 8,
@@ -9935,7 +9925,7 @@
       "label": "buildFolderPath()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L549",
+      "source_location": "L545",
       "_origin": "ast",
       "id": "src_store_useappstore_buildfolderpath",
       "community": 8,
@@ -9945,7 +9935,7 @@
       "label": "removeFolderFromTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L554",
+      "source_location": "L550",
       "_origin": "ast",
       "id": "src_store_useappstore_removefolderfromtree",
       "community": 8,
@@ -9955,7 +9945,7 @@
       "label": "rekeySubtree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L569",
+      "source_location": "L565",
       "_origin": "ast",
       "id": "src_store_useappstore_rekeysubtree",
       "community": 8,
@@ -9965,7 +9955,7 @@
       "label": "collectNoteIdsFromFolder()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L602",
+      "source_location": "L598",
       "_origin": "ast",
       "id": "src_store_useappstore_collectnoteidsfromfolder",
       "community": 8,
@@ -9975,7 +9965,7 @@
       "label": "removeNotesFromFolderTree()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L610",
+      "source_location": "L606",
       "_origin": "ast",
       "id": "src_store_useappstore_removenotesfromfoldertree",
       "community": 8,
@@ -9985,7 +9975,7 @@
       "label": "findFolderPath()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L621",
+      "source_location": "L617",
       "_origin": "ast",
       "id": "src_store_useappstore_findfolderpath",
       "community": 8,
@@ -9995,7 +9985,7 @@
       "label": "isFolderInsideDeleted()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L634",
+      "source_location": "L630",
       "_origin": "ast",
       "id": "src_store_useappstore_isfolderinsidedeleted",
       "community": 8,
@@ -10005,7 +9995,7 @@
       "label": "flushBoards()",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L648",
+      "source_location": "L644",
       "_origin": "ast",
       "id": "src_store_useappstore_flushboards",
       "community": 37,
@@ -10015,10 +10005,10 @@
       "label": "useAppStore",
       "file_type": "code",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L672",
+      "source_location": "L668",
       "_origin": "ast",
       "id": "src_store_useappstore_useappstore",
-      "community": 25,
+      "community": 29,
       "norm_label": "useappstore"
     },
     {
@@ -10158,7 +10148,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_types_index_boardtask",
-      "community": 29,
+      "community": 58,
       "norm_label": "boardtask"
     },
     {
@@ -26172,7 +26162,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L740",
+      "source_location": "L739",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_abbreviationssection",
@@ -26182,7 +26172,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1875",
+      "source_location": "L1834",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_aboutlink",
@@ -26192,7 +26182,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1764",
+      "source_location": "L1723",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_customthemecard",
@@ -26202,7 +26192,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L33",
+      "source_location": "L32",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_font_options",
@@ -26212,7 +26202,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L41",
+      "source_location": "L40",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_font_size_options",
@@ -26222,7 +26212,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L927",
+      "source_location": "L926",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_formatvaultdate",
@@ -26232,7 +26222,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1183",
+      "source_location": "L1182",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_gitbranchsection",
@@ -26242,7 +26232,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L48",
+      "source_location": "L47",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_line_height_options",
@@ -26252,7 +26242,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L57",
+      "source_location": "L56",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_nav_items",
@@ -26262,7 +26252,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L29",
+      "source_location": "L28",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_section",
@@ -26272,7 +26262,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1859",
+      "source_location": "L1818",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_settingrow",
@@ -26282,7 +26272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L73",
+      "source_location": "L72",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_settingsdialog",
@@ -26292,7 +26282,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L638",
+      "source_location": "L637",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_shortcutssection",
@@ -26302,7 +26292,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1355",
+      "source_location": "L1354",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_syncsection",
@@ -26312,7 +26302,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1512",
+      "source_location": "L1471",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_teamsection",
@@ -26322,7 +26312,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L546",
+      "source_location": "L545",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_themecard",
@@ -26332,7 +26322,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1838",
+      "source_location": "L1797",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_toggleswitch",
@@ -26342,7 +26332,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L738",
+      "source_location": "L737",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_trigger_options",
@@ -26352,7 +26342,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L937",
+      "source_location": "L936",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_vaultsection",
@@ -26510,39 +26500,6 @@
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_lib_github_setgithubtoken",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports_from",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L25",
-      "weight": 1.0,
-      "source": "src_components_settings_settingsdialog",
-      "target": "src_lib_gitsync",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L25",
-      "weight": 1.0,
-      "source": "src_components_settings_settingsdialog",
-      "target": "src_lib_gitsync_gitremoteurl",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L25",
-      "weight": 1.0,
-      "source": "src_components_settings_settingsdialog",
-      "target": "src_lib_gitsync_isgitrepo",
       "confidence_score": 1.0
     },
     {
@@ -27002,7 +26959,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L159",
+      "source_location": "L158",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_settingsdialog",
       "target": "src_components_settings_settingsdialog_nav_items"
@@ -27013,7 +26970,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L252",
+      "source_location": "L251",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_settingsdialog",
       "target": "src_lib_themes_themes"
@@ -27024,7 +26981,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L114",
+      "source_location": "L113",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_settingsdialog",
       "target": "src_lib_utils_cn"
@@ -27035,7 +26992,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L94",
+      "source_location": "L93",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_settingsdialog",
       "target": "src_lib_vault_pickvaultdirectory"
@@ -27046,7 +27003,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L91",
+      "source_location": "L90",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_settingsdialog",
       "target": "src_store_useappstore_useappstore"
@@ -27057,7 +27014,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L558",
+      "source_location": "L557",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_themecard",
       "target": "src_lib_utils_cn"
@@ -27068,7 +27025,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L661",
+      "source_location": "L660",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_shortcutssection",
       "target": "src_lib_shortcuts_eventtocombo"
@@ -27079,7 +27036,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L669",
+      "source_location": "L668",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_shortcutssection",
       "target": "src_lib_shortcuts_formatcombo"
@@ -27090,7 +27047,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L662",
+      "source_location": "L661",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_shortcutssection",
       "target": "src_lib_shortcuts_hasmodifier"
@@ -27101,7 +27058,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L668",
+      "source_location": "L667",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_shortcutssection",
       "target": "src_lib_shortcuts_shortcut_defs"
@@ -27112,7 +27069,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L708",
+      "source_location": "L707",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_shortcutssection",
       "target": "src_lib_utils_cn"
@@ -27123,7 +27080,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L639",
+      "source_location": "L638",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_shortcutssection",
       "target": "src_store_useappstore_useappstore"
@@ -27134,7 +27091,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L741",
+      "source_location": "L740",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_abbreviationssection",
       "target": "src_store_useappstore_useappstore"
@@ -27144,7 +27101,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1145",
+      "source_location": "L1144",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_components_settings_settingsdialog_formatvaultdate",
@@ -27156,7 +27113,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L963",
+      "source_location": "L962",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_auth_getsession"
@@ -27167,7 +27124,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L965",
+      "source_location": "L964",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_id_genid"
@@ -27178,7 +27135,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L989",
+      "source_location": "L988",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_sync_yjssync_closevaultsync"
@@ -27189,7 +27146,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L970",
+      "source_location": "L969",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_sync_yjssync_openvaultsync"
@@ -27200,7 +27157,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L971",
+      "source_location": "L970",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_sync_yjssync_pushlocalboardsstate"
@@ -27211,7 +27168,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L995",
+      "source_location": "L994",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_sync_yjssync_resumevaultsyncifshared"
@@ -27222,7 +27179,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L967",
+      "source_location": "L966",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_team_createsharedvault"
@@ -27233,7 +27190,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L955",
+      "source_location": "L954",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_team_listmyteams"
@@ -27244,43 +27201,10 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1030",
+      "source_location": "L1029",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_utils_cn"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L993",
-      "weight": 1.0,
-      "source": "src_components_settings_settingsdialog_vaultsection",
-      "target": "src_lib_vault_addrecentvault"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L950",
-      "weight": 1.0,
-      "source": "src_components_settings_settingsdialog_vaultsection",
-      "target": "src_lib_vault_getrecentvaults"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1006",
-      "weight": 1.0,
-      "source": "src_components_settings_settingsdialog_vaultsection",
-      "target": "src_lib_vault_pickvaultdirectory"
     },
     {
       "relation": "calls",
@@ -27291,6 +27215,39 @@
       "source_location": "L992",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
+      "target": "src_lib_vault_addrecentvault"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/settings/SettingsDialog.tsx",
+      "source_location": "L949",
+      "weight": 1.0,
+      "source": "src_components_settings_settingsdialog_vaultsection",
+      "target": "src_lib_vault_getrecentvaults"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/settings/SettingsDialog.tsx",
+      "source_location": "L1005",
+      "weight": 1.0,
+      "source": "src_components_settings_settingsdialog_vaultsection",
+      "target": "src_lib_vault_pickvaultdirectory"
+    },
+    {
+      "relation": "calls",
+      "context": "call",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "src/components/settings/SettingsDialog.tsx",
+      "source_location": "L991",
+      "weight": 1.0,
+      "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_vault_readvaultfs"
     },
     {
@@ -27299,7 +27256,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1018",
+      "source_location": "L1017",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_vault_removerecentvault"
@@ -27310,7 +27267,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L988",
+      "source_location": "L987",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_vault_writeboardsfile"
@@ -27321,7 +27278,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L968",
+      "source_location": "L967",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_lib_vault_writeteamdata"
@@ -27332,7 +27289,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L938",
+      "source_location": "L937",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_vaultsection",
       "target": "src_store_useappstore_useappstore"
@@ -27343,7 +27300,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1185",
+      "source_location": "L1184",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_gitbranchsection",
       "target": "src_lib_github_getgithubowner"
@@ -27354,7 +27311,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1184",
+      "source_location": "L1183",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_gitbranchsection",
       "target": "src_lib_github_getgithubtoken"
@@ -27365,7 +27322,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1205",
+      "source_location": "L1204",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_gitbranchsection",
       "target": "src_lib_github_listrepos"
@@ -27376,7 +27333,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1193",
+      "source_location": "L1192",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_gitbranchsection",
       "target": "src_lib_github_setgithubowner"
@@ -27387,7 +27344,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1192",
+      "source_location": "L1191",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_gitbranchsection",
       "target": "src_lib_github_setgithubtoken"
@@ -27398,7 +27355,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1248",
+      "source_location": "L1247",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_gitbranchsection",
       "target": "src_lib_utils_cn"
@@ -27409,18 +27366,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1371",
-      "weight": 1.0,
-      "source": "src_components_settings_settingsdialog_syncsection",
-      "target": "src_lib_gitsync_isgitrepo"
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1437",
+      "source_location": "L1411",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_syncsection",
       "target": "src_lib_utils_cn"
@@ -27431,7 +27377,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1360",
+      "source_location": "L1359",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_syncsection",
       "target": "src_store_useappstore_useappstore"
@@ -27442,7 +27388,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1537",
+      "source_location": "L1496",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_teamsection",
       "target": "src_lib_auth_getsession"
@@ -27453,7 +27399,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1555",
+      "source_location": "L1514",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_teamsection",
       "target": "src_lib_auth_signout"
@@ -27464,7 +27410,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1526",
+      "source_location": "L1485",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_teamsection",
       "target": "src_lib_team_acceptpendinginvites"
@@ -27475,7 +27421,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1566",
+      "source_location": "L1525",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_teamsection",
       "target": "src_lib_team_createteam"
@@ -27486,7 +27432,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1582",
+      "source_location": "L1541",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_teamsection",
       "target": "src_lib_team_invitemember"
@@ -27497,7 +27443,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1527",
+      "source_location": "L1486",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_teamsection",
       "target": "src_lib_team_listmyteams"
@@ -27508,7 +27454,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1533",
+      "source_location": "L1492",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_teamsection",
       "target": "src_lib_team_listteammembers"
@@ -27519,7 +27465,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1596",
+      "source_location": "L1555",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_teamsection",
       "target": "src_lib_team_removemember"
@@ -27530,7 +27476,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1658",
+      "source_location": "L1617",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_teamsection",
       "target": "src_lib_utils_cn"
@@ -27541,7 +27487,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1782",
+      "source_location": "L1741",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_customthemecard",
       "target": "src_lib_utils_cn"
@@ -27552,7 +27498,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1844",
+      "source_location": "L1803",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_toggleswitch",
       "target": "src_lib_utils_cn"
@@ -30887,7 +30833,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L54",
+      "source_location": "L53",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_fs",
@@ -30898,7 +30844,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L54",
+      "source_location": "L53",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_fs_savenote",
@@ -30928,7 +30874,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L138",
+      "source_location": "L124",
       "weight": 1.0,
       "source": "src_lib_gitsync",
       "target": "src_lib_gitsync_gitaddall",
@@ -30948,7 +30894,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L142",
+      "source_location": "L128",
       "weight": 1.0,
       "source": "src_lib_gitsync",
       "target": "src_lib_gitsync_gitcommit",
@@ -30958,7 +30904,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L203",
+      "source_location": "L189",
       "weight": 1.0,
       "source": "src_lib_gitsync",
       "target": "src_lib_gitsync_gitcurrentbranch",
@@ -30968,7 +30914,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L151",
+      "source_location": "L137",
       "weight": 1.0,
       "source": "src_lib_gitsync",
       "target": "src_lib_gitsync_githasremotebranch",
@@ -30998,7 +30944,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L168",
+      "source_location": "L154",
       "weight": 1.0,
       "source": "src_lib_gitsync",
       "target": "src_lib_gitsync_gitpull",
@@ -31008,7 +30954,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L186",
+      "source_location": "L172",
       "weight": 1.0,
       "source": "src_lib_gitsync",
       "target": "src_lib_gitsync_gitpush",
@@ -31018,7 +30964,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L190",
+      "source_location": "L176",
       "weight": 1.0,
       "source": "src_lib_gitsync",
       "target": "src_lib_gitsync_gitremoteurl",
@@ -31038,7 +30984,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L134",
+      "source_location": "L120",
       "weight": 1.0,
       "source": "src_lib_gitsync",
       "target": "src_lib_gitsync_gitstatus",
@@ -31062,16 +31008,6 @@
       "weight": 1.0,
       "source": "src_lib_gitsync",
       "target": "src_lib_gitsync_rungit",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "contains",
-      "confidence": "EXTRACTED",
-      "source_file": "src/lib/gitSync.ts",
-      "source_location": "L122",
-      "weight": 1.0,
-      "source": "src_lib_gitsync",
-      "target": "src_lib_gitsync_setgitremote",
       "confidence_score": 1.0
     },
     {
@@ -31120,7 +31056,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L197",
+      "source_location": "L183",
       "weight": 1.0,
       "source": "src_lib_gitsync_gitremoteurl",
       "target": "src_lib_gitsync_describeerror",
@@ -31164,7 +31100,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L153",
+      "source_location": "L139",
       "weight": 1.0,
       "source": "src_lib_gitsync_githasremotebranch",
       "target": "src_lib_gitsync_rungit",
@@ -31175,7 +31111,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L170",
+      "source_location": "L156",
       "weight": 1.0,
       "source": "src_lib_gitsync_gitpull",
       "target": "src_lib_gitsync_rungit",
@@ -31186,7 +31122,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L139",
+      "source_location": "L125",
       "weight": 1.0,
       "source": "src_lib_gitsync_gitaddall",
       "target": "src_lib_gitsync_git",
@@ -31197,7 +31133,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L143",
+      "source_location": "L129",
       "weight": 1.0,
       "source": "src_lib_gitsync_gitcommit",
       "target": "src_lib_gitsync_git",
@@ -31208,7 +31144,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L205",
+      "source_location": "L191",
       "weight": 1.0,
       "source": "src_lib_gitsync_gitcurrentbranch",
       "target": "src_lib_gitsync_git",
@@ -31230,7 +31166,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L187",
+      "source_location": "L173",
       "weight": 1.0,
       "source": "src_lib_gitsync_gitpush",
       "target": "src_lib_gitsync_git",
@@ -31241,7 +31177,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L192",
+      "source_location": "L178",
       "weight": 1.0,
       "source": "src_lib_gitsync_gitremoteurl",
       "target": "src_lib_gitsync_git",
@@ -31252,20 +31188,9 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L135",
+      "source_location": "L121",
       "weight": 1.0,
       "source": "src_lib_gitsync_gitstatus",
-      "target": "src_lib_gitsync_git",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/lib/gitSync.ts",
-      "source_location": "L127",
-      "weight": 1.0,
-      "source": "src_lib_gitsync_setgitremote",
       "target": "src_lib_gitsync_git",
       "confidence_score": 1.0
     },
@@ -31307,29 +31232,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/gitSync.ts",
-      "source_location": "L125",
-      "weight": 1.0,
-      "source": "src_lib_gitsync_setgitremote",
-      "target": "src_lib_gitsync_gitremoteurl",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "imports",
-      "context": "import",
-      "confidence": "EXTRACTED",
-      "source_file": "src/store/useAppStore.ts",
-      "source_location": "L40",
-      "weight": 1.0,
-      "source": "src_store_useappstore",
-      "target": "src_lib_gitsync_setgitremote",
-      "confidence_score": 1.0
-    },
-    {
-      "relation": "calls",
-      "context": "call",
-      "confidence": "EXTRACTED",
-      "source_file": "src/lib/gitSync.ts",
-      "source_location": "L178",
+      "source_location": "L164",
       "weight": 1.0,
       "source": "src_lib_gitsync_gitpull",
       "target": "src_lib_gitsync_gitstatus",
@@ -32378,7 +32281,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L55",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_shortcuts",
@@ -32389,7 +32292,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L55",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_shortcuts_default_shortcuts",
@@ -32400,7 +32303,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L55",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_shortcuts_loadshortcuts",
@@ -32411,7 +32314,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L55",
+      "source_location": "L54",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_shortcuts_saveshortcuts",
@@ -32882,7 +32785,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L668",
+      "source_location": "L664",
       "weight": 1.0,
       "source": "src_store_useappstore_flushboards",
       "target": "src_lib_sync_yjssync_getsynchandle",
@@ -33025,7 +32928,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L669",
+      "source_location": "L665",
       "weight": 1.0,
       "source": "src_store_useappstore_flushboards",
       "target": "src_lib_sync_yjssync_pushlocalboardsstate",
@@ -33345,7 +33248,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L147",
+      "source_location": "L146",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_themeutils",
@@ -33389,7 +33292,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L147",
+      "source_location": "L146",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_themeutils_derivethemevars",
@@ -33400,7 +33303,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L147",
+      "source_location": "L146",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_themeutils_applycustomthemevars",
@@ -33411,7 +33314,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L147",
+      "source_location": "L146",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_themeutils_clearcustomthemevars",
@@ -33502,7 +33405,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L141",
+      "source_location": "L140",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_themes",
@@ -33524,7 +33427,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L141",
+      "source_location": "L140",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_themes_isdarktheme",
@@ -33535,7 +33438,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L141",
+      "source_location": "L140",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_themes_customtheme",
@@ -33546,7 +33449,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L215",
+      "source_location": "L214",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_lib_themes_customtheme",
@@ -33557,7 +33460,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L141",
+      "source_location": "L140",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_themes_loadcustomthemes",
@@ -33568,7 +33471,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L141",
+      "source_location": "L140",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_themes_persistcustomthemes",
@@ -33589,7 +33492,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L56",
+      "source_location": "L55",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_updatecheck",
@@ -33600,7 +33503,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L56",
+      "source_location": "L55",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_updatecheck_checkforappupdate",
@@ -34428,7 +34331,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L139",
+      "source_location": "L138",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_vault",
@@ -34604,7 +34507,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L139",
+      "source_location": "L138",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_lib_vault_vaultdata",
@@ -34615,7 +34518,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L267",
+      "source_location": "L266",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_lib_vault_vaultdata",
@@ -35110,7 +35013,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L663",
+      "source_location": "L659",
       "weight": 1.0,
       "source": "src_store_useappstore_flushboards",
       "target": "src_lib_vault_writeboardsfile",
@@ -35346,7 +35249,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L167",
+      "source_location": "L166",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_abbreviation",
@@ -35356,7 +35259,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L453",
+      "source_location": "L449",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_addnotetofoldertree",
@@ -35366,7 +35269,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L193",
+      "source_location": "L192",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_appstate",
@@ -35376,7 +35279,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L549",
+      "source_location": "L545",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_buildfolderpath",
@@ -35386,7 +35289,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L602",
+      "source_location": "L598",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_collectnoteidsfromfolder",
@@ -35396,7 +35299,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L184",
+      "source_location": "L183",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_confirmconfig",
@@ -35406,7 +35309,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L413",
+      "source_location": "L409",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_findfolderbyid",
@@ -35416,7 +35319,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L621",
+      "source_location": "L617",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_findfolderpath",
@@ -35426,7 +35329,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L648",
+      "source_location": "L644",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_flushboards",
@@ -35436,7 +35339,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L508",
+      "source_location": "L504",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_insertfolderat",
@@ -35446,7 +35349,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L436",
+      "source_location": "L432",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_insertfolderintotree",
@@ -35456,7 +35359,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L477",
+      "source_location": "L473",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_insertnoteintofolderat",
@@ -35466,7 +35369,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L634",
+      "source_location": "L630",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_isfolderinsidedeleted",
@@ -35476,7 +35379,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L176",
+      "source_location": "L175",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_loadnoteeditormodes",
@@ -35486,7 +35389,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L153",
+      "source_location": "L152",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_namepromptconfig",
@@ -35496,7 +35399,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L569",
+      "source_location": "L565",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_rekeysubtree",
@@ -35506,7 +35409,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L554",
+      "source_location": "L550",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_removefolderfromtree",
@@ -35516,7 +35419,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L469",
+      "source_location": "L465",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_removenotefromfoldertree",
@@ -35526,7 +35429,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L610",
+      "source_location": "L606",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_removenotesfromfoldertree",
@@ -35536,7 +35439,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L422",
+      "source_location": "L418",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_renamefolderintree",
@@ -35546,7 +35449,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L67",
+      "source_location": "L66",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_syncvibrancy",
@@ -35556,7 +35459,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L429",
+      "source_location": "L425",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_togglefolderbyid",
@@ -35566,7 +35469,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L401",
+      "source_location": "L397",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_updatefoldernotes",
@@ -35576,7 +35479,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L672",
+      "source_location": "L668",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_useappstore",
@@ -35586,7 +35489,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L75",
+      "source_location": "L74",
       "weight": 1.0,
       "source": "src_store_useappstore",
       "target": "src_store_useappstore_writeactivevaultfile",
@@ -35740,7 +35643,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L198",
+      "source_location": "L197",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_activeview",
@@ -35751,7 +35654,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L316",
+      "source_location": "L315",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_attachment",
@@ -35762,7 +35665,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L320",
+      "source_location": "L319",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_board",
@@ -35773,7 +35676,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L321",
+      "source_location": "L320",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_boardcolumn",
@@ -35784,7 +35687,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L339",
+      "source_location": "L338",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_boardtask",
@@ -35795,7 +35698,7 @@
       "context": "generic_arg",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L206",
+      "source_location": "L205",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_editormode",
@@ -35806,7 +35709,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L195",
+      "source_location": "L194",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_folder",
@@ -35817,7 +35720,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L314",
+      "source_location": "L313",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_linkeditem",
@@ -35828,7 +35731,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L196",
+      "source_location": "L195",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_note",
@@ -35839,7 +35742,7 @@
       "context": "field",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L197",
+      "source_location": "L196",
       "weight": 1.0,
       "source": "src_store_useappstore_appstate",
       "target": "src_types_index_task",
@@ -35850,7 +35753,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/store/useAppStore.ts",
-      "source_location": "L641",
+      "source_location": "L637",
       "weight": 1.0,
       "source": "src_store_useappstore_isfolderinsidedeleted",
       "target": "src_store_useappstore_findfolderpath",

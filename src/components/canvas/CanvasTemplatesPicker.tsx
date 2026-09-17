@@ -418,9 +418,9 @@ function TemplateCard({ tpl, onSelect }: { tpl: DiagramTemplate; onSelect: () =>
   return (
     <button
       onClick={onSelect}
-      className="flex flex-col gap-2 p-2.5 rounded-xl border border-border bg-background hover:bg-surface hover:border-accent/40 transition-all group text-left"
+      className="flex flex-col gap-2 p-2.5 rounded-xl border border-border bg-background hover:bg-surface hover:border-border transition-all group text-left"
     >
-      <div className="w-full aspect-[4/3] rounded-lg bg-surface border border-border/60 flex items-center justify-center text-foreground/60 group-hover:text-foreground/90 transition-colors overflow-hidden p-1.5">
+      <div className="w-full aspect-[4/3] rounded-lg bg-accent/8 border border-accent/15 flex items-center justify-center text-accent/70 group-hover:text-accent transition-colors overflow-hidden p-1.5">
         {Preview && <Preview />}
       </div>
       <div className="px-0.5">
@@ -460,10 +460,10 @@ export function CanvasTemplatesPicker({ onSelect, onClose }: Props) {
 
   return (
     /* Overlay */
-    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/30 backdrop-blur-[2px]">
+    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/40 backdrop-blur-[2px]">
       <div
         ref={ref}
-        className="bg-surface border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+        className="bg-panel border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden"
         style={{ width: 680, maxHeight: '80vh' }}
       >
         {/* Header */}
@@ -474,28 +474,30 @@ export function CanvasTemplatesPicker({ onSelect, onClose }: Props) {
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:bg-surface hover:text-foreground transition-colors"
           >
             <X size={14} />
           </button>
         </div>
 
         {/* Category tabs */}
-        <div className="flex gap-1 px-5 pb-3 flex-shrink-0 border-b border-border">
-          {TEMPLATE_CATEGORIES.map(cat => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-                activeCategory === cat.id
-                  ? 'bg-accent/15 text-accent border border-accent/30'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-              )}
-            >
-              {cat.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-3 px-5 pb-3 flex-shrink-0 border-b border-border">
+          <div className="flex items-center gap-1 border border-border rounded-lg p-1">
+            {TEMPLATE_CATEGORIES.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={cn(
+                  'px-3 py-1.5 rounded-md text-xs transition-colors',
+                  activeCategory === cat.id
+                    ? 'bg-active text-foreground font-medium'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
           <span className="ml-auto text-[10px] text-tertiary self-center">
             {filtered.length} template{filtered.length !== 1 ? 's' : ''}
           </span>

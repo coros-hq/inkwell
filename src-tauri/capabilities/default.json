@@ -22,13 +22,23 @@
     "fs:allow-mkdir",
     "fs:allow-stat",
     "fs:allow-remove",
+    "fs:allow-watch",
+    "fs:allow-unwatch",
     {
       "identifier": "fs:scope",
       "allow": [
         { "path": "$HOME/**" },
         { "path": "$HOME" },
         { "path": "$HOME/**/.inkwell" },
-        { "path": "$HOME/**/.inkwell/**" }
+        { "path": "$HOME/**/.inkwell/**" },
+        { "path": "$HOME/**/.git" },
+        { "path": "$HOME/**/.gitignore" }
+      ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        { "name": "git", "cmd": "git", "args": true }
       ]
     }
   ]

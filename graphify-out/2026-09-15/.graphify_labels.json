@@ -58,7 +58,7 @@
   "56": "FileEmbedWidget",
   "57": "macOS Schema Capability Type",
   "58": "Desktop Shell Scope Args",
-  "59": "Desktop Schema Value Type",
+  "59": "gitSync.ts",
   "60": "macOS Schema Identifier Type",
   "61": "NoteSearchBar.tsx",
   "62": "macOS Schema Value Type",
@@ -107,9 +107,13 @@
   "105": "Edit/Split/Preview View Modes",
   "106": "CheckboxWidget",
   "107": "ThemeEditor.tsx",
-  "108": "buildTableDecorations",
-  "109": "pushLocalBoardsState",
+  "108": "readVaultFS",
+  "109": "Select.tsx",
   "110": "description",
-  "111": "BulletWidget",
-  "112": "ShellScopeEntryAllowedArgs"
+  "111": "Identifier",
+  "112": "ShellScopeEntryAllowedArgs",
+  "113": "ShellScopeEntryAllowedArg",
+  "114": "Attachment",
+  "115": "BulletWidget",
+  "117": "ShellScopeEntryAllowedArgs"
 }

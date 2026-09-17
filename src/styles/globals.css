@@ -154,9 +154,24 @@ html, body, #root {
 @layer base {
   :root {
     --code-block-bg: 35 16% 91%;  /* light: warm off-white, slightly darker than bg */
+
+    /* Fenced-code token palette — shared by the CodeMirror editor
+       (codeHighlighting in editorExtensions.ts) and the rendered preview
+       (.hljs-* rules below). Values are bare `H S% L%` for hsl(). */
+    --code-kw:   var(--accent);      /* keywords            */
+    --code-str:  125 42% 36%;        /* strings — forest    */
+    --code-cmt:  var(--muted-foreground); /* comments       */
+    --code-num:  30 68% 40%;         /* numbers — amber     */
+    --code-fn:   212 52% 44%;        /* functions / types   */
+    --code-meta: 188 55% 34%;        /* meta / decorators   */
   }
   .dark {
     --code-block-bg: 36 10% 7%;   /* dark: warm near-black, matches midnight hue */
+
+    --code-str:  100 40% 62%;        /* soft green  */
+    --code-num:  35 70% 65%;         /* amber       */
+    --code-fn:   200 55% 65%;        /* steel blue  */
+    --code-meta: 180 48% 56%;        /* teal        */
   }
 }
 
@@ -419,55 +434,31 @@ html[data-theme="onyx"] {
   color: hsl(var(--foreground) / 0.9);
 }
 
-/* ── Light mode ── */
+/* Colours come from the shared --code-* variables (globals.css @layer base),
+   which already carry light/dark values — no per-mode overrides needed here. */
 .hljs-keyword,
-.hljs-selector-tag          { color: hsl(var(--accent)); font-weight: 500; }
+.hljs-selector-tag          { color: hsl(var(--code-kw)); font-weight: 500; }
 
 .hljs-string,
-.hljs-attr                  { color: hsl(125 42% 36%); }   /* forest green  */
+.hljs-attr                  { color: hsl(var(--code-str)); }
 
 .hljs-comment,
-.hljs-quote                 { color: hsl(var(--muted-foreground)); font-style: italic; }
+.hljs-quote                 { color: hsl(var(--code-cmt)); font-style: italic; }
 
 .hljs-meta,
-.hljs-meta .hljs-keyword    { color: hsl(188 55% 34%); }   /* teal          */
+.hljs-meta .hljs-keyword    { color: hsl(var(--code-meta)); }
 
 .hljs-number,
-.hljs-literal               { color: hsl(30 68% 40%); }    /* amber-brown   */
+.hljs-literal               { color: hsl(var(--code-num)); }
 
 .hljs-title,
 .hljs-title.class_          { color: hsl(var(--foreground)); font-weight: 600; }
 
 .hljs-type,
-.hljs-built_in              { color: hsl(212 52% 44%); }   /* steel blue    */
+.hljs-built_in              { color: hsl(var(--code-fn)); }
 
 .hljs-variable,
 .hljs-params                { color: hsl(var(--foreground) / 0.82); }
-
-/* ── Dark mode overrides ── (.dark is toggled on <html>) */
-.dark .hljs-keyword,
-.dark .hljs-selector-tag    { color: hsl(var(--accent)); font-weight: 500; }
-
-.dark .hljs-string,
-.dark .hljs-attr            { color: hsl(100 40% 62%); }   /* soft green    */
-
-.dark .hljs-comment,
-.dark .hljs-quote           { color: hsl(var(--muted-foreground)); font-style: italic; }
-
-.dark .hljs-meta,
-.dark .hljs-meta .hljs-keyword { color: hsl(180 48% 56%); } /* teal         */
-
-.dark .hljs-number,
-.dark .hljs-literal         { color: hsl(35 70% 65%); }    /* amber         */
-
-.dark .hljs-title,
-.dark .hljs-title.class_    { color: hsl(var(--foreground)); font-weight: 600; }
-
-.dark .hljs-type,
-.dark .hljs-built_in        { color: hsl(200 55% 65%); }   /* steel blue    */
-
-.dark .hljs-variable,
-.dark .hljs-params          { color: hsl(var(--foreground) / 0.82); }
 
 .hljs-emphasis              { font-style: italic; }
 .hljs-strong                { font-weight: 700; }
@@ -503,8 +494,11 @@ html[data-theme="onyx"] {
   font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace !important;
   font-size: 0.85em;
   background: hsl(var(--muted) / 0.5);
-  white-space: pre !important;
-  overflow-x: auto;
+  /* Wrap long lines instead of giving every code line its own horizontal
+     scrollbar — the editor has no horizontal scroll (EditorView.lineWrapping).
+     pre-wrap keeps leading indentation intact. */
+  white-space: pre-wrap !important;
+  overflow-wrap: anywhere;
   padding-left: 14px !important;
   padding-right: 14px !important;
 }
@@ -525,6 +519,15 @@ html[data-theme="onyx"] {
   border-left: 3px solid hsl(var(--border));
   padding-left: 14px !important;
   font-style: italic;
+}
+
+/* Rendered thematic break (`---`) in Normal-mode live preview. Inline-block so
+   it sits on the concealed line; the border is the visible rule. */
+.cm-hr {
+  display: inline-block;
+  width: 100%;
+  vertical-align: middle;
+  border-top: 1px solid hsl(var(--border));
 }
 
 /* ── Markdown mode split view — resizable source + preview ─────────────────── */

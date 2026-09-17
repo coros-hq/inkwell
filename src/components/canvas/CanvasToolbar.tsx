@@ -1,4 +1,4 @@
-import { MousePointer2, Pencil, Square, Circle, Minus, MoveRight, Type, Undo2, Redo2, ZoomIn, ZoomOut, LayoutTemplate } from 'lucide-react'
+import { MousePointer2, Pencil, Square, Circle, Minus, MoveRight, Type, StickyNote, Undo2, Redo2, ZoomIn, ZoomOut, LayoutTemplate, Waves, FileText, Maximize2, Grid3x3 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Tool } from './canvasTypes'
 
@@ -16,6 +16,7 @@ const TOOLS: { id: Tool; Icon: React.FC<{ size?: number }>; label: string; key: 
   { id: 'line',    Icon: Minus,         label: 'Line',      key: 'L' },
   { id: 'arrow',   Icon: MoveRight,     label: 'Arrow',     key: 'A' },
   { id: 'text',    Icon: Type,          label: 'Text',      key: 'T' },
+  { id: 'sticky',  Icon: StickyNote,    label: 'Sticky note', key: 'S' },
 ]
 
 const PALETTE = [
@@ -80,6 +81,12 @@ interface Props {
   bold: boolean
   italic: boolean
   selectedShapeType: string | null
+  hasBoundText: boolean
+  sketchy: boolean
+  showGrid: boolean
+  canAddNote: boolean
+  hasNote: boolean
+  canPromoteSticky: boolean
   onTool:       (t: Tool) => void
   onColor:      (c: string) => void
   onFill:       (f: string) => void
@@ -94,16 +101,22 @@ interface Props {
   onZoom:       (delta: number) => void
   onTemplates:  () => void
   showTemplates: boolean
+  onSketchy:    () => void
+  onToggleGrid: () => void
+  onAddNote:    () => void
+  onPromoteSticky: () => void
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
 
 export function CanvasToolbar(p: Props) {
+  const isSticky = p.tool === 'sticky' || p.selectedShapeType === 'sticky'
   const fillable = p.tool === 'rect' || p.tool === 'ellipse'
                || p.selectedShapeType === 'rect' || p.selectedShapeType === 'ellipse'
   const fillOn   = p.fill !== 'none'
   const showRect = p.tool === 'rect' || p.selectedShapeType === 'rect'
-  const showText = p.tool === 'text' || p.selectedShapeType === 'text'
+  const showText = p.tool === 'text' || p.selectedShapeType === 'text' || p.hasBoundText
+  const showNoteActions = p.canAddNote || p.canPromoteSticky
 
   const rowCls = 'flex flex-row items-center gap-0.5 bg-surface border border-border rounded-2xl px-3 py-2 shadow-xl select-none'
 
@@ -111,8 +124,26 @@ export function CanvasToolbar(p: Props) {
     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5">
 
       {/* ── Context row ── */}
-      {(showRect || showText) && (
+      {(showRect || showText || showNoteActions) && (
         <div className={rowCls}>
+
+          {showNoteActions && (
+            <>
+              {p.canAddNote && (
+                <Btn onClick={p.onAddNote} title={p.hasNote ? 'Edit note' : 'Add note'} className="px-2 h-7 gap-1.5">
+                  <FileText size={12} />
+                  <span className="text-[10px] font-medium">{p.hasNote ? 'Edit note' : 'Add note'}</span>
+                </Btn>
+              )}
+              {p.canPromoteSticky && (
+                <Btn onClick={p.onPromoteSticky} title="Expand to full note" className="px-2 h-7 gap-1.5">
+                  <Maximize2 size={12} />
+                  <span className="text-[10px] font-medium">Expand to note</span>
+                </Btn>
+              )}
+              {(showRect || showText) && <VDivider />}
+            </>
+          )}
 
           {showRect && (
             <>
@@ -185,44 +216,48 @@ export function CanvasToolbar(p: Props) {
           ))}
         </div>
 
-        {/* Fill toggle */}
-        <button
-          onClick={() => p.onFill(fillOn ? 'none' : p.color + '28')}
-          title={fillOn ? 'Remove fill' : 'Add fill'}
-          className={cn(
-            'h-6 px-1.5 text-[10px] font-medium rounded transition-colors ml-1 shrink-0',
-            fillOn ? 'bg-accent text-white' : 'text-muted-foreground hover:bg-muted',
-            !fillable && 'opacity-25 pointer-events-none',
-          )}
-        >
-          fill
-        </button>
+        {!isSticky && (
+          <>
+            {/* Fill toggle */}
+            <button
+              onClick={() => p.onFill(fillOn ? 'none' : p.color + '28')}
+              title={fillOn ? 'Remove fill' : 'Add fill'}
+              className={cn(
+                'h-6 px-1.5 text-[10px] font-medium rounded transition-colors ml-1 shrink-0',
+                fillOn ? 'bg-accent text-white' : 'text-muted-foreground hover:bg-muted',
+                !fillable && 'opacity-25 pointer-events-none',
+              )}
+            >
+              fill
+            </button>
 
-        <VDivider />
+            <VDivider />
 
-        {/* Stroke widths */}
-        {WIDTHS.map(({ v, thick }) => (
-          <button
-            key={v}
-            onClick={() => p.onWidth(v)}
-            title={`${v}px`}
-            className={cn(
-              'w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0',
-              p.strokeWidth === v ? 'bg-muted' : 'hover:bg-muted',
-            )}
-          >
-            <div
-              className="rounded-full"
-              style={{
-                width:      20,
-                height:     thick,
-                background: p.strokeWidth === v ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
-              }}
-            />
-          </button>
-        ))}
+            {/* Stroke widths */}
+            {WIDTHS.map(({ v, thick }) => (
+              <button
+                key={v}
+                onClick={() => p.onWidth(v)}
+                title={`${v}px`}
+                className={cn(
+                  'w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0',
+                  p.strokeWidth === v ? 'bg-muted' : 'hover:bg-muted',
+                )}
+              >
+                <div
+                  className="rounded-full"
+                  style={{
+                    width:      20,
+                    height:     thick,
+                    background: p.strokeWidth === v ? 'hsl(var(--foreground))' : 'hsl(var(--muted-foreground))',
+                  }}
+                />
+              </button>
+            ))}
 
-        <VDivider />
+            <VDivider />
+          </>
+        )}
 
         {/* Undo / Redo */}
         <button
@@ -252,6 +287,34 @@ export function CanvasToolbar(p: Props) {
         </button>
 
         <VDivider />
+
+        {/* Sketchy (hand-drawn) style toggle */}
+        <button
+          onClick={p.onSketchy}
+          title="Sketchy style"
+          className={cn(
+            'w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0',
+            p.sketchy
+              ? 'bg-accent text-white'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+          )}
+        >
+          <Waves size={14} />
+        </button>
+
+        {/* Grid toggle */}
+        <button
+          onClick={p.onToggleGrid}
+          title={p.showGrid ? 'Hide grid' : 'Show grid'}
+          className={cn(
+            'w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0',
+            p.showGrid
+              ? 'bg-accent text-white'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+          )}
+        >
+          <Grid3x3 size={14} />
+        </button>
 
         {/* Templates */}
         <button

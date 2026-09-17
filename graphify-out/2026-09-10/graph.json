@@ -1028,7 +1028,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_identifier_description",
-      "community": 23,
+      "community": 48,
       "norm_label": "description"
     },
     {
@@ -1118,7 +1118,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_properties_local",
-      "community": 48,
+      "community": 23,
       "norm_label": "local"
     },
     {
@@ -1128,7 +1128,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_local_description",
-      "community": 48,
+      "community": 23,
       "norm_label": "description"
     },
     {
@@ -1138,7 +1138,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_local_default",
-      "community": 48,
+      "community": 23,
       "norm_label": "default"
     },
     {
@@ -1148,7 +1148,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_local_type",
-      "community": 48,
+      "community": 23,
       "norm_label": "type"
     },
     {
@@ -1468,7 +1468,7 @@
       "source_location": "L2378",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_definitions_identifier",
-      "community": 16,
+      "community": 48,
       "norm_label": "identifier"
     },
     {
@@ -1478,7 +1478,7 @@
       "source_location": "L2380",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_identifier_oneof",
-      "community": 16,
+      "community": 48,
       "norm_label": "oneof"
     },
     {
@@ -1608,7 +1608,7 @@
       "source_location": "L6592",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_definitions_shellscopeentryallowedarg",
-      "community": 108,
+      "community": 16,
       "norm_label": "shellscopeentryallowedarg"
     },
     {
@@ -1618,7 +1618,7 @@
       "source_location": "L6593",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_shellscopeentryallowedarg_description",
-      "community": 108,
+      "community": 16,
       "norm_label": "description"
     },
     {
@@ -1628,7 +1628,7 @@
       "source_location": "L6594",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_desktop_schema_shellscopeentryallowedarg_anyof",
-      "community": 108,
+      "community": 16,
       "norm_label": "anyof"
     },
     {
@@ -1808,7 +1808,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_properties_description",
-      "community": 21,
+      "community": 110,
       "norm_label": "description"
     },
     {
@@ -1818,7 +1818,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_description_description",
-      "community": 21,
+      "community": 110,
       "norm_label": "description"
     },
     {
@@ -1828,7 +1828,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_description_default",
-      "community": 21,
+      "community": 110,
       "norm_label": "default"
     },
     {
@@ -1838,7 +1838,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_description_type",
-      "community": 21,
+      "community": 110,
       "norm_label": "type"
     },
     {
@@ -1878,7 +1878,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_properties_local",
-      "community": 58,
+      "community": 21,
       "norm_label": "local"
     },
     {
@@ -1888,7 +1888,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_local_description",
-      "community": 58,
+      "community": 21,
       "norm_label": "description"
     },
     {
@@ -1898,7 +1898,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_local_default",
-      "community": 58,
+      "community": 21,
       "norm_label": "default"
     },
     {
@@ -1908,7 +1908,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_local_type",
-      "community": 58,
+      "community": 21,
       "norm_label": "type"
     },
     {
@@ -2228,7 +2228,7 @@
       "source_location": "L2378",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_identifier",
-      "community": 17,
+      "community": 21,
       "norm_label": "identifier"
     },
     {
@@ -2238,7 +2238,7 @@
       "source_location": "L2380",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_identifier_oneof",
-      "community": 17,
+      "community": 21,
       "norm_label": "oneof"
     },
     {
@@ -2368,7 +2368,7 @@
       "source_location": "L6592",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_shellscopeentryallowedarg",
-      "community": 109,
+      "community": 17,
       "norm_label": "shellscopeentryallowedarg"
     },
     {
@@ -2378,7 +2378,7 @@
       "source_location": "L6593",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedarg_description",
-      "community": 109,
+      "community": 17,
       "norm_label": "description"
     },
     {
@@ -2388,7 +2388,7 @@
       "source_location": "L6594",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedarg_anyof",
-      "community": 109,
+      "community": 17,
       "norm_label": "anyof"
     },
     {
@@ -3528,7 +3528,7 @@
       "source_location": "L29",
       "_origin": "ast",
       "id": "src_components_board_kanbancolumn_kanbancolumnprops",
-      "community": 30,
+      "community": 19,
       "norm_label": "kanbancolumnprops"
     },
     {
@@ -3548,7 +3548,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_board_taskcard",
-      "community": 41,
+      "community": 29,
       "norm_label": "taskcard.tsx"
     },
     {
@@ -3558,7 +3558,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_board_taskcard_priority_dot",
-      "community": 41,
+      "community": 29,
       "norm_label": "priority_dot"
     },
     {
@@ -3568,7 +3568,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_components_board_taskcard_formatdue",
-      "community": 41,
+      "community": 29,
       "norm_label": "formatdue()"
     },
     {
@@ -3578,7 +3578,7 @@
       "source_location": "L24",
       "_origin": "ast",
       "id": "src_components_board_taskcard_taskcardprops",
-      "community": 41,
+      "community": 29,
       "norm_label": "taskcardprops"
     },
     {
@@ -3588,7 +3588,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_board_taskcard_taskcard",
-      "community": 41,
+      "community": 29,
       "norm_label": "taskcard()"
     },
     {
@@ -4758,7 +4758,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_attachmentsbar",
-      "community": 14,
+      "community": 52,
       "norm_label": "attachmentsbar.tsx"
     },
     {
@@ -4768,7 +4768,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_components_editor_attachmentsbar_attachmentsbarprops",
-      "community": 14,
+      "community": 52,
       "norm_label": "attachmentsbarprops"
     },
     {
@@ -4778,7 +4778,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_components_editor_attachmentsbar_attachmentcard",
-      "community": 14,
+      "community": 52,
       "norm_label": "attachmentcard()"
     },
     {
@@ -4788,7 +4788,7 @@
       "source_location": "L117",
       "_origin": "ast",
       "id": "src_components_editor_attachmentsbar_attachmentsbar",
-      "community": 14,
+      "community": 52,
       "norm_label": "attachmentsbar()"
     },
     {
@@ -4798,7 +4798,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_editortoolbar",
-      "community": 61,
+      "community": 52,
       "norm_label": "editortoolbar.tsx"
     },
     {
@@ -4808,7 +4808,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_components_editor_editortoolbar_editortoolbar",
-      "community": 61,
+      "community": 52,
       "norm_label": "editortoolbar()"
     },
     {
@@ -4818,7 +4818,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext",
-      "community": 71,
+      "community": 52,
       "norm_label": "editorviewcontext.tsx"
     },
     {
@@ -4828,7 +4828,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_viewref",
-      "community": 71,
+      "community": 52,
       "norm_label": "viewref"
     },
     {
@@ -4838,7 +4838,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_editorviewcontext",
-      "community": 71,
+      "community": 52,
       "norm_label": "editorviewcontext"
     },
     {
@@ -4848,7 +4848,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_editorviewprovider",
-      "community": 71,
+      "community": 52,
       "norm_label": "editorviewprovider()"
     },
     {
@@ -4858,7 +4858,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_editor_editorviewcontext_useeditorviewref",
-      "community": 71,
+      "community": 52,
       "norm_label": "useeditorviewref()"
     },
     {
@@ -4928,7 +4928,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_mediapanel",
-      "community": 14,
+      "community": 52,
       "norm_label": "mediapanel.tsx"
     },
     {
@@ -4938,7 +4938,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_editor_mediapanel_attachicon",
-      "community": 14,
+      "community": 52,
       "norm_label": "attachicon()"
     },
     {
@@ -4948,7 +4948,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_components_editor_mediapanel_imagethumb",
-      "community": 14,
+      "community": 52,
       "norm_label": "imagethumb()"
     },
     {
@@ -4958,7 +4958,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_components_editor_mediapanel_mediaitem",
-      "community": 14,
+      "community": 52,
       "norm_label": "mediaitem()"
     },
     {
@@ -4968,7 +4968,7 @@
       "source_location": "L129",
       "_origin": "ast",
       "id": "src_components_editor_mediapanel_sectionlabel",
-      "community": 14,
+      "community": 52,
       "norm_label": "sectionlabel()"
     },
     {
@@ -4978,7 +4978,7 @@
       "source_location": "L139",
       "_origin": "ast",
       "id": "src_components_editor_mediapanel_mediapanelprops",
-      "community": 14,
+      "community": 52,
       "norm_label": "mediapanelprops"
     },
     {
@@ -4988,7 +4988,7 @@
       "source_location": "L144",
       "_origin": "ast",
       "id": "src_components_editor_mediapanel_mediapanel",
-      "community": 14,
+      "community": 52,
       "norm_label": "mediapanel()"
     },
     {
@@ -4998,7 +4998,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_editor_notesearchbar",
-      "community": 71,
+      "community": 52,
       "norm_label": "notesearchbar.tsx"
     },
     {
@@ -5008,7 +5008,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_components_editor_notesearchbar_notesearchbarprops",
-      "community": 71,
+      "community": 52,
       "norm_label": "notesearchbarprops"
     },
     {
@@ -5018,7 +5018,7 @@
       "source_location": "L18",
       "_origin": "ast",
       "id": "src_components_editor_notesearchbar_notesearchbar",
-      "community": 71,
+      "community": 52,
       "norm_label": "notesearchbar()"
     },
     {
@@ -5198,7 +5198,7 @@
       "source_location": "L516",
       "_origin": "ast",
       "id": "src_components_editor_richpreview_localimage",
-      "community": 15,
+      "community": 2,
       "norm_label": "localimage()"
     },
     {
@@ -5318,7 +5318,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "src_components_editor_sharedialog_sharedialogprops",
-      "community": 19,
+      "community": 2,
       "norm_label": "sharedialogprops"
     },
     {
@@ -5568,7 +5568,7 @@
       "source_location": "L112",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_dropline",
-      "community": 29,
+      "community": 25,
       "norm_label": "dropline()"
     },
     {
@@ -5578,7 +5578,7 @@
       "source_location": "L128",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_noterowprops",
-      "community": 19,
+      "community": 25,
       "norm_label": "noterowprops"
     },
     {
@@ -5625,7 +5625,7 @@
       "label": "findNotesInFolder()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1297",
+      "source_location": "L1332",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_findnotesinfolder",
       "community": 25,
@@ -5635,7 +5635,7 @@
       "label": "findFolderChildren()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1309",
+      "source_location": "L1344",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_findfolderchildren",
       "community": 25,
@@ -5645,7 +5645,7 @@
       "label": "flatFolders()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1321",
+      "source_location": "L1356",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_flatfolders",
       "community": 25,
@@ -5728,7 +5728,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_settings_joinvaultdialog",
-      "community": 15,
+      "community": 41,
       "norm_label": "joinvaultdialog.tsx"
     },
     {
@@ -5738,7 +5738,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_settings_joinvaultdialog_props",
-      "community": 15,
+      "community": 41,
       "norm_label": "props"
     },
     {
@@ -5748,7 +5748,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_components_settings_joinvaultdialog_joinvaultdialog",
-      "community": 15,
+      "community": 41,
       "norm_label": "joinvaultdialog()"
     },
     {
@@ -5838,7 +5838,7 @@
       "source_location": "L631",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_shortcutssection",
-      "community": 73,
+      "community": 47,
       "norm_label": "shortcutssection()"
     },
     {
@@ -5868,7 +5868,7 @@
       "source_location": "L920",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_formatvaultdate",
-      "community": 73,
+      "community": 41,
       "norm_label": "formatvaultdate()"
     },
     {
@@ -5878,7 +5878,7 @@
       "source_location": "L930",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_vaultsection",
-      "community": 15,
+      "community": 41,
       "norm_label": "vaultsection()"
     },
     {
@@ -5888,7 +5888,7 @@
       "source_location": "L1176",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_gitbranchsection",
-      "community": 73,
+      "community": 30,
       "norm_label": "gitbranchsection()"
     },
     {
@@ -6118,7 +6118,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_githubsyncdialog",
-      "community": 73,
+      "community": 30,
       "norm_label": "githubsyncdialog.tsx"
     },
     {
@@ -6128,7 +6128,7 @@
       "source_location": "L27",
       "_origin": "ast",
       "id": "src_components_shared_githubsyncdialog_props",
-      "community": 73,
+      "community": 30,
       "norm_label": "props"
     },
     {
@@ -6138,7 +6138,7 @@
       "source_location": "L33",
       "_origin": "ast",
       "id": "src_components_shared_githubsyncdialog_pushresult",
-      "community": 73,
+      "community": 30,
       "norm_label": "pushresult"
     },
     {
@@ -6148,7 +6148,7 @@
       "source_location": "L35",
       "_origin": "ast",
       "id": "src_components_shared_githubsyncdialog_githubsyncdialog",
-      "community": 73,
+      "community": 30,
       "norm_label": "githubsyncdialog()"
     },
     {
@@ -6178,7 +6178,7 @@
       "source_location": "L47",
       "_origin": "ast",
       "id": "src_components_shared_markdownfield_markdownfield",
-      "community": 61,
+      "community": 52,
       "norm_label": "markdownfield()"
     },
     {
@@ -6198,7 +6198,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_searchoverlay",
-      "community": 15,
+      "community": 10,
       "norm_label": "searchoverlay.tsx"
     },
     {
@@ -6208,7 +6208,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_shared_searchoverlay_searchoverlay",
-      "community": 15,
+      "community": 10,
       "norm_label": "searchoverlay()"
     },
     {
@@ -6218,7 +6218,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_signindialog",
-      "community": 73,
+      "community": 37,
       "norm_label": "signindialog.tsx"
     },
     {
@@ -6228,7 +6228,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_components_shared_signindialog_props",
-      "community": 73,
+      "community": 37,
       "norm_label": "props"
     },
     {
@@ -6238,7 +6238,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_components_shared_signindialog_signindialog",
-      "community": 73,
+      "community": 37,
       "norm_label": "signindialog()"
     },
     {
@@ -6248,7 +6248,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_tagchip",
-      "community": 41,
+      "community": 10,
       "norm_label": "tagchip.tsx"
     },
     {
@@ -6258,7 +6258,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_tagchip_tagchipprops",
-      "community": 41,
+      "community": 10,
       "norm_label": "tagchipprops"
     },
     {
@@ -6268,7 +6268,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_shared_tagchip_tagchip",
-      "community": 41,
+      "community": 10,
       "norm_label": "tagchip()"
     },
     {
@@ -6278,7 +6278,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_themetoggle",
-      "community": 10,
+      "community": 25,
       "norm_label": "themetoggle.tsx"
     },
     {
@@ -6288,7 +6288,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_components_shared_themetoggle_themetoggle",
-      "community": 10,
+      "community": 25,
       "norm_label": "themetoggle()"
     },
     {
@@ -6298,7 +6298,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_shared_vaultpicker",
-      "community": 15,
+      "community": 41,
       "norm_label": "vaultpicker.tsx"
     },
     {
@@ -6308,7 +6308,7 @@
       "source_location": "L15",
       "_origin": "ast",
       "id": "src_components_shared_vaultpicker_vaultpicker",
-      "community": 15,
+      "community": 41,
       "norm_label": "vaultpicker()"
     },
     {
@@ -6418,7 +6418,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_components_ui_select",
-      "community": 73,
+      "community": 29,
       "norm_label": "select.tsx"
     },
     {
@@ -6428,7 +6428,7 @@
       "source_location": "L5",
       "_origin": "ast",
       "id": "src_components_ui_select_selectoption",
-      "community": 73,
+      "community": 29,
       "norm_label": "selectoption"
     },
     {
@@ -6438,7 +6438,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_components_ui_select_selectprops",
-      "community": 73,
+      "community": 29,
       "norm_label": "selectprops"
     },
     {
@@ -6448,7 +6448,7 @@
       "source_location": "L20",
       "_origin": "ast",
       "id": "src_components_ui_select_select",
-      "community": 73,
+      "community": 29,
       "norm_label": "select()"
     },
     {
@@ -6458,7 +6458,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_attachments",
-      "community": 14,
+      "community": 52,
       "norm_label": "attachments.ts"
     },
     {
@@ -6468,7 +6468,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_attachments_image_exts",
-      "community": 14,
+      "community": 52,
       "norm_label": "image_exts"
     },
     {
@@ -6478,7 +6478,7 @@
       "source_location": "L8",
       "_origin": "ast",
       "id": "src_lib_attachments_video_exts",
-      "community": 14,
+      "community": 52,
       "norm_label": "video_exts"
     },
     {
@@ -6488,7 +6488,7 @@
       "source_location": "L10",
       "_origin": "ast",
       "id": "src_lib_attachments_detecttype",
-      "community": 14,
+      "community": 52,
       "norm_label": "detecttype()"
     },
     {
@@ -6498,7 +6498,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_lib_attachments_formatfilesize",
-      "community": 14,
+      "community": 52,
       "norm_label": "formatfilesize()"
     },
     {
@@ -6508,7 +6508,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_attachments_makeattachmentmarkdown",
-      "community": 61,
+      "community": 52,
       "norm_label": "makeattachmentmarkdown()"
     },
     {
@@ -6518,7 +6518,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_lib_attachments_fileicon",
-      "community": 14,
+      "community": 52,
       "norm_label": "fileicon()"
     },
     {
@@ -6528,7 +6528,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_lib_attachments_getattachmenturl",
-      "community": 14,
+      "community": 52,
       "norm_label": "getattachmenturl()"
     },
     {
@@ -6538,7 +6538,7 @@
       "source_location": "L55",
       "_origin": "ast",
       "id": "src_lib_attachments_getattachmenturlsync",
-      "community": 14,
+      "community": 52,
       "norm_label": "getattachmenturlsync()"
     },
     {
@@ -6548,7 +6548,7 @@
       "source_location": "L65",
       "_origin": "ast",
       "id": "src_lib_attachments_pickandcopyattachment",
-      "community": 14,
+      "community": 52,
       "norm_label": "pickandcopyattachment()"
     },
     {
@@ -6558,7 +6558,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "src_lib_attachments_openattachment",
-      "community": 14,
+      "community": 52,
       "norm_label": "openattachment()"
     },
     {
@@ -6568,7 +6568,7 @@
       "source_location": "L136",
       "_origin": "ast",
       "id": "src_lib_attachments_deleteattachmentfile",
-      "community": 14,
+      "community": 52,
       "norm_label": "deleteattachmentfile()"
     },
     {
@@ -6578,7 +6578,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_auth",
-      "community": 73,
+      "community": 37,
       "norm_label": "auth.ts"
     },
     {
@@ -6588,7 +6588,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_lib_auth_signup",
-      "community": 73,
+      "community": 37,
       "norm_label": "signup()"
     },
     {
@@ -6598,7 +6598,7 @@
       "source_location": "L17",
       "_origin": "ast",
       "id": "src_lib_auth_signin",
-      "community": 73,
+      "community": 37,
       "norm_label": "signin()"
     },
     {
@@ -6618,7 +6618,7 @@
       "source_location": "L28",
       "_origin": "ast",
       "id": "src_lib_auth_getsession",
-      "community": 15,
+      "community": 37,
       "norm_label": "getsession()"
     },
     {
@@ -6628,7 +6628,7 @@
       "source_location": "L34",
       "_origin": "ast",
       "id": "src_lib_auth_onauthstatechange",
-      "community": 73,
+      "community": 37,
       "norm_label": "onauthstatechange()"
     },
     {
@@ -6638,7 +6638,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_deleteactions",
-      "community": 47,
+      "community": 1,
       "norm_label": "deleteactions.ts"
     },
     {
@@ -6648,7 +6648,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_deleteactions_findfolderbyid",
-      "community": 47,
+      "community": 1,
       "norm_label": "findfolderbyid()"
     },
     {
@@ -6658,7 +6658,7 @@
       "source_location": "L13",
       "_origin": "ast",
       "id": "src_lib_deleteactions_countnotesinfolder",
-      "community": 47,
+      "community": 1,
       "norm_label": "countnotesinfolder()"
     },
     {
@@ -6698,7 +6698,7 @@
       "source_location": "L64",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletefolder",
-      "community": 47,
+      "community": 1,
       "norm_label": "confirmdeletefolder()"
     },
     {
@@ -6708,7 +6708,7 @@
       "source_location": "L78",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletefolderitem",
-      "community": 47,
+      "community": 1,
       "norm_label": "confirmdeletefolderitem()"
     },
     {
@@ -6718,7 +6718,7 @@
       "source_location": "L82",
       "_origin": "ast",
       "id": "src_lib_deleteactions_confirmdeletefolderbyid",
-      "community": 47,
+      "community": 1,
       "norm_label": "confirmdeletefolderbyid()"
     },
     {
@@ -6735,7 +6735,7 @@
       "label": "inkwellHighlightStyle",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L15",
+      "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_editorextensions_inkwellhighlightstyle",
       "community": 20,
@@ -6745,27 +6745,37 @@
       "label": "markdownHighlighting",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L37",
+      "source_location": "L36",
       "_origin": "ast",
       "id": "src_lib_editorextensions_markdownhighlighting",
       "community": 52,
       "norm_label": "markdownhighlighting"
     },
     {
+      "label": "codeTokenHighlightStyle",
+      "file_type": "code",
+      "source_file": "src/lib/editorExtensions.ts",
+      "source_location": "L51",
+      "_origin": "ast",
+      "id": "src_lib_editorextensions_codetokenhighlightstyle",
+      "community": 20,
+      "norm_label": "codetokenhighlightstyle"
+    },
+    {
       "label": "codeHighlighting",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L44",
+      "source_location": "L97",
       "_origin": "ast",
       "id": "src_lib_editorextensions_codehighlighting",
-      "community": 52,
+      "community": 20,
       "norm_label": "codehighlighting"
     },
     {
       "label": "ICON_GLYPH",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L53",
+      "source_location": "L106",
       "_origin": "ast",
       "id": "src_lib_editorextensions_icon_glyph",
       "community": 20,
@@ -6775,7 +6785,7 @@
       "label": "iconRules()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L60",
+      "source_location": "L113",
       "_origin": "ast",
       "id": "src_lib_editorextensions_iconrules",
       "community": 20,
@@ -6785,7 +6795,7 @@
       "label": "autocompleteTheme",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L68",
+      "source_location": "L121",
       "_origin": "ast",
       "id": "src_lib_editorextensions_autocompletetheme",
       "community": 52,
@@ -6795,7 +6805,7 @@
       "label": "SLASH_COMMANDS",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L143",
+      "source_location": "L196",
       "_origin": "ast",
       "id": "src_lib_editorextensions_slash_commands",
       "community": 20,
@@ -6805,7 +6815,7 @@
       "label": "slashCompletion()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L160",
+      "source_location": "L213",
       "_origin": "ast",
       "id": "src_lib_editorextensions_slashcompletion",
       "community": 20,
@@ -6815,7 +6825,7 @@
       "label": "noteMentionCompletion()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L208",
+      "source_location": "L261",
       "_origin": "ast",
       "id": "src_lib_editorextensions_notementioncompletion",
       "community": 20,
@@ -6825,7 +6835,7 @@
       "label": "BUILT_IN_ABBREVIATIONS",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L247",
+      "source_location": "L300",
       "_origin": "ast",
       "id": "src_lib_editorextensions_built_in_abbreviations",
       "community": 20,
@@ -6835,7 +6845,7 @@
       "label": "abbreviationCompletion()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L255",
+      "source_location": "L308",
       "_origin": "ast",
       "id": "src_lib_editorextensions_abbreviationcompletion",
       "community": 20,
@@ -6845,7 +6855,7 @@
       "label": "tryAbbreviationReplace()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L290",
+      "source_location": "L343",
       "_origin": "ast",
       "id": "src_lib_editorextensions_tryabbreviationreplace",
       "community": 52,
@@ -6855,7 +6865,7 @@
       "label": "slashCommandCompletion",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L315",
+      "source_location": "L368",
       "_origin": "ast",
       "id": "src_lib_editorextensions_slashcommandcompletion",
       "community": 52,
@@ -6865,7 +6875,7 @@
       "label": "CheckboxWidget",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L323",
+      "source_location": "L376",
       "_origin": "ast",
       "id": "src_lib_editorextensions_checkboxwidget",
       "community": 106,
@@ -6875,7 +6885,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L324",
+      "source_location": "L377",
       "_origin": "ast",
       "id": "src_lib_editorextensions_checkboxwidget_constructor",
       "community": 106,
@@ -6885,7 +6895,7 @@
       "label": ".toDOM()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L326",
+      "source_location": "L379",
       "_origin": "ast",
       "id": "src_lib_editorextensions_checkboxwidget_todom",
       "community": 106,
@@ -6895,7 +6905,7 @@
       "label": ".eq()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L345",
+      "source_location": "L398",
       "_origin": "ast",
       "id": "src_lib_editorextensions_checkboxwidget_eq",
       "community": 106,
@@ -6905,7 +6915,7 @@
       "label": ".ignoreEvent()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L349",
+      "source_location": "L402",
       "_origin": "ast",
       "id": "src_lib_editorextensions_checkboxwidget_ignoreevent",
       "community": 106,
@@ -6915,7 +6925,7 @@
       "label": "todoCheckboxPlugin",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L352",
+      "source_location": "L405",
       "_origin": "ast",
       "id": "src_lib_editorextensions_todocheckboxplugin",
       "community": 20,
@@ -6925,7 +6935,7 @@
       "label": "buildCheckboxDecorations()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L369",
+      "source_location": "L422",
       "_origin": "ast",
       "id": "src_lib_editorextensions_buildcheckboxdecorations",
       "community": 20,
@@ -6935,107 +6945,107 @@
       "label": "CONCEALED_MARK_NODES",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L410",
+      "source_location": "L463",
       "_origin": "ast",
       "id": "src_lib_editorextensions_concealed_mark_nodes",
-      "community": 20,
+      "community": 61,
       "norm_label": "concealed_mark_nodes"
     },
     {
       "label": "BulletWidget",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L417",
+      "source_location": "L470",
       "_origin": "ast",
       "id": "src_lib_editorextensions_bulletwidget",
-      "community": 20,
+      "community": 111,
       "norm_label": "bulletwidget"
     },
     {
       "label": ".toDOM()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L418",
+      "source_location": "L471",
       "_origin": "ast",
       "id": "src_lib_editorextensions_bulletwidget_todom",
-      "community": 20,
+      "community": 111,
       "norm_label": ".todom()"
     },
     {
       "label": ".ignoreEvent()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L424",
+      "source_location": "L477",
       "_origin": "ast",
       "id": "src_lib_editorextensions_bulletwidget_ignoreevent",
-      "community": 20,
+      "community": 111,
       "norm_label": ".ignoreevent()"
     },
     {
       "label": "activeLineSet()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L427",
+      "source_location": "L480",
       "_origin": "ast",
       "id": "src_lib_editorextensions_activelineset",
-      "community": 20,
+      "community": 61,
       "norm_label": "activelineset()"
     },
     {
       "label": "decorateBlockLines()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L440",
+      "source_location": "L493",
       "_origin": "ast",
       "id": "src_lib_editorextensions_decorateblocklines",
-      "community": 20,
+      "community": 61,
       "norm_label": "decorateblocklines()"
     },
     {
       "label": "buildLiveMarkdownDecorations()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L459",
+      "source_location": "L512",
       "_origin": "ast",
       "id": "src_lib_editorextensions_buildlivemarkdowndecorations",
-      "community": 20,
+      "community": 61,
       "norm_label": "buildlivemarkdowndecorations()"
     },
     {
       "label": "liveMarkdownPlugin",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L519",
+      "source_location": "L572",
       "_origin": "ast",
       "id": "src_lib_editorextensions_livemarkdownplugin",
-      "community": 52,
+      "community": 20,
       "norm_label": "livemarkdownplugin"
     },
     {
       "label": "isTableRow()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L536",
+      "source_location": "L589",
       "_origin": "ast",
       "id": "src_lib_editorextensions_istablerow",
-      "community": 20,
+      "community": 108,
       "norm_label": "istablerow()"
     },
     {
       "label": "isSeparatorRow()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L542",
+      "source_location": "L595",
       "_origin": "ast",
       "id": "src_lib_editorextensions_isseparatorrow",
-      "community": 20,
+      "community": 108,
       "norm_label": "isseparatorrow()"
     },
     {
       "label": "TableLineType",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L547",
+      "source_location": "L600",
       "_origin": "ast",
       "id": "src_lib_editorextensions_tablelinetype",
       "community": 20,
@@ -7045,27 +7055,27 @@
       "label": "codeBlockLineNumbers()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L552",
+      "source_location": "L605",
       "_origin": "ast",
       "id": "src_lib_editorextensions_codeblocklinenumbers",
-      "community": 20,
+      "community": 108,
       "norm_label": "codeblocklinenumbers()"
     },
     {
       "label": "buildTableDecorations()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L565",
+      "source_location": "L618",
       "_origin": "ast",
       "id": "src_lib_editorextensions_buildtabledecorations",
-      "community": 20,
+      "community": 108,
       "norm_label": "buildtabledecorations()"
     },
     {
       "label": "tablePlugin",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L655",
+      "source_location": "L708",
       "_origin": "ast",
       "id": "src_lib_editorextensions_tableplugin",
       "community": 52,
@@ -7075,7 +7085,7 @@
       "label": "highlightMarkPlugin",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L670",
+      "source_location": "L723",
       "_origin": "ast",
       "id": "src_lib_editorextensions_highlightmarkplugin",
       "community": 52,
@@ -7085,7 +7095,7 @@
       "label": "buildHighlightDecorations()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L687",
+      "source_location": "L740",
       "_origin": "ast",
       "id": "src_lib_editorextensions_buildhighlightdecorations",
       "community": 20,
@@ -7095,17 +7105,17 @@
       "label": "MATH_FENCE_LANGS",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L717",
+      "source_location": "L770",
       "_origin": "ast",
       "id": "src_lib_editorextensions_math_fence_langs",
-      "community": 20,
+      "community": 71,
       "norm_label": "math_fence_langs"
     },
     {
       "label": "KatexWidget",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L719",
+      "source_location": "L772",
       "_origin": "ast",
       "id": "src_lib_editorextensions_katexwidget",
       "community": 70,
@@ -7115,7 +7125,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L720",
+      "source_location": "L773",
       "_origin": "ast",
       "id": "src_lib_editorextensions_katexwidget_constructor",
       "community": 70,
@@ -7125,7 +7135,7 @@
       "label": ".eq()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L722",
+      "source_location": "L775",
       "_origin": "ast",
       "id": "src_lib_editorextensions_katexwidget_eq",
       "community": 70,
@@ -7135,7 +7145,7 @@
       "label": ".toDOM()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L726",
+      "source_location": "L779",
       "_origin": "ast",
       "id": "src_lib_editorextensions_katexwidget_todom",
       "community": 70,
@@ -7145,7 +7155,7 @@
       "label": ".ignoreEvent()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L744",
+      "source_location": "L797",
       "_origin": "ast",
       "id": "src_lib_editorextensions_katexwidget_ignoreevent",
       "community": 70,
@@ -7155,47 +7165,47 @@
       "label": "overlapsSelection()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L747",
+      "source_location": "L800",
       "_origin": "ast",
       "id": "src_lib_editorextensions_overlapsselection",
-      "community": 20,
+      "community": 71,
       "norm_label": "overlapsselection()"
     },
     {
       "label": "overlapsAny()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L751",
+      "source_location": "L804",
       "_origin": "ast",
       "id": "src_lib_editorextensions_overlapsany",
-      "community": 20,
+      "community": 71,
       "norm_label": "overlapsany()"
     },
     {
       "label": "buildMathDecorations()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L755",
+      "source_location": "L808",
       "_origin": "ast",
       "id": "src_lib_editorextensions_buildmathdecorations",
-      "community": 20,
+      "community": 71,
       "norm_label": "buildmathdecorations()"
     },
     {
       "label": "mathPreviewField",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L829",
+      "source_location": "L882",
       "_origin": "ast",
       "id": "src_lib_editorextensions_mathpreviewfield",
-      "community": 52,
+      "community": 20,
       "norm_label": "mathpreviewfield"
     },
     {
       "label": "EMBED_IMAGE_EXTS",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L844",
+      "source_location": "L897",
       "_origin": "ast",
       "id": "src_lib_editorextensions_embed_image_exts",
       "community": 20,
@@ -7205,7 +7215,7 @@
       "label": "EMBED_VIDEO_EXTS",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L845",
+      "source_location": "L898",
       "_origin": "ast",
       "id": "src_lib_editorextensions_embed_video_exts",
       "community": 20,
@@ -7215,7 +7225,7 @@
       "label": "embedFileType()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L847",
+      "source_location": "L900",
       "_origin": "ast",
       "id": "src_lib_editorextensions_embedfiletype",
       "community": 20,
@@ -7225,7 +7235,7 @@
       "label": "embedFormatSize()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L854",
+      "source_location": "L907",
       "_origin": "ast",
       "id": "src_lib_editorextensions_embedformatsize",
       "community": 56,
@@ -7235,7 +7245,7 @@
       "label": "uint8ToBase64()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L861",
+      "source_location": "L914",
       "_origin": "ast",
       "id": "src_lib_editorextensions_uint8tobase64",
       "community": 56,
@@ -7245,7 +7255,7 @@
       "label": "FileEmbedWidget",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L873",
+      "source_location": "L926",
       "_origin": "ast",
       "id": "src_lib_editorextensions_fileembedwidget",
       "community": 56,
@@ -7255,7 +7265,7 @@
       "label": ".constructor()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L878",
+      "source_location": "L931",
       "_origin": "ast",
       "id": "src_lib_editorextensions_fileembedwidget_constructor",
       "community": 56,
@@ -7265,7 +7275,7 @@
       "label": ".resolvePath()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L895",
+      "source_location": "L948",
       "_origin": "ast",
       "id": "src_lib_editorextensions_fileembedwidget_resolvepath",
       "community": 56,
@@ -7275,7 +7285,7 @@
       "label": ".eq()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L915",
+      "source_location": "L968",
       "_origin": "ast",
       "id": "src_lib_editorextensions_fileembedwidget_eq",
       "community": 56,
@@ -7285,7 +7295,7 @@
       "label": ".buildImageDOM()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L928",
+      "source_location": "L981",
       "_origin": "ast",
       "id": "src_lib_editorextensions_fileembedwidget_buildimagedom",
       "community": 56,
@@ -7295,7 +7305,7 @@
       "label": ".toDOM()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1035",
+      "source_location": "L1088",
       "_origin": "ast",
       "id": "src_lib_editorextensions_fileembedwidget_todom",
       "community": 56,
@@ -7305,7 +7315,7 @@
       "label": ".estimatedHeight()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1308",
+      "source_location": "L1361",
       "_origin": "ast",
       "id": "src_lib_editorextensions_fileembedwidget_estimatedheight",
       "community": 56,
@@ -7315,7 +7325,7 @@
       "label": ".ignoreEvent()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1309",
+      "source_location": "L1362",
       "_origin": "ast",
       "id": "src_lib_editorextensions_fileembedwidget_ignoreevent",
       "community": 56,
@@ -7325,7 +7335,7 @@
       "label": "buildFileEmbedDecorations()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1312",
+      "source_location": "L1365",
       "_origin": "ast",
       "id": "src_lib_editorextensions_buildfileembeddecorations",
       "community": 20,
@@ -7335,7 +7345,7 @@
       "label": "createFileEmbedPlugin()",
       "file_type": "code",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1352",
+      "source_location": "L1405",
       "_origin": "ast",
       "id": "src_lib_editorextensions_createfileembedplugin",
       "community": 52,
@@ -7348,7 +7358,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_editorformatting",
-      "community": 61,
+      "community": 52,
       "norm_label": "editorformatting.ts"
     },
     {
@@ -7358,7 +7368,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_editorformatting_applyinlineformat",
-      "community": 61,
+      "community": 52,
       "norm_label": "applyinlineformat()"
     },
     {
@@ -7368,7 +7378,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_editorformatting_applyblockformat",
-      "community": 61,
+      "community": 52,
       "norm_label": "applyblockformat()"
     },
     {
@@ -7378,7 +7388,7 @@
       "source_location": "L75",
       "_origin": "ast",
       "id": "src_lib_editorformatting_insertatcursor",
-      "community": 61,
+      "community": 52,
       "norm_label": "insertatcursor()"
     },
     {
@@ -7388,7 +7398,7 @@
       "source_location": "L87",
       "_origin": "ast",
       "id": "src_lib_editorformatting_formataction",
-      "community": 61,
+      "community": 52,
       "norm_label": "formataction"
     },
     {
@@ -7398,7 +7408,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_lib_editorformatting_format_toolbar_items",
-      "community": 61,
+      "community": 52,
       "norm_label": "format_toolbar_items"
     },
     {
@@ -7408,7 +7418,7 @@
       "source_location": "L108",
       "_origin": "ast",
       "id": "src_lib_editorformatting_applyformataction",
-      "community": 61,
+      "community": 52,
       "norm_label": "applyformataction()"
     },
     {
@@ -7548,7 +7558,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_github",
-      "community": 73,
+      "community": 30,
       "norm_label": "github.ts"
     },
     {
@@ -7558,7 +7568,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_github_getgithubtoken",
-      "community": 73,
+      "community": 30,
       "norm_label": "getgithubtoken()"
     },
     {
@@ -7568,7 +7578,7 @@
       "source_location": "L19",
       "_origin": "ast",
       "id": "src_lib_github_setgithubtoken",
-      "community": 73,
+      "community": 30,
       "norm_label": "setgithubtoken()"
     },
     {
@@ -7578,7 +7588,7 @@
       "source_location": "L23",
       "_origin": "ast",
       "id": "src_lib_github_getgithubowner",
-      "community": 73,
+      "community": 30,
       "norm_label": "getgithubowner()"
     },
     {
@@ -7588,7 +7598,7 @@
       "source_location": "L26",
       "_origin": "ast",
       "id": "src_lib_github_setgithubowner",
-      "community": 73,
+      "community": 30,
       "norm_label": "setgithubowner()"
     },
     {
@@ -7598,7 +7608,7 @@
       "source_location": "L30",
       "_origin": "ast",
       "id": "src_lib_github_isgithubconfigured",
-      "community": 73,
+      "community": 30,
       "norm_label": "isgithubconfigured()"
     },
     {
@@ -7608,7 +7618,7 @@
       "source_location": "L36",
       "_origin": "ast",
       "id": "src_lib_github_ghrepo",
-      "community": 73,
+      "community": 30,
       "norm_label": "ghrepo"
     },
     {
@@ -7618,7 +7628,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_lib_github_ghfile",
-      "community": 73,
+      "community": 30,
       "norm_label": "ghfile"
     },
     {
@@ -7628,7 +7638,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_lib_github_ghtreeitem",
-      "community": 73,
+      "community": 30,
       "norm_label": "ghtreeitem"
     },
     {
@@ -7638,7 +7648,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_lib_github_ghfetch",
-      "community": 73,
+      "community": 30,
       "norm_label": "ghfetch()"
     },
     {
@@ -7648,7 +7658,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_lib_github_listrepos",
-      "community": 73,
+      "community": 30,
       "norm_label": "listrepos()"
     },
     {
@@ -7658,7 +7668,7 @@
       "source_location": "L100",
       "_origin": "ast",
       "id": "src_lib_github_getfile",
-      "community": 73,
+      "community": 30,
       "norm_label": "getfile()"
     },
     {
@@ -7668,7 +7678,7 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "src_lib_github_pushfile",
-      "community": 73,
+      "community": 30,
       "norm_label": "pushfile()"
     },
     {
@@ -7678,7 +7688,7 @@
       "source_location": "L163",
       "_origin": "ast",
       "id": "src_lib_github_listmarkdownfiles",
-      "community": 73,
+      "community": 30,
       "norm_label": "listmarkdownfiles()"
     },
     {
@@ -7688,7 +7698,7 @@
       "source_location": "L180",
       "_origin": "ast",
       "id": "src_lib_github_syncnotetogithub",
-      "community": 73,
+      "community": 30,
       "norm_label": "syncnotetogithub()"
     },
     {
@@ -7698,7 +7708,7 @@
       "source_location": "L200",
       "_origin": "ast",
       "id": "src_lib_github_pullnotefromgithub",
-      "community": 73,
+      "community": 30,
       "norm_label": "pullnotefromgithub()"
     },
     {
@@ -7708,7 +7718,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_id",
-      "community": 15,
+      "community": 14,
       "norm_label": "id.ts"
     },
     {
@@ -7718,7 +7728,7 @@
       "source_location": "L6",
       "_origin": "ast",
       "id": "src_lib_id_genid",
-      "community": 15,
+      "community": 14,
       "norm_label": "genid()"
     },
     {
@@ -7758,7 +7768,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_notereferences",
-      "community": 2,
+      "community": 10,
       "norm_label": "notereferences.tsx"
     },
     {
@@ -7768,7 +7778,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_notereferences_navigatetonote",
-      "community": 2,
+      "community": 10,
       "norm_label": "navigatetonote()"
     },
     {
@@ -7778,7 +7788,7 @@
       "source_location": "L16",
       "_origin": "ast",
       "id": "src_lib_notereferences_noterefautocompleteprops",
-      "community": 2,
+      "community": 10,
       "norm_label": "noterefautocompleteprops"
     },
     {
@@ -7788,7 +7798,7 @@
       "source_location": "L22",
       "_origin": "ast",
       "id": "src_lib_notereferences_noterefautocomplete",
-      "community": 2,
+      "community": 10,
       "norm_label": "noterefautocomplete()"
     },
     {
@@ -7798,7 +7808,7 @@
       "source_location": "L150",
       "_origin": "ast",
       "id": "src_lib_notereferences_getfilterednotes",
-      "community": 2,
+      "community": 10,
       "norm_label": "getfilterednotes()"
     },
     {
@@ -7808,7 +7818,7 @@
       "source_location": "L158",
       "_origin": "ast",
       "id": "src_lib_notereferences_noterefdisplay",
-      "community": 2,
+      "community": 10,
       "norm_label": "noterefdisplay()"
     },
     {
@@ -7918,7 +7928,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension",
-      "community": 71,
+      "community": 52,
       "norm_label": "searchhighlightextension.ts"
     },
     {
@@ -7928,7 +7938,7 @@
       "source_location": "L4",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_searchhighlightspec",
-      "community": 71,
+      "community": 52,
       "norm_label": "searchhighlightspec"
     },
     {
@@ -7938,7 +7948,7 @@
       "source_location": "L9",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_setsearchhighlights",
-      "community": 71,
+      "community": 52,
       "norm_label": "setsearchhighlights"
     },
     {
@@ -7948,7 +7958,7 @@
       "source_location": "L11",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_matchdeco",
-      "community": 71,
+      "community": 52,
       "norm_label": "matchdeco"
     },
     {
@@ -7958,7 +7968,7 @@
       "source_location": "L12",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_activedeco",
-      "community": 71,
+      "community": 52,
       "norm_label": "activedeco"
     },
     {
@@ -7968,7 +7978,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_searchhighlightfield",
-      "community": 71,
+      "community": 52,
       "norm_label": "searchhighlightfield"
     },
     {
@@ -7978,7 +7988,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_searchhighlighttheme",
-      "community": 71,
+      "community": 52,
       "norm_label": "searchhighlighttheme"
     },
     {
@@ -7988,7 +7998,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_lib_searchhighlightextension_searchhighlightextension",
-      "community": 71,
+      "community": 52,
       "norm_label": "searchhighlightextension"
     },
     {
@@ -7998,7 +8008,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_shortcuts",
-      "community": 73,
+      "community": 47,
       "norm_label": "shortcuts.ts"
     },
     {
@@ -8008,7 +8018,7 @@
       "source_location": "L7",
       "_origin": "ast",
       "id": "src_lib_shortcuts_shortcutdef",
-      "community": 73,
+      "community": 47,
       "norm_label": "shortcutdef"
     },
     {
@@ -8018,7 +8028,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_shortcuts_shortcut_defs",
-      "community": 73,
+      "community": 47,
       "norm_label": "shortcut_defs"
     },
     {
@@ -8028,7 +8038,7 @@
       "source_location": "L25",
       "_origin": "ast",
       "id": "src_lib_shortcuts_default_shortcuts",
-      "community": 73,
+      "community": 47,
       "norm_label": "default_shortcuts"
     },
     {
@@ -8038,7 +8048,7 @@
       "source_location": "L31",
       "_origin": "ast",
       "id": "src_lib_shortcuts_loadshortcuts",
-      "community": 73,
+      "community": 47,
       "norm_label": "loadshortcuts()"
     },
     {
@@ -8048,7 +8058,7 @@
       "source_location": "L41",
       "_origin": "ast",
       "id": "src_lib_shortcuts_saveshortcuts",
-      "community": 73,
+      "community": 47,
       "norm_label": "saveshortcuts()"
     },
     {
@@ -8058,7 +8068,7 @@
       "source_location": "L46",
       "_origin": "ast",
       "id": "src_lib_shortcuts_eventtocombo",
-      "community": 73,
+      "community": 47,
       "norm_label": "eventtocombo()"
     },
     {
@@ -8078,7 +8088,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_lib_shortcuts_hasmodifier",
-      "community": 73,
+      "community": 47,
       "norm_label": "hasmodifier()"
     },
     {
@@ -8088,7 +8098,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_lib_shortcuts_mod_symbols",
-      "community": 73,
+      "community": 47,
       "norm_label": "mod_symbols"
     },
     {
@@ -8098,7 +8108,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_lib_shortcuts_mod_labels",
-      "community": 73,
+      "community": 47,
       "norm_label": "mod_labels"
     },
     {
@@ -8108,7 +8118,7 @@
       "source_location": "L71",
       "_origin": "ast",
       "id": "src_lib_shortcuts_formatcombo",
-      "community": 73,
+      "community": 47,
       "norm_label": "formatcombo()"
     },
     {
@@ -8118,7 +8128,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_supabase",
-      "community": 73,
+      "community": 37,
       "norm_label": "supabase.ts"
     },
     {
@@ -8128,7 +8138,7 @@
       "source_location": "L14",
       "_origin": "ast",
       "id": "src_lib_supabase_supabase",
-      "community": 73,
+      "community": 37,
       "norm_label": "supabase"
     },
     {
@@ -8148,7 +8158,7 @@
       "source_location": "L39",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_boardsstate",
-      "community": 30,
+      "community": 19,
       "norm_label": "boardsstate"
     },
     {
@@ -8158,7 +8168,7 @@
       "source_location": "L45",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_synchandle",
-      "community": 30,
+      "community": 19,
       "norm_label": "synchandle"
     },
     {
@@ -8178,7 +8188,7 @@
       "source_location": "L60",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_getsynchandle",
-      "community": 37,
+      "community": 109,
       "norm_label": "getsynchandle()"
     },
     {
@@ -8218,7 +8228,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_patchymapfromarray",
-      "community": 37,
+      "community": 109,
       "norm_label": "patchymapfromarray()"
     },
     {
@@ -8248,7 +8258,7 @@
       "source_location": "L215",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_closevaultsync",
-      "community": 37,
+      "community": 41,
       "norm_label": "closevaultsync()"
     },
     {
@@ -8258,7 +8268,7 @@
       "source_location": "L223",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_pushlocalboardsstate",
-      "community": 37,
+      "community": 109,
       "norm_label": "pushlocalboardsstate()"
     },
     {
@@ -8268,7 +8278,7 @@
       "source_location": "L237",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_pullvaultfromcloud",
-      "community": 15,
+      "community": 41,
       "norm_label": "pullvaultfromcloud()"
     },
     {
@@ -8278,7 +8288,7 @@
       "source_location": "L253",
       "_origin": "ast",
       "id": "src_lib_sync_yjssync_resumevaultsyncifshared",
-      "community": 15,
+      "community": 37,
       "norm_label": "resumevaultsyncifshared()"
     },
     {
@@ -8468,7 +8478,7 @@
       "source_location": "L80",
       "_origin": "ast",
       "id": "src_lib_team_listsharedvaults",
-      "community": 15,
+      "community": 41,
       "norm_label": "listsharedvaults()"
     },
     {
@@ -8648,7 +8658,7 @@
       "source_location": "L91",
       "_origin": "ast",
       "id": "src_lib_themes_dark_themes",
-      "community": 15,
+      "community": 73,
       "norm_label": "dark_themes"
     },
     {
@@ -8658,7 +8668,7 @@
       "source_location": "L92",
       "_origin": "ast",
       "id": "src_lib_themes_light_themes",
-      "community": 15,
+      "community": 73,
       "norm_label": "light_themes"
     },
     {
@@ -8688,7 +8698,7 @@
       "source_location": "L121",
       "_origin": "ast",
       "id": "src_lib_themes_persistcustomthemes",
-      "community": 15,
+      "community": 0,
       "norm_label": "persistcustomthemes()"
     },
     {
@@ -8798,7 +8808,7 @@
       "source_location": "L59",
       "_origin": "ast",
       "id": "src_lib_utils_slugifytitle",
-      "community": 73,
+      "community": 30,
       "norm_label": "slugifytitle()"
     },
     {
@@ -8828,7 +8838,7 @@
       "source_location": "L1",
       "_origin": "ast",
       "id": "src_lib_vault",
-      "community": 15,
+      "community": 14,
       "norm_label": "vault.ts"
     },
     {
@@ -8838,7 +8848,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_lib_vault_ignored_dir_names",
-      "community": 15,
+      "community": 14,
       "norm_label": "ignored_dir_names"
     },
     {
@@ -8848,7 +8858,7 @@
       "source_location": "L61",
       "_origin": "ast",
       "id": "src_lib_vault_appdata",
-      "community": 30,
+      "community": 19,
       "norm_label": "appdata"
     },
     {
@@ -8858,7 +8868,7 @@
       "source_location": "L72",
       "_origin": "ast",
       "id": "src_lib_vault_vaultdata",
-      "community": 30,
+      "community": 19,
       "norm_label": "vaultdata"
     },
     {
@@ -8868,7 +8878,7 @@
       "source_location": "L81",
       "_origin": "ast",
       "id": "src_lib_vault_recentvault",
-      "community": 15,
+      "community": 41,
       "norm_label": "recentvault"
     },
     {
@@ -8878,7 +8888,7 @@
       "source_location": "L89",
       "_origin": "ast",
       "id": "src_lib_vault_frontmattermeta",
-      "community": 15,
+      "community": 14,
       "norm_label": "frontmattermeta"
     },
     {
@@ -8888,7 +8898,7 @@
       "source_location": "L97",
       "_origin": "ast",
       "id": "src_lib_vault_parsefrontmatter",
-      "community": 15,
+      "community": 14,
       "norm_label": "parsefrontmatter()"
     },
     {
@@ -8898,7 +8908,7 @@
       "source_location": "L124",
       "_origin": "ast",
       "id": "src_lib_vault_serializefrontmatter",
-      "community": 15,
+      "community": 14,
       "norm_label": "serializefrontmatter()"
     },
     {
@@ -8908,7 +8918,7 @@
       "source_location": "L131",
       "_origin": "ast",
       "id": "src_lib_vault_fsentry",
-      "community": 15,
+      "community": 14,
       "norm_label": "fsentry"
     },
     {
@@ -8918,7 +8928,7 @@
       "source_location": "L133",
       "_origin": "ast",
       "id": "src_lib_vault_listdir",
-      "community": 15,
+      "community": 14,
       "norm_label": "listdir()"
     },
     {
@@ -8928,7 +8938,7 @@
       "source_location": "L141",
       "_origin": "ast",
       "id": "src_lib_vault_extracttitle",
-      "community": 15,
+      "community": 14,
       "norm_label": "extracttitle()"
     },
     {
@@ -8938,7 +8948,7 @@
       "source_location": "L153",
       "_origin": "ast",
       "id": "src_lib_vault_filesearchcache",
-      "community": 15,
+      "community": 14,
       "norm_label": "filesearchcache"
     },
     {
@@ -8948,7 +8958,7 @@
       "source_location": "L155",
       "_origin": "ast",
       "id": "src_lib_vault_clearfilesearchcache",
-      "community": 15,
+      "community": 14,
       "norm_label": "clearfilesearchcache()"
     },
     {
@@ -8958,7 +8968,7 @@
       "source_location": "L169",
       "_origin": "ast",
       "id": "src_lib_vault_findexternalsearchroot",
-      "community": 15,
+      "community": 14,
       "norm_label": "findexternalsearchroot()"
     },
     {
@@ -8968,7 +8978,7 @@
       "source_location": "L185",
       "_origin": "ast",
       "id": "src_lib_vault_findfileinvault",
-      "community": 15,
+      "community": 14,
       "norm_label": "findfileinvault()"
     },
     {
@@ -8978,7 +8988,7 @@
       "source_location": "L214",
       "_origin": "ast",
       "id": "src_lib_vault_readdirectory",
-      "community": 15,
+      "community": 14,
       "norm_label": "readdirectory()"
     },
     {
@@ -8988,7 +8998,7 @@
       "source_location": "L277",
       "_origin": "ast",
       "id": "src_lib_vault_readvaultfs",
-      "community": 15,
+      "community": 14,
       "norm_label": "readvaultfs()"
     },
     {
@@ -8998,7 +9008,7 @@
       "source_location": "L367",
       "_origin": "ast",
       "id": "src_lib_vault_writenotefile",
-      "community": 15,
+      "community": 14,
       "norm_label": "writenotefile()"
     },
     {
@@ -9008,7 +9018,7 @@
       "source_location": "L382",
       "_origin": "ast",
       "id": "src_lib_vault_deletenotefile",
-      "community": 0,
+      "community": 14,
       "norm_label": "deletenotefile()"
     },
     {
@@ -9018,7 +9028,7 @@
       "source_location": "L392",
       "_origin": "ast",
       "id": "src_lib_vault_createfolderdir",
-      "community": 15,
+      "community": 14,
       "norm_label": "createfolderdir()"
     },
     {
@@ -9028,7 +9038,7 @@
       "source_location": "L398",
       "_origin": "ast",
       "id": "src_lib_vault_deletefolderdir",
-      "community": 0,
+      "community": 14,
       "norm_label": "deletefolderdir()"
     },
     {
@@ -9048,7 +9058,7 @@
       "source_location": "L414",
       "_origin": "ast",
       "id": "src_lib_vault_emptyappdata",
-      "community": 15,
+      "community": 58,
       "norm_label": "emptyappdata()"
     },
     {
@@ -9058,7 +9068,7 @@
       "source_location": "L418",
       "_origin": "ast",
       "id": "src_lib_vault_readappdata",
-      "community": 15,
+      "community": 58,
       "norm_label": "readappdata()"
     },
     {
@@ -9068,7 +9078,7 @@
       "source_location": "L428",
       "_origin": "ast",
       "id": "src_lib_vault_writeappdata",
-      "community": 15,
+      "community": 58,
       "norm_label": "writeappdata()"
     },
     {
@@ -9078,7 +9088,7 @@
       "source_location": "L444",
       "_origin": "ast",
       "id": "src_lib_vault_teamdata",
-      "community": 15,
+      "community": 14,
       "norm_label": "teamdata"
     },
     {
@@ -9088,7 +9098,7 @@
       "source_location": "L450",
       "_origin": "ast",
       "id": "src_lib_vault_readteamdata",
-      "community": 15,
+      "community": 37,
       "norm_label": "readteamdata()"
     },
     {
@@ -9098,7 +9108,7 @@
       "source_location": "L460",
       "_origin": "ast",
       "id": "src_lib_vault_writeteamdata",
-      "community": 15,
+      "community": 41,
       "norm_label": "writeteamdata()"
     },
     {
@@ -9108,7 +9118,7 @@
       "source_location": "L472",
       "_origin": "ast",
       "id": "src_lib_vault_boardsdata",
-      "community": 30,
+      "community": 19,
       "norm_label": "boardsdata"
     },
     {
@@ -9118,7 +9128,7 @@
       "source_location": "L479",
       "_origin": "ast",
       "id": "src_lib_vault_writeboardsfile",
-      "community": 15,
+      "community": 41,
       "norm_label": "writeboardsfile()"
     },
     {
@@ -9128,7 +9138,7 @@
       "source_location": "L491",
       "_origin": "ast",
       "id": "src_lib_vault_readboardsfile",
-      "community": 15,
+      "community": 14,
       "norm_label": "readboardsfile()"
     },
     {
@@ -9138,7 +9148,7 @@
       "source_location": "L507",
       "_origin": "ast",
       "id": "src_lib_vault_getglobalcanvaspath",
-      "community": 15,
+      "community": 14,
       "norm_label": "getglobalcanvaspath()"
     },
     {
@@ -9148,7 +9158,7 @@
       "source_location": "L513",
       "_origin": "ast",
       "id": "src_lib_vault_getglobalcanvasnotespath",
-      "community": 15,
+      "community": 14,
       "norm_label": "getglobalcanvasnotespath()"
     },
     {
@@ -9158,7 +9168,7 @@
       "source_location": "L519",
       "_origin": "ast",
       "id": "src_lib_vault_writeglobalcanvasfile",
-      "community": 15,
+      "community": 14,
       "norm_label": "writeglobalcanvasfile()"
     },
     {
@@ -9168,7 +9178,7 @@
       "source_location": "L531",
       "_origin": "ast",
       "id": "src_lib_vault_readglobalcanvasfile",
-      "community": 15,
+      "community": 14,
       "norm_label": "readglobalcanvasfile()"
     },
     {
@@ -9178,7 +9188,7 @@
       "source_location": "L541",
       "_origin": "ast",
       "id": "src_lib_vault_writeglobalcanvasnotes",
-      "community": 15,
+      "community": 14,
       "norm_label": "writeglobalcanvasnotes()"
     },
     {
@@ -9188,7 +9198,7 @@
       "source_location": "L553",
       "_origin": "ast",
       "id": "src_lib_vault_readglobalcanvasnotes",
-      "community": 15,
+      "community": 14,
       "norm_label": "readglobalcanvasnotes()"
     },
     {
@@ -9198,7 +9208,7 @@
       "source_location": "L563",
       "_origin": "ast",
       "id": "src_lib_vault_writenotemeta",
-      "community": 15,
+      "community": 58,
       "norm_label": "writenotemeta()"
     },
     {
@@ -9208,7 +9218,7 @@
       "source_location": "L575",
       "_origin": "ast",
       "id": "src_lib_vault_revivedates",
-      "community": 15,
+      "community": 14,
       "norm_label": "revivedates()"
     },
     {
@@ -9218,7 +9228,7 @@
       "source_location": "L583",
       "_origin": "ast",
       "id": "src_lib_vault_findfolderrelpath",
-      "community": 15,
+      "community": 14,
       "norm_label": "findfolderrelpath()"
     },
     {
@@ -9228,7 +9238,7 @@
       "source_location": "L593",
       "_origin": "ast",
       "id": "src_lib_vault_flattenfolders",
-      "community": 15,
+      "community": 14,
       "norm_label": "flattenfolders()"
     },
     {
@@ -9238,7 +9248,7 @@
       "source_location": "L597",
       "_origin": "ast",
       "id": "src_lib_vault_migratefromjson",
-      "community": 15,
+      "community": 14,
       "norm_label": "migratefromjson()"
     },
     {
@@ -9248,7 +9258,7 @@
       "source_location": "L664",
       "_origin": "ast",
       "id": "src_lib_vault_pickvaultdirectory",
-      "community": 15,
+      "community": 41,
       "norm_label": "pickvaultdirectory()"
     },
     {
@@ -9258,7 +9268,7 @@
       "source_location": "L672",
       "_origin": "ast",
       "id": "src_lib_vault_getrecentvaults",
-      "community": 15,
+      "community": 41,
       "norm_label": "getrecentvaults()"
     },
     {
@@ -9268,7 +9278,7 @@
       "source_location": "L679",
       "_origin": "ast",
       "id": "src_lib_vault_addrecentvault",
-      "community": 15,
+      "community": 41,
       "norm_label": "addrecentvault()"
     },
     {
@@ -9278,7 +9288,7 @@
       "source_location": "L687",
       "_origin": "ast",
       "id": "src_lib_vault_removerecentvault",
-      "community": 15,
+      "community": 41,
       "norm_label": "removerecentvault()"
     },
     {
@@ -9308,7 +9318,7 @@
       "source_location": "L748",
       "_origin": "ast",
       "id": "src_lib_vault_externalnoteid",
-      "community": 15,
+      "community": 14,
       "norm_label": "externalnoteid()"
     },
     {
@@ -9318,7 +9328,7 @@
       "source_location": "L752",
       "_origin": "ast",
       "id": "src_lib_vault_readexternalnote",
-      "community": 15,
+      "community": 14,
       "norm_label": "readexternalnote()"
     },
     {
@@ -9328,7 +9338,7 @@
       "source_location": "L780",
       "_origin": "ast",
       "id": "src_lib_vault_pickexternalmarkdownfile",
-      "community": 0,
+      "community": 14,
       "norm_label": "pickexternalmarkdownfile()"
     },
     {
@@ -9338,7 +9348,7 @@
       "source_location": "L793",
       "_origin": "ast",
       "id": "src_lib_vault_addexternalfiletovault",
-      "community": 15,
+      "community": 58,
       "norm_label": "addexternalfiletovault()"
     },
     {
@@ -9348,7 +9358,7 @@
       "source_location": "L800",
       "_origin": "ast",
       "id": "src_lib_vault_removeexternalfilefromvault",
-      "community": 15,
+      "community": 58,
       "norm_label": "removeexternalfilefromvault()"
     },
     {
@@ -9358,7 +9368,7 @@
       "source_location": "L806",
       "_origin": "ast",
       "id": "src_lib_vault_renameexternalfileinvault",
-      "community": 15,
+      "community": 58,
       "norm_label": "renameexternalfileinvault()"
     },
     {
@@ -9628,7 +9638,7 @@
       "source_location": "L601",
       "_origin": "ast",
       "id": "src_store_useappstore_flushboards",
-      "community": 37,
+      "community": 109,
       "norm_label": "flushboards()"
     },
     {
@@ -9698,7 +9708,7 @@
       "source_location": "L43",
       "_origin": "ast",
       "id": "src_types_index_task",
-      "community": 30,
+      "community": 19,
       "norm_label": "task"
     },
     {
@@ -9748,7 +9758,7 @@
       "source_location": "L77",
       "_origin": "ast",
       "id": "src_types_index_board",
-      "community": 30,
+      "community": 19,
       "norm_label": "board"
     },
     {
@@ -9758,7 +9768,7 @@
       "source_location": "L83",
       "_origin": "ast",
       "id": "src_types_index_boardcolumn",
-      "community": 30,
+      "community": 19,
       "norm_label": "boardcolumn"
     },
     {
@@ -9778,7 +9788,7 @@
       "source_location": "L99",
       "_origin": "ast",
       "id": "src_types_index_boardtask",
-      "community": 30,
+      "community": 19,
       "norm_label": "boardtask"
     },
     {
@@ -10145,7 +10155,7 @@
       "label": "Tech Stack",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L84",
+      "source_location": "L87",
       "_origin": "ast",
       "id": "readme_tech_stack",
       "community": 40,
@@ -10155,7 +10165,7 @@
       "label": "Getting Started",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L101",
+      "source_location": "L104",
       "_origin": "ast",
       "id": "readme_getting_started",
       "community": 40,
@@ -10165,7 +10175,7 @@
       "label": "Prerequisites",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L103",
+      "source_location": "L106",
       "_origin": "ast",
       "id": "readme_prerequisites",
       "community": 40,
@@ -10175,7 +10185,7 @@
       "label": "Development",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L110",
+      "source_location": "L113",
       "_origin": "ast",
       "id": "readme_development",
       "community": 40,
@@ -10185,7 +10195,7 @@
       "label": "Build for production",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L122",
+      "source_location": "L125",
       "_origin": "ast",
       "id": "readme_build_for_production",
       "community": 40,
@@ -10195,7 +10205,7 @@
       "label": "Build the MCP server",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L132",
+      "source_location": "L135",
       "_origin": "ast",
       "id": "readme_build_the_mcp_server",
       "community": 40,
@@ -10205,7 +10215,7 @@
       "label": "Project Structure",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L155",
+      "source_location": "L158",
       "_origin": "ast",
       "id": "readme_project_structure",
       "community": 40,
@@ -10215,7 +10225,7 @@
       "label": "License",
       "file_type": "document",
       "source_file": "README.md",
-      "source_location": "L179",
+      "source_location": "L182",
       "_origin": "ast",
       "id": "readme_license",
       "community": 40,
@@ -21275,7 +21285,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/editor/MarkdownEditor.tsx",
-      "source_location": "L228",
+      "source_location": "L233",
       "weight": 1.0,
       "source": "src_components_editor_markdowneditor_markdowneditor",
       "target": "src_lib_attachments_makeattachmentmarkdown"
@@ -21286,7 +21296,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/editor/MarkdownEditor.tsx",
-      "source_location": "L243",
+      "source_location": "L252",
       "weight": 1.0,
       "source": "src_components_editor_markdowneditor_markdowneditor",
       "target": "src_lib_editorextensions_createfileembedplugin"
@@ -21297,7 +21307,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/editor/MarkdownEditor.tsx",
-      "source_location": "L190",
+      "source_location": "L195",
       "weight": 1.0,
       "source": "src_components_editor_markdowneditor_markdowneditor",
       "target": "src_lib_editorextensions_tryabbreviationreplace"
@@ -21308,7 +21318,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/editor/MarkdownEditor.tsx",
-      "source_location": "L207",
+      "source_location": "L212",
       "weight": 1.0,
       "source": "src_components_editor_markdowneditor_markdowneditor",
       "target": "src_lib_editorformatting_applyinlineformat"
@@ -21319,7 +21329,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/editor/MarkdownEditor.tsx",
-      "source_location": "L259",
+      "source_location": "L268",
       "weight": 1.0,
       "source": "src_components_editor_markdowneditor_markdowneditor",
       "target": "src_lib_fs_savenote"
@@ -21330,7 +21340,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/editor/MarkdownEditor.tsx",
-      "source_location": "L225",
+      "source_location": "L230",
       "weight": 1.0,
       "source": "src_components_editor_markdowneditor_markdowneditor",
       "target": "src_lib_images_saveclipboardimage"
@@ -21341,7 +21351,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/editor/MarkdownEditor.tsx",
-      "source_location": "L292",
+      "source_location": "L301",
       "weight": 1.0,
       "source": "src_components_editor_markdowneditor_markdowneditor",
       "target": "src_lib_utils_cn"
@@ -21352,7 +21362,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/editor/MarkdownEditor.tsx",
-      "source_location": "L293",
+      "source_location": "L302",
       "weight": 1.0,
       "source": "src_components_editor_markdowneditor_markdowneditor",
       "target": "src_lib_utils_glassbg"
@@ -24039,7 +24049,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1309",
+      "source_location": "L1344",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_findfolderchildren",
@@ -24049,7 +24059,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1297",
+      "source_location": "L1332",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_findnotesinfolder",
@@ -24059,7 +24069,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1321",
+      "source_location": "L1356",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_flatfolders",
@@ -24390,7 +24400,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1253",
+      "source_location": "L1286",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_snapoverlaytocursor",
@@ -24522,7 +24532,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L822",
+      "source_location": "L847",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_findfolderchildren",
@@ -24533,7 +24543,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L793",
+      "source_location": "L818",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_findnotesinfolder",
@@ -24544,7 +24554,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L639",
+      "source_location": "L625",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_flatfolders",
@@ -24556,7 +24566,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L851",
+      "source_location": "L877",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_deleteactions_confirmdeletefolderitem"
@@ -24567,7 +24577,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L873",
+      "source_location": "L899",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_deleteactions_confirmdeletenote"
@@ -24589,7 +24599,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L930",
+      "source_location": "L963",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_utils_cn"
@@ -24600,7 +24610,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L935",
+      "source_location": "L968",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_utils_glassbg"
@@ -29011,7 +29021,7 @@
       "relation": "indirect_call",
       "confidence": "INFERRED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L316",
+      "source_location": "L369",
       "weight": 1.0,
       "context": "collection",
       "source": "src_lib_editorextensions",
@@ -29022,7 +29032,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L427",
+      "source_location": "L480",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_activelineset",
@@ -29032,7 +29042,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L68",
+      "source_location": "L121",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_autocompletetheme",
@@ -29042,7 +29052,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L369",
+      "source_location": "L422",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_buildcheckboxdecorations",
@@ -29052,7 +29062,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1312",
+      "source_location": "L1365",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_buildfileembeddecorations",
@@ -29062,7 +29072,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L687",
+      "source_location": "L740",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_buildhighlightdecorations",
@@ -29072,7 +29082,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L459",
+      "source_location": "L512",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_buildlivemarkdowndecorations",
@@ -29082,7 +29092,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L755",
+      "source_location": "L808",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_buildmathdecorations",
@@ -29092,7 +29102,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L565",
+      "source_location": "L618",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_buildtabledecorations",
@@ -29102,7 +29112,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L247",
+      "source_location": "L300",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_built_in_abbreviations",
@@ -29112,7 +29122,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L417",
+      "source_location": "L470",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_bulletwidget",
@@ -29122,7 +29132,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L323",
+      "source_location": "L376",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_checkboxwidget",
@@ -29132,7 +29142,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L552",
+      "source_location": "L605",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_codeblocklinenumbers",
@@ -29142,7 +29152,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L44",
+      "source_location": "L97",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_codehighlighting",
@@ -29152,7 +29162,17 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L410",
+      "source_location": "L51",
+      "weight": 1.0,
+      "source": "src_lib_editorextensions",
+      "target": "src_lib_editorextensions_codetokenhighlightstyle",
+      "confidence_score": 1.0
+    },
+    {
+      "relation": "contains",
+      "confidence": "EXTRACTED",
+      "source_file": "src/lib/editorExtensions.ts",
+      "source_location": "L463",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_concealed_mark_nodes",
@@ -29162,7 +29182,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1352",
+      "source_location": "L1405",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_createfileembedplugin",
@@ -29172,7 +29192,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L440",
+      "source_location": "L493",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_decorateblocklines",
@@ -29182,7 +29202,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L844",
+      "source_location": "L897",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_embed_image_exts",
@@ -29192,7 +29212,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L845",
+      "source_location": "L898",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_embed_video_exts",
@@ -29202,7 +29222,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L847",
+      "source_location": "L900",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_embedfiletype",
@@ -29212,7 +29232,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L854",
+      "source_location": "L907",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_embedformatsize",
@@ -29222,7 +29242,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L873",
+      "source_location": "L926",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_fileembedwidget",
@@ -29232,7 +29252,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L670",
+      "source_location": "L723",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_highlightmarkplugin",
@@ -29242,7 +29262,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L53",
+      "source_location": "L106",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_icon_glyph",
@@ -29252,7 +29272,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L60",
+      "source_location": "L113",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_iconrules",
@@ -29262,7 +29282,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L15",
+      "source_location": "L14",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_inkwellhighlightstyle",
@@ -29272,7 +29292,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L542",
+      "source_location": "L595",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_isseparatorrow",
@@ -29282,7 +29302,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L536",
+      "source_location": "L589",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_istablerow",
@@ -29292,7 +29312,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L719",
+      "source_location": "L772",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_katexwidget",
@@ -29302,7 +29322,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L519",
+      "source_location": "L572",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_livemarkdownplugin",
@@ -29312,7 +29332,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L37",
+      "source_location": "L36",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_markdownhighlighting",
@@ -29322,7 +29342,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L717",
+      "source_location": "L770",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_math_fence_langs",
@@ -29332,7 +29352,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L829",
+      "source_location": "L882",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_mathpreviewfield",
@@ -29342,7 +29362,7 @@
       "relation": "indirect_call",
       "confidence": "INFERRED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L316",
+      "source_location": "L369",
       "weight": 1.0,
       "context": "collection",
       "source": "src_lib_editorextensions",
@@ -29353,7 +29373,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L751",
+      "source_location": "L804",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_overlapsany",
@@ -29363,7 +29383,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L747",
+      "source_location": "L800",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_overlapsselection",
@@ -29373,7 +29393,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L143",
+      "source_location": "L196",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_slash_commands",
@@ -29383,7 +29403,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L315",
+      "source_location": "L368",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_slashcommandcompletion",
@@ -29393,7 +29413,7 @@
       "relation": "indirect_call",
       "confidence": "INFERRED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L316",
+      "source_location": "L369",
       "weight": 1.0,
       "context": "collection",
       "source": "src_lib_editorextensions",
@@ -29404,7 +29424,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L547",
+      "source_location": "L600",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_tablelinetype",
@@ -29414,7 +29434,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L655",
+      "source_location": "L708",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_tableplugin",
@@ -29424,7 +29444,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L352",
+      "source_location": "L405",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_todocheckboxplugin",
@@ -29434,7 +29454,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L290",
+      "source_location": "L343",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_tryabbreviationreplace",
@@ -29444,7 +29464,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L861",
+      "source_location": "L914",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_lib_editorextensions_uint8tobase64",
@@ -29455,7 +29475,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L11",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_store_useappstore",
@@ -29466,7 +29486,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L11",
+      "source_location": "L10",
       "weight": 1.0,
       "source": "src_lib_editorextensions",
       "target": "src_store_useappstore_useappstore",
@@ -29476,7 +29496,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L324",
+      "source_location": "L377",
       "weight": 1.0,
       "source": "src_lib_editorextensions_checkboxwidget",
       "target": "src_lib_editorextensions_checkboxwidget_constructor",
@@ -29486,7 +29506,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L345",
+      "source_location": "L398",
       "weight": 1.0,
       "source": "src_lib_editorextensions_checkboxwidget",
       "target": "src_lib_editorextensions_checkboxwidget_eq",
@@ -29496,7 +29516,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L349",
+      "source_location": "L402",
       "weight": 1.0,
       "source": "src_lib_editorextensions_checkboxwidget",
       "target": "src_lib_editorextensions_checkboxwidget_ignoreevent",
@@ -29506,7 +29526,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L326",
+      "source_location": "L379",
       "weight": 1.0,
       "source": "src_lib_editorextensions_checkboxwidget",
       "target": "src_lib_editorextensions_checkboxwidget_todom",
@@ -29518,7 +29538,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L481",
+      "source_location": "L534",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildlivemarkdowndecorations",
       "target": "src_lib_editorextensions_concealed_mark_nodes"
@@ -29527,7 +29547,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L424",
+      "source_location": "L477",
       "weight": 1.0,
       "source": "src_lib_editorextensions_bulletwidget",
       "target": "src_lib_editorextensions_bulletwidget_ignoreevent",
@@ -29537,7 +29557,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L418",
+      "source_location": "L471",
       "weight": 1.0,
       "source": "src_lib_editorextensions_bulletwidget",
       "target": "src_lib_editorextensions_bulletwidget_todom",
@@ -29548,7 +29568,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L461",
+      "source_location": "L514",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildlivemarkdowndecorations",
       "target": "src_lib_editorextensions_activelineset",
@@ -29559,7 +29579,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L471",
+      "source_location": "L524",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildlivemarkdowndecorations",
       "target": "src_lib_editorextensions_decorateblocklines",
@@ -29570,7 +29590,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L577",
+      "source_location": "L630",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildtabledecorations",
       "target": "src_lib_editorextensions_istablerow",
@@ -29581,7 +29601,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L590",
+      "source_location": "L643",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildtabledecorations",
       "target": "src_lib_editorextensions_isseparatorrow",
@@ -29592,7 +29612,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L569",
+      "source_location": "L622",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildtabledecorations",
       "target": "src_lib_editorextensions_codeblocklinenumbers",
@@ -29604,7 +29624,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L775",
+      "source_location": "L828",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildmathdecorations",
       "target": "src_lib_editorextensions_math_fence_langs"
@@ -29613,7 +29633,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L720",
+      "source_location": "L773",
       "weight": 1.0,
       "source": "src_lib_editorextensions_katexwidget",
       "target": "src_lib_editorextensions_katexwidget_constructor",
@@ -29623,7 +29643,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L722",
+      "source_location": "L775",
       "weight": 1.0,
       "source": "src_lib_editorextensions_katexwidget",
       "target": "src_lib_editorextensions_katexwidget_eq",
@@ -29633,7 +29653,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L744",
+      "source_location": "L797",
       "weight": 1.0,
       "source": "src_lib_editorextensions_katexwidget",
       "target": "src_lib_editorextensions_katexwidget_ignoreevent",
@@ -29643,7 +29663,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L726",
+      "source_location": "L779",
       "weight": 1.0,
       "source": "src_lib_editorextensions_katexwidget",
       "target": "src_lib_editorextensions_katexwidget_todom",
@@ -29654,7 +29674,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L780",
+      "source_location": "L833",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildmathdecorations",
       "target": "src_lib_editorextensions_overlapsselection",
@@ -29665,7 +29685,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L795",
+      "source_location": "L848",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildmathdecorations",
       "target": "src_lib_editorextensions_overlapsany",
@@ -29676,7 +29696,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1334",
+      "source_location": "L1387",
       "weight": 1.0,
       "source": "src_lib_editorextensions_buildfileembeddecorations",
       "target": "src_lib_editorextensions_embedfiletype",
@@ -29687,7 +29707,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1080",
+      "source_location": "L1133",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget_todom",
       "target": "src_lib_editorextensions_embedformatsize",
@@ -29698,7 +29718,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1145",
+      "source_location": "L1198",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget_todom",
       "target": "src_lib_editorextensions_uint8tobase64",
@@ -29708,7 +29728,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L928",
+      "source_location": "L981",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget",
       "target": "src_lib_editorextensions_fileembedwidget_buildimagedom",
@@ -29718,7 +29738,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L878",
+      "source_location": "L931",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget",
       "target": "src_lib_editorextensions_fileembedwidget_constructor",
@@ -29728,7 +29748,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L915",
+      "source_location": "L968",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget",
       "target": "src_lib_editorextensions_fileembedwidget_eq",
@@ -29738,7 +29758,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1308",
+      "source_location": "L1361",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget",
       "target": "src_lib_editorextensions_fileembedwidget_estimatedheight",
@@ -29748,7 +29768,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1309",
+      "source_location": "L1362",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget",
       "target": "src_lib_editorextensions_fileembedwidget_ignoreevent",
@@ -29758,7 +29778,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L895",
+      "source_location": "L948",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget",
       "target": "src_lib_editorextensions_fileembedwidget_resolvepath",
@@ -29768,7 +29788,7 @@
       "relation": "method",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1035",
+      "source_location": "L1088",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget",
       "target": "src_lib_editorextensions_fileembedwidget_todom",
@@ -29779,7 +29799,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L965",
+      "source_location": "L1018",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget_buildimagedom",
       "target": "src_lib_editorextensions_fileembedwidget_resolvepath",
@@ -29790,7 +29810,7 @@
       "context": "import",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L904",
+      "source_location": "L957",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget_resolvepath",
       "target": "src_lib_vault",
@@ -29802,7 +29822,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L908",
+      "source_location": "L961",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget_resolvepath",
       "target": "src_lib_vault_findfileinvault"
@@ -29812,7 +29832,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1137",
+      "source_location": "L1190",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget_todom",
       "target": "src_lib_editorextensions_fileembedwidget_resolvepath",
@@ -29823,7 +29843,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/lib/editorExtensions.ts",
-      "source_location": "L1036",
+      "source_location": "L1089",
       "weight": 1.0,
       "source": "src_lib_editorextensions_fileembedwidget_todom",
       "target": "src_lib_editorextensions_fileembedwidget_buildimagedom",
@@ -34677,7 +34697,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L101",
+      "source_location": "L104",
       "weight": 1.0,
       "source": "readme",
       "target": "readme_getting_started",
@@ -34687,7 +34707,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L179",
+      "source_location": "L182",
       "weight": 1.0,
       "source": "readme",
       "target": "readme_license",
@@ -34707,7 +34727,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L155",
+      "source_location": "L158",
       "weight": 1.0,
       "source": "readme",
       "target": "readme_project_structure",
@@ -34717,7 +34737,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L84",
+      "source_location": "L87",
       "weight": 1.0,
       "source": "readme",
       "target": "readme_tech_stack",
@@ -34727,7 +34747,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L122",
+      "source_location": "L125",
       "weight": 1.0,
       "source": "readme_getting_started",
       "target": "readme_build_for_production",
@@ -34737,7 +34757,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L132",
+      "source_location": "L135",
       "weight": 1.0,
       "source": "readme_getting_started",
       "target": "readme_build_the_mcp_server",
@@ -34747,7 +34767,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L110",
+      "source_location": "L113",
       "weight": 1.0,
       "source": "readme_getting_started",
       "target": "readme_development",
@@ -34757,7 +34777,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "README.md",
-      "source_location": "L103",
+      "source_location": "L106",
       "weight": 1.0,
       "source": "readme_getting_started",
       "target": "readme_prerequisites",
@@ -35201,5 +35221,5 @@
       "source_file": "public/excalidraw-frame.html"
     }
   ],
-  "built_at_commit": "7aa4e8453bbc915dcc7b599847b2d29dad4bd9da"
+  "built_at_commit": "fcdd2c4c76ed2a96a71787e3f2569be888517eb1"
 }

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { EditorState } from '@codemirror/state'
-import { EditorView, keymap } from '@codemirror/view'
+import { EditorView, keymap, drawSelection } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, undo, redo } from '@codemirror/commands'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
@@ -15,6 +15,7 @@ import { useEditorViewRef } from './EditorViewContext'
 import { deleteAttachmentFile, makeAttachmentMarkdown } from '../../lib/attachments'
 import { saveClipboardImage } from '../../lib/images'
 import { applyInlineFormat } from '../../lib/editorFormatting'
+import { NOTE_REF_RE, navigateToNote } from '../../lib/noteReferences'
 
 interface MarkdownEditorProps {
   noteId: string
@@ -177,6 +178,11 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         ...(vimModeEnabled ? [vim({ status: true })] : []),
         history(),
         keymap.of([...defaultKeymap, ...historyKeymap]),
+        // Render selection ourselves so `.cm-selectionBackground` (styled
+        // translucent in customTheme) applies. Without this CodeMirror falls
+        // back to the opaque native browser highlight, which turns a selection
+        // over a code block into an unreadable solid-blue rectangle.
+        drawSelection(),
         // Chromium's contenteditable fires its own native undo/redo (beforeinput
         // historyUndo/historyRedo) which bypasses CodeMirror's managed history and
         // corrupts editor state. This only surfaces on Chromium-based WebViews
@@ -233,10 +239,37 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
             })
             return true
           },
+          // Cmd/Ctrl+click a `[@Title](note://id)` reference to jump to that
+          // note — in both the raw-source pane and liveConceal (Normal) mode,
+          // where the syntax is usually concealed down to just "@Title". A
+          // plain click always stays free to place the cursor, so it doesn't
+          // interfere with editing the link text or the surrounding line.
+          mousedown: (event, view) => {
+            if (event.button !== 0 || event.shiftKey || event.altKey) return false
+            if (!(event.metaKey || event.ctrlKey)) return false
+            const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
+            if (pos == null) return false
+            const line = view.state.doc.lineAt(pos)
+            const offsetInLine = pos - line.from
+            const re = new RegExp(NOTE_REF_RE.source, 'g')
+            let match: RegExpExecArray | null
+            while ((match = re.exec(line.text))) {
+              if (offsetInLine >= match.index && offsetInLine <= match.index + match[0].length) {
+                event.preventDefault()
+                navigateToNote(match[2])
+                return true
+              }
+            }
+            return false
+          },
         }),
         markdown({ base: markdownLanguage, codeLanguages: languages }),
-        markdownHighlighting,
+        // codeHighlighting first so its StyleModule loads before
+        // markdownHighlighting's — on tags both define (punctuation, meta) the
+        // markdown rule then wins the CSS tie and prose looks unchanged, while
+        // code-only tags (keyword, string, number, …) still get coloured.
         codeHighlighting,
+        markdownHighlighting,
         ...(liveConceal ? [liveMarkdownPlugin, mathPreviewField] : []),
         highlightMarkPlugin,
         tablePlugin,

@@ -6,7 +6,6 @@ import { ViewPlugin, Decoration, WidgetType, EditorView } from '@codemirror/view
 import type { DecorationSet, ViewUpdate } from '@codemirror/view'
 import { StateField } from '@codemirror/state'
 import type { Range, EditorState } from '@codemirror/state'
-import { oneDarkHighlightStyle } from '@codemirror/theme-one-dark'
 import katex from 'katex'
 import { useAppStore } from '../store/useAppStore'
 
@@ -38,10 +37,64 @@ export const markdownHighlighting = syntaxHighlighting(inkwellHighlightStyle)
 
 // Fenced code blocks embed a real language grammar (see `codeLanguages` on the
 // markdown() extension in MarkdownEditor) whose tokens — keywords, strings,
-// numbers, comments — aren't covered by inkwellHighlightStyle above. Layered
-// in as a fallback so it only fills gaps rather than fighting the markdown-
-// specific rules (headings, emphasis, etc.) for tags both styles define.
-export const codeHighlighting = syntaxHighlighting(oneDarkHighlightStyle, { fallback: true })
+// numbers, comments — aren't covered by inkwellHighlightStyle above. Both
+// styles run as active (non-fallback) highlighters; CodeMirror emits the union
+// of their classes, so this only adds colour for tags inkwellHighlightStyle
+// leaves unstyled (keywords, strings, numbers, function/type names, …). It
+// must NOT be registered with `{ fallback: true }` — a fallback highlighter is
+// ignored entirely whenever any non-fallback one (markdownHighlighting) exists.
+//
+// Colours resolve from the shared --code-* CSS variables (see globals.css),
+// which carry per-theme light/dark values. The previous One Dark palette was
+// hard-coded for a dark editor and washed out to near-invisible on the app's
+// light themes.
+const codeTokenHighlightStyle = HighlightStyle.define([
+  {
+    tag: [
+      tags.keyword, tags.controlKeyword, tags.moduleKeyword,
+      tags.operatorKeyword, tags.definitionKeyword, tags.self,
+    ],
+    color: 'hsl(var(--code-kw))',
+    fontWeight: '500',
+  },
+  {
+    tag: [tags.string, tags.special(tags.string), tags.regexp, tags.character],
+    color: 'hsl(var(--code-str))',
+  },
+  {
+    tag: [tags.comment, tags.lineComment, tags.blockComment, tags.docComment],
+    color: 'hsl(var(--code-cmt))',
+    fontStyle: 'italic',
+  },
+  {
+    tag: [
+      tags.number, tags.integer, tags.float,
+      tags.bool, tags.null, tags.atom,
+    ],
+    color: 'hsl(var(--code-num))',
+  },
+  {
+    tag: [
+      tags.function(tags.variableName), tags.function(tags.propertyName),
+      tags.macroName, tags.typeName, tags.className, tags.namespace,
+    ],
+    color: 'hsl(var(--code-fn))',
+  },
+  { tag: [tags.meta, tags.annotation], color: 'hsl(var(--code-meta))' },
+  { tag: [tags.propertyName, tags.attributeName], color: 'hsl(var(--foreground))' },
+  { tag: tags.variableName, color: 'hsl(var(--foreground) / 0.9)' },
+  {
+    tag: [
+      tags.operator, tags.punctuation, tags.bracket,
+      tags.separator, tags.derefOperator,
+    ],
+    color: 'hsl(var(--muted-foreground))',
+  },
+  { tag: tags.escape, color: 'hsl(var(--code-meta))' },
+  { tag: tags.invalid, color: 'hsl(var(--destructive))' },
+])
+
+export const codeHighlighting = syntaxHighlighting(codeTokenHighlightStyle)
 
 // ─── Autocomplete popup theme ──────────────────────────────────────────────────
 // Shared by both the slash-command and @-mention popups (MarkdownEditor and
@@ -424,6 +477,18 @@ class BulletWidget extends WidgetType {
   ignoreEvent() { return false }
 }
 
+// Replaces a `---` / `***` / `___` thematic-break line with a rendered rule.
+// Revealed as raw text on the active line, like every other conceal here.
+class HorizontalRuleWidget extends WidgetType {
+  eq() { return true }
+  toDOM() {
+    const span = document.createElement('span')
+    span.className = 'cm-hr'
+    return span
+  }
+  ignoreEvent() { return false }
+}
+
 function activeLineSet(view: EditorView): Set<number> {
   const lines = new Set<number>()
   for (const range of view.state.selection.ranges) {
@@ -477,6 +542,13 @@ function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
 
         const lineNo = view.state.doc.lineAt(node.from).number
         if (activeLines.has(lineNo)) return
+
+        if (node.name === 'HorizontalRule') {
+          decos.push(
+            Decoration.replace({ widget: new HorizontalRuleWidget() }).range(node.from, node.to),
+          )
+          return
+        }
 
         if (CONCEALED_MARK_NODES.has(node.name)) {
           let end = node.to

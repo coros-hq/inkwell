@@ -17,10 +17,13 @@ import { readVaultFS, writeAppData, readAppData, addRecentVault, getLastVaultPat
 import type { AppData } from '../../lib/vault'
 import { comboMatches } from '../../lib/shortcuts'
 import { resumeVaultSyncIfShared } from '../../lib/sync/yjsSync'
+import { startVaultWatcher } from '../../lib/vaultWatcher'
+import { ConflictBanner } from '../editor/ConflictBanner'
 
 export function AppShell() {
   const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const autoCommitTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Restore theme from localStorage on mount
   useEffect(() => {
@@ -110,6 +113,55 @@ export function AppShell() {
         writeAppData(vp, appData)
       }, 800)
     })
+  }, [vaultPath])
+
+  // "Auto-commit on save" (Settings > Sync) — commits, never pushes, a few
+  // seconds after edits settle. Off unless both gitSyncEnabled and
+  // gitAutoCommit are on; autoCommitIfDue itself is a no-op otherwise.
+  useEffect(() => {
+    if (!vaultPath) return
+    return useAppStore.subscribe((state) => {
+      if (!state.vaultPath || !state.gitSyncEnabled || !state.gitAutoCommit) return
+      if (autoCommitTimer.current) clearTimeout(autoCommitTimer.current)
+      autoCommitTimer.current = setTimeout(() => {
+        useAppStore.getState().autoCommitIfDue().catch(console.error)
+      }, 4000)
+    })
+  }, [vaultPath])
+
+  // Watch the vault for changes made outside the app (git pull, iCloud/Dropbox/
+  // Syncthing, a manual edit elsewhere) and fold them into the store — see
+  // git-sync-feature-design.md. Self-suppressing: inkwell's own writes don't
+  // trigger this (see selfWriteRegistry.ts).
+  useEffect(() => {
+    if (!vaultPath) return
+    let handle: { stop: () => void } | null = null
+    let cancelled = false
+    startVaultWatcher(vaultPath, () => {
+      useAppStore.getState().refreshVaultFromDisk().catch(console.error)
+    }).then((h) => {
+      if (cancelled) h.stop()
+      else handle = h
+    })
+    return () => {
+      cancelled = true
+      handle?.stop()
+    }
+  }, [vaultPath])
+
+  // Git sync: pull/push on vault open and whenever the window regains focus —
+  // no continuous polling, consistent with the rest of the app.
+  useEffect(() => {
+    if (!vaultPath) return
+    const { gitSyncEnabled, syncNow } = useAppStore.getState()
+    if (gitSyncEnabled) syncNow().catch(console.error)
+
+    const onFocus = () => {
+      const s = useAppStore.getState()
+      if (s.vaultPath === vaultPath && s.gitSyncEnabled) s.syncNow().catch(console.error)
+    }
+    window.addEventListener('focus', onFocus)
+    return () => window.removeEventListener('focus', onFocus)
   }, [vaultPath])
 
   // Search / toggle sidebar / open external file — user-remappable, see Settings > Shortcuts
@@ -219,6 +271,7 @@ export function AppShell() {
       <SearchOverlay />
       <NamePromptDialog />
       <ConfirmDialog />
+      <ConflictBanner />
     </div>
   )
 }

@@ -21,9 +21,10 @@ interface Props {
   content: string
   onChange: (c: string) => void
   onClose: () => void
+  title?: string
 }
 
-export function CanvasNotesSheet({ content, onChange, onClose }: Props) {
+export function CanvasNotesSheet({ content, onChange, onClose, title = 'Diagram Notes' }: Props) {
   const [tab, setTab] = useState<'edit' | 'preview'>('edit')
   const { theme, editorFontSize, editorFontFamily, editorLineHeight } = useAppStore()
 
@@ -145,7 +146,7 @@ export function CanvasNotesSheet({ content, onChange, onClose }: Props) {
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 border-b border-border shrink-0">
-        <span className="text-sm font-medium text-foreground">Diagram Notes</span>
+        <span className="text-sm font-medium text-foreground truncate">{title}</span>
 
         <div className="flex items-center gap-2">
           <div className="flex items-center bg-muted rounded-lg p-0.5">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail } from 'lucide-react'
+import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail, RefreshCw } from 'lucide-react'
 import { useAppStore, type Abbreviation } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { THEMES, DARK_THEMES, LIGHT_THEMES, type CustomTheme } from '../../lib/themes'
@@ -22,10 +22,11 @@ import {
 import { SignInDialog } from '../shared/SignInDialog'
 import { JoinVaultDialog } from './JoinVaultDialog'
 import { closeVaultSync, resumeVaultSyncIfShared, openVaultSync, pushLocalBoardsState } from '../../lib/sync/yjsSync'
+import { isGitRepo, gitRemoteUrl as gitGetRemoteUrl } from '../../lib/gitSync'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'github' | 'team' | 'about'
+type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'github' | 'sync' | 'team' | 'about'
 
 // ─── Font options ─────────────────────────────────────────────────────────────
 
@@ -62,6 +63,7 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ className?
   { id: 'abbreviations', label: 'Abbreviations', icon: List },
   { id: 'vault', label: 'Vaults', icon: Folder },
   { id: 'github', label: 'GitHub', icon: GitBranch },
+  { id: 'sync', label: 'Sync', icon: RefreshCw },
   { id: 'team', label: 'Team', icon: Users },
   { id: 'about', label: 'About', icon: Info },
 ]
@@ -494,6 +496,11 @@ export function SettingsDialog() {
               {/* ── GitHub ── */}
               {section === 'github' && (
                 <GitBranchSection />
+              )}
+
+              {/* ── Sync (git) ── */}
+              {section === 'sync' && (
+                <SyncSection />
               )}
 
               {/* ── Team ── */}
@@ -1334,6 +1341,167 @@ function GitBranchSection() {
             ))}
           </div>
         </div>
+      )}
+    </div>
+  )
+}
+
+// ─── SyncSection ────────────────────────────────────────────────────────────
+// Whole-vault sync over the system `git` binary — distinct from the GitHub tab
+// above, which pushes/pulls one note at a time via a stored PAT. This tab
+// stores no credential: auth is whatever the user's system git/SSH already
+// does. See git-sync-feature-design.md.
+
+function SyncSection() {
+  const {
+    vaultPath, gitSyncEnabled, setGitSyncEnabled, updateGitRemote,
+    gitAutoCommit, setGitAutoCommit,
+    gitSyncStatus, gitSyncError, lastSyncedAt, syncNow,
+  } = useAppStore()
+  const [remoteUrl, setRemoteUrl] = useState('')
+  const [toggling, setToggling] = useState(false)
+  const [savingRemote, setSavingRemote] = useState(false)
+
+  // Prefill from whatever's actually configured on disk — not just this
+  // component's local state — so a repo that already has (or is missing) a
+  // remote from an earlier attempt is visible and editable here.
+  useEffect(() => {
+    if (!vaultPath) return
+    let cancelled = false
+    isGitRepo(vaultPath).then((repo) => {
+      if (!repo) return
+      return gitGetRemoteUrl(vaultPath)
+    }).then((url) => {
+      if (!cancelled && url) setRemoteUrl(url)
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [vaultPath, gitSyncEnabled])
+
+  const handleToggle = async (enabled: boolean) => {
+    setToggling(true)
+    try {
+      await setGitSyncEnabled(enabled, enabled ? remoteUrl : undefined)
+    } finally {
+      setToggling(false)
+    }
+  }
+
+  const handleSaveRemote = async () => {
+    setSavingRemote(true)
+    try {
+      await updateGitRemote(remoteUrl)
+    } finally {
+      setSavingRemote(false)
+    }
+  }
+
+  const statusLabel: Record<typeof gitSyncStatus, string> = {
+    idle: 'Idle',
+    syncing: 'Syncing…',
+    dirty: 'Changes pending',
+    conflict: 'Merge conflict — resolve manually',
+    error: gitSyncError ?? 'Error',
+  }
+  const statusColor: Record<typeof gitSyncStatus, string> = {
+    idle: 'bg-green-500',
+    syncing: 'bg-accent animate-pulse',
+    dirty: 'bg-amber-500',
+    conflict: 'bg-red-500',
+    error: 'bg-red-500',
+  }
+
+  if (!vaultPath) {
+    return <p className="text-xs text-muted-foreground">Open a vault to configure sync.</p>
+  }
+
+  return (
+    <div className="space-y-5">
+      <SettingRow
+        label="Git Sync"
+        description="Sync this whole vault through your own git remote — any host, no inkwell account"
+      >
+        <ToggleSwitch checked={gitSyncEnabled} onChange={handleToggle} />
+      </SettingRow>
+
+      <div className="space-y-1.5">
+        <label className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">
+          Remote URL {!gitSyncEnabled && '(optional)'}
+        </label>
+        <div className="flex items-center gap-1.5">
+          <input
+            type="text"
+            value={remoteUrl}
+            onChange={(e) => setRemoteUrl(e.target.value)}
+            placeholder="git@github.com:you/your-vault.git"
+            disabled={toggling || savingRemote}
+            className={cn(
+              'flex-1 px-3 py-2 rounded-lg text-xs bg-surface border border-border',
+              'text-foreground placeholder:text-tertiary font-mono',
+              'focus:outline-none focus:border-accent/50 transition-colors',
+            )}
+          />
+          {gitSyncEnabled && (
+            <button
+              onClick={handleSaveRemote}
+              disabled={savingRemote || !remoteUrl.trim()}
+              className={cn(
+                'px-3 py-2 rounded-lg text-xs font-medium border border-border transition-colors shrink-0',
+                'text-muted-foreground hover:text-foreground hover:border-accent/50',
+                (savingRemote || !remoteUrl.trim()) && 'opacity-40 pointer-events-none',
+              )}
+            >
+              {savingRemote ? 'Saving…' : 'Save'}
+            </button>
+          )}
+        </div>
+        <p className="text-[10px] text-tertiary">
+          {gitSyncEnabled
+            ? 'Add or fix the remote at any time — useful if the repo was initialized before a remote was set.'
+            : 'Leave blank to init a local-only repo (commits, no remote) and add one later.'}
+          {' '}Auth uses your system git/SSH config — inkwell stores nothing here.
+        </p>
+      </div>
+
+      {gitSyncEnabled && (
+        <>
+          <SettingRow
+            label="Auto-commit on save"
+            description="Commit (not push) a few seconds after edits settle"
+          >
+            <ToggleSwitch checked={gitAutoCommit} onChange={setGitAutoCommit} />
+          </SettingRow>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => syncNow()}
+              disabled={gitSyncStatus === 'syncing'}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
+                'bg-accent text-white hover:opacity-90',
+                gitSyncStatus === 'syncing' && 'opacity-40 pointer-events-none',
+              )}
+            >
+              {gitSyncStatus === 'syncing' ? 'Syncing…' : 'Sync Now'}
+            </button>
+            <span className="flex items-center gap-1.5 text-xs">
+              <span className={cn('w-1.5 h-1.5 rounded-full', statusColor[gitSyncStatus])} />
+              <span className="text-muted-foreground">{statusLabel[gitSyncStatus]}</span>
+            </span>
+          </div>
+
+          <p className="text-[10px] text-tertiary">
+            {lastSyncedAt
+              ? `Last synced ${lastSyncedAt.toLocaleString()}`
+              : 'Not synced yet.'}
+          </p>
+
+          {gitSyncStatus === 'conflict' && (
+            <p className="text-[11px] text-amber-500 leading-relaxed">
+              The last pull left a merge conflict. Resolve it in the vault folder with your
+              usual git tools, then Sync Now again.
+            </p>
+          )}
+        </>
       )}
     </div>
   )

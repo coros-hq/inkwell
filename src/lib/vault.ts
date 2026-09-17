@@ -33,6 +33,7 @@
 import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, LinkedItem } from '../types'
 import { slugifyTitle } from './utils'
 import { genId } from './id'
+import { markSelfWrite } from './selfWriteRegistry'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
@@ -67,6 +68,10 @@ export interface AppData {
   noteMeta: Record<string, { attachments: Attachment[]; linkedItems: LinkedItem[] }>
   /** Absolute paths of standalone .md files opened into this vault via "Open File". */
   externalFiles?: string[]
+  /** Opt-in, per-vault git sync (see git-sync-feature-design.md). Off by default. */
+  gitSyncEnabled?: boolean
+  /** Auto-commit (not push) a few seconds after edits settle, when git sync is enabled. */
+  gitAutoCommit?: boolean
 }
 
 export interface VaultData {
@@ -376,6 +381,7 @@ export async function writeNoteFile(note: Note): Promise<void> {
     pinned: note.pinned,
     tags: note.tags,
   }
+  markSelfWrite(note.path)
   await writeTextFile(note.path, serializeFrontmatter(meta, note.content))
 }
 
@@ -383,6 +389,7 @@ export async function deleteNoteFile(absolutePath: string): Promise<void> {
   if (!isTauri) return
   try {
     const { remove } = await import('@tauri-apps/plugin-fs')
+    markSelfWrite(absolutePath)
     await remove(absolutePath)
   } catch { /* already gone */ }
 }
@@ -406,6 +413,8 @@ export async function deleteFolderDir(absolutePath: string): Promise<void> {
 export async function renameItem(oldPath: string, newPath: string): Promise<void> {
   if (!isTauri) return
   const { rename } = await import('@tauri-apps/plugin-fs')
+  markSelfWrite(oldPath)
+  markSelfWrite(newPath)
   await rename(oldPath, newPath)
 }
 
@@ -431,6 +440,7 @@ export async function writeAppData(vaultPath: string, data: AppData): Promise<vo
     const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
     const dir = `${vaultPath}/${INKWELL_DIR}`
     if (!await exists(dir)) await mkdir(dir, { recursive: true })
+    markSelfWrite(`${dir}/${APP_DATA_FILE}`)
     await writeTextFile(`${dir}/${APP_DATA_FILE}`, JSON.stringify(data, null, 2))
   } catch (e) { console.error('Failed to write app data:', e) }
 }
@@ -463,6 +473,7 @@ export async function writeTeamData(vaultPath: string, data: TeamData): Promise<
     const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
     const dir = `${vaultPath}/${INKWELL_DIR}`
     if (!await exists(dir)) await mkdir(dir, { recursive: true })
+    markSelfWrite(`${dir}/${TEAM_FILE}`)
     await writeTextFile(`${dir}/${TEAM_FILE}`, JSON.stringify(data, null, 2))
   } catch (e) { console.error('Failed to write team data:', e) }
 }
@@ -482,6 +493,7 @@ export async function writeBoardsFile(vaultPath: string, data: BoardsData): Prom
     const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
     const dir = `${vaultPath}/${INKWELL_DIR}`
     if (!await exists(dir)) await mkdir(dir, { recursive: true })
+    markSelfWrite(`${dir}/${BOARDS_FILE}`)
     await writeTextFile(`${dir}/${BOARDS_FILE}`, JSON.stringify(data, null, 2))
     // Once safely on disk, the localStorage backup is no longer needed
     try { localStorage.removeItem(`inkwell-boards:${vaultPath}`) } catch { /* ok */ }

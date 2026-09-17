@@ -33,7 +33,24 @@ import {
   addExternalFileToVault,
   removeExternalFileFromVault,
   renameExternalFileInVault,
+  readVaultFS,
+  readAppData,
+  writeAppData,
 } from "../lib/vault";
+import {
+  isGitRepo,
+  gitInit,
+  setGitRemote,
+  gitStatus,
+  gitAddAll,
+  gitCommit,
+  gitPull,
+  gitPush,
+  gitRemoteUrl,
+  gitCurrentBranch,
+  gitHasRemoteBranch,
+  describeError,
+} from "../lib/gitSync";
 import { saveNote } from "../lib/fs";
 import { loadShortcuts, saveShortcuts, DEFAULT_SHORTCUTS } from "../lib/shortcuts";
 import { checkForAppUpdate } from "../lib/updateCheck";
@@ -349,6 +366,36 @@ interface AppState {
    * (which tracks the local-disk write on every keystroke). Idle when unshared. */
   syncStatus: "idle" | "syncing" | "synced" | "error";
   setSyncStatus: (status: "idle" | "syncing" | "synced" | "error") => void;
+
+  // ─── Git sync ───────────────────────────────────────────────────────────────
+  // Opt-in, per-vault, whole-vault sync over the system `git` binary — no token
+  // or credential is stored by inkwell for this feature (auth is whatever the
+  // user's system git/SSH already does). See git-sync-feature-design.md.
+  gitSyncEnabled: boolean;
+  gitAutoCommit: boolean;
+  gitSyncStatus: "idle" | "syncing" | "dirty" | "conflict" | "error";
+  lastSyncedAt: Date | null;
+  gitSyncError: string | null;
+  /** Set when a file-watcher refresh sees the currently-open note changed on
+   * disk while it may have unsaved local edits — surfaced as a banner rather
+   * than silently picking a winner. */
+  conflictNoteId: string | null;
+  conflictDiskContent: string | null;
+  setGitSyncEnabled: (enabled: boolean, remoteUrl?: string) => Promise<void>;
+  /** Add/update the `origin` remote on an already-initialized repo — the only
+   * way to fix a repo that ended up without one (or with the wrong one). */
+  updateGitRemote: (remoteUrl: string) => Promise<void>;
+  setGitAutoCommit: (enabled: boolean) => void;
+  syncNow: () => Promise<void>;
+  /** Re-reads the vault from disk and folds in external changes (git pull,
+   * iCloud/Dropbox/Syncthing, a manual edit) without resetting selection or
+   * the open editor — see vaultWatcher.ts, which calls this on fs change events. */
+  refreshVaultFromDisk: () => Promise<void>;
+  resolveConflictKeepMine: () => void;
+  resolveConflictReloadFromDisk: () => void;
+  /** Commits (never pushes) if gitAutoCommit is on and the tree is dirty —
+   * called from a debounced subscribe in AppShell.tsx after edits settle. */
+  autoCommitIfDue: () => Promise<void>;
 }
 
 function updateFolderNotes(
@@ -669,6 +716,14 @@ export const useAppStore = create<AppState>((set, get) => ({
   sharedVault: null,
   syncStatus: "idle",
 
+  gitSyncEnabled: false,
+  gitAutoCommit: false,
+  gitSyncStatus: "idle",
+  lastSyncedAt: null,
+  gitSyncError: null,
+  conflictNoteId: null,
+  conflictDiskContent: null,
+
   openVault: (path, data) => {
     // Flush boards to boards.json before switching vaults
     const current = get();
@@ -737,11 +792,28 @@ export const useAppStore = create<AppState>((set, get) => ({
       lastSelectedNoteId: notes[0]?.id ?? null,
       selectedFolderId: folders[0]?.id ?? null,
       activeView: "notes",
+      gitSyncEnabled: false,
+      gitAutoCommit: false,
+      gitSyncStatus: "idle",
+      lastSyncedAt: null,
+      gitSyncError: null,
+      conflictNoteId: null,
+      conflictDiskContent: null,
     });
 
     // Tell the MCP server which vault is active so it always operates
     // on the correct path rather than the stale env-var value.
     writeActiveVaultFile(path);
+
+    // Git sync settings live in this vault's own app.json, not the VaultData
+    // shape passed in above — fetch them separately once the vault is open.
+    readAppData(path).then((appData) => {
+      if (get().vaultPath !== path) return; // vault switched again before this resolved
+      set({
+        gitSyncEnabled: appData?.gitSyncEnabled ?? false,
+        gitAutoCommit: appData?.gitAutoCommit ?? false,
+      });
+    }).catch(console.error);
   },
 
   closeVault: () =>
@@ -1953,5 +2025,187 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ boards, boardColumns, boardTasks });
     const { vaultPath } = get();
     flushBoards(vaultPath, boards, boardColumns, boardTasks);
+  },
+
+  // ─── Git sync ───────────────────────────────────────────────────────────────
+
+  refreshVaultFromDisk: async () => {
+    const { vaultPath } = get();
+    if (!vaultPath) return;
+    const data = await readVaultFS(vaultPath);
+    if (!data) return;
+
+    set((s) => {
+      const primaryId = s.lastSelectedNoteId ?? s.selectedNoteIds[0] ?? null;
+      const currentPrimary = primaryId ? s.notes.find((n) => n.id === primaryId) : undefined;
+      const incomingPrimary = primaryId ? data.notes.find((n) => n.id === primaryId) : undefined;
+
+      // The note currently open in the editor is the one place an external
+      // change landing mid-edit would be visible/surprising — don't silently
+      // overwrite it. Everything else is safe to fold in as-is.
+      if (currentPrimary && incomingPrimary && incomingPrimary.content !== currentPrimary.content) {
+        return {
+          folders: data.folders,
+          notes: data.notes.map((n) => (n.id === primaryId ? currentPrimary : n)),
+          tasks: data.tasks,
+          boards: data.boards,
+          boardColumns: data.boardColumns,
+          boardTasks: data.boardTasks,
+          conflictNoteId: primaryId,
+          conflictDiskContent: incomingPrimary.content,
+        };
+      }
+
+      return {
+        folders: data.folders,
+        notes: data.notes,
+        tasks: data.tasks,
+        boards: data.boards,
+        boardColumns: data.boardColumns,
+        boardTasks: data.boardTasks,
+      };
+    });
+  },
+
+  resolveConflictKeepMine: () => {
+    const { conflictNoteId, notes } = get();
+    if (!conflictNoteId) return;
+    const note = notes.find((n) => n.id === conflictNoteId);
+    if (note) writeNoteFile(note).catch(console.error);
+    set({ conflictNoteId: null, conflictDiskContent: null });
+  },
+
+  resolveConflictReloadFromDisk: () => {
+    const { conflictNoteId, conflictDiskContent, applyRemoteNoteUpdate } = get();
+    if (!conflictNoteId || conflictDiskContent == null) return;
+    applyRemoteNoteUpdate(conflictNoteId, conflictDiskContent);
+    set({ conflictNoteId: null, conflictDiskContent: null });
+  },
+
+  setGitSyncEnabled: async (enabled, remoteUrl) => {
+    const { vaultPath } = get();
+    if (!vaultPath) return;
+    set({ gitSyncEnabled: enabled, gitSyncError: null });
+    try {
+      if (enabled) {
+        if (!(await isGitRepo(vaultPath))) {
+          await gitInit(vaultPath);
+        }
+        // Independent of whether init just ran — a repo that already existed
+        // (e.g. from an earlier attempt) may still be missing a remote, or
+        // have the wrong one.
+        if (remoteUrl && remoteUrl.trim()) {
+          await setGitRemote(vaultPath, remoteUrl);
+        }
+      }
+      const existing = (await readAppData(vaultPath)) ?? {
+        version: 1, tasks: [], boards: [], boardColumns: [], boardTasks: [], noteMeta: {},
+      };
+      await writeAppData(vaultPath, { ...existing, gitSyncEnabled: enabled });
+    } catch (e) {
+      console.error("[inkwell] git sync enable failed:", e);
+      set({ gitSyncEnabled: false, gitSyncStatus: "error", gitSyncError: describeError(e) });
+      return;
+    }
+    // Flipping the toggle on is the one moment sync should fire immediately,
+    // rather than waiting for the next focus-regain/vault-open/manual click —
+    // otherwise "enable + add a remote" visibly does nothing until some other
+    // trigger happens to fire.
+    if (enabled) get().syncNow().catch(console.error);
+  },
+
+  updateGitRemote: async (remoteUrl) => {
+    const { vaultPath } = get();
+    if (!vaultPath || !remoteUrl.trim()) return;
+    set({ gitSyncError: null });
+    try {
+      if (!(await isGitRepo(vaultPath))) await gitInit(vaultPath);
+      await setGitRemote(vaultPath, remoteUrl);
+    } catch (e) {
+      console.error("[inkwell] setting git remote failed:", e);
+      set({ gitSyncStatus: "error", gitSyncError: describeError(e) });
+      return;
+    }
+    get().syncNow().catch(console.error);
+  },
+
+  setGitAutoCommit: (enabled) => {
+    const { vaultPath } = get();
+    set({ gitAutoCommit: enabled });
+    if (!vaultPath) return;
+    readAppData(vaultPath).then((existing) => {
+      const base = existing ?? { version: 1, tasks: [], boards: [], boardColumns: [], boardTasks: [], noteMeta: {} };
+      writeAppData(vaultPath, { ...base, gitAutoCommit: enabled }).catch(console.error);
+    }).catch(console.error);
+  },
+
+  syncNow: async () => {
+    const { vaultPath, gitSyncEnabled } = get();
+    if (!vaultPath || !gitSyncEnabled) return;
+    set({ gitSyncStatus: "syncing", gitSyncError: null });
+    try {
+      if (!(await isGitRepo(vaultPath))) {
+        set({ gitSyncStatus: "error", gitSyncError: "Not a git repository yet." });
+        return;
+      }
+
+      const dirty = (await gitStatus(vaultPath)).trim().length > 0;
+      console.log("[inkwell:git] sync: dirty =", dirty);
+      if (dirty) {
+        await gitAddAll(vaultPath);
+        await gitCommit(vaultPath, `inkwell: sync — ${new Date().toLocaleString()}`);
+      }
+
+      const remote = await gitRemoteUrl(vaultPath);
+      console.log("[inkwell:git] sync: remote =", remote);
+      if (!remote) {
+        // Local-only repo (no remote configured yet) — commits are enough.
+        set({ gitSyncStatus: "idle", lastSyncedAt: new Date() });
+        return;
+      }
+
+      const branch = await gitCurrentBranch(vaultPath);
+      console.log("[inkwell:git] sync: branch =", branch);
+      if (!branch) {
+        // No commits yet — nothing to push, and nothing to pull onto.
+        set({ gitSyncStatus: "idle", lastSyncedAt: new Date() });
+        return;
+      }
+
+      // Pull only if the branch already exists on the remote — a brand-new
+      // repo (or the first sync after adding a remote) has nothing to pull
+      // yet, and `git pull` would fail since no upstream tracking is set
+      // until the first push.
+      const remoteHasBranch = await gitHasRemoteBranch(vaultPath, branch);
+      console.log("[inkwell:git] sync: remote has branch =", remoteHasBranch, "— about to push");
+      if (remoteHasBranch) {
+        const { conflict } = await gitPull(vaultPath, branch);
+        if (conflict) {
+          set({ gitSyncStatus: "conflict" });
+          return;
+        }
+        await get().refreshVaultFromDisk();
+      }
+      await gitPush(vaultPath, branch);
+      set({ gitSyncStatus: "idle", lastSyncedAt: new Date() });
+    } catch (e) {
+      console.error("[inkwell] git sync failed:", e);
+      set({ gitSyncStatus: "error", gitSyncError: describeError(e) });
+    }
+  },
+
+  autoCommitIfDue: async () => {
+    const { vaultPath, gitSyncEnabled, gitAutoCommit } = get();
+    if (!vaultPath || !gitSyncEnabled || !gitAutoCommit) return;
+    try {
+      if (!(await isGitRepo(vaultPath))) return;
+      const dirty = (await gitStatus(vaultPath)).trim().length > 0;
+      if (!dirty) return;
+      await gitAddAll(vaultPath);
+      await gitCommit(vaultPath, `inkwell: auto-commit — ${new Date().toLocaleString()}`);
+      set({ gitSyncStatus: "dirty" });
+    } catch (e) {
+      console.error("[inkwell] auto-commit failed:", e);
+    }
   },
 }));

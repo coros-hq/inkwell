@@ -531,8 +531,6 @@ export function Sidebar() {
     // dismissUpdateNotice,
   } = useAppStore();
 
-  console.log(updateInfo)
-
   // ── Inline rename state ─────────────────────────────────────────────────────
   const [renamingId, setRenamingId] = useState<string | null>(null);
 

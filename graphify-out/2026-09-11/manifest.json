@@ -25,8 +25,8 @@
     "semantic_hash": "1be34a5c61c2c35365de3dab14298f0b"
   },
   "src-tauri/capabilities/default.json": {
-    "mtime": 1789461155.121892,
-    "ast_hash": "08ec4255a4b7c81fab521d1e9e6a4998",
+    "mtime": 1783788252.5704076,
+    "ast_hash": "24ffbcc780af976d5c2567cc3ae97d31",
     "semantic_hash": ""
   },
   "src-tauri/capabilities/quick-note.json": {
@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "src-tauri/gen/schemas/capabilities.json": {
-    "mtime": 1789461157.6437,
-    "ast_hash": "8b3ca2bfc6945b60eff57d8e9dfb6994",
+    "mtime": 1783788695.8760448,
+    "ast_hash": "6382277c60ee768bc875bf6122b51d3f",
     "semantic_hash": ""
   },
   "src-tauri/gen/schemas/desktop-schema.json": {
@@ -165,8 +165,8 @@
     "semantic_hash": "3395185c59d4b925e2b7d609379130d3"
   },
   "src/components/editor/MarkdownEditor.tsx": {
-    "mtime": 1789143188.2037222,
-    "ast_hash": "fb8450b83d05f9e6141e3cbac0014ade",
+    "mtime": 1789142942.6763916,
+    "ast_hash": "e99eafb3e386a45b973e12326693f865",
     "semantic_hash": ""
   },
   "src/components/editor/MediaPanel.tsx": {
@@ -195,8 +195,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/AppShell.tsx": {
-    "mtime": 1789479719.837261,
-    "ast_hash": "0e97513c95b10e380abffb94ae64d87a",
+    "mtime": 1789040482.5872123,
+    "ast_hash": "ec28692c17e4f9b36cee1711f59743dc",
     "semantic_hash": ""
   },
   "src/components/layout/EditorPane.tsx": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
-    "mtime": 1789481246.5879414,
-    "ast_hash": "202141282bdd773bc6cd58b3f12bba9a",
+    "mtime": 1789040482.5878365,
+    "ast_hash": "4b841d6092e809708649fe90a23af182",
     "semantic_hash": ""
   },
   "src/components/quicknote/QuickNoteCapture.tsx": {
@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/settings/SettingsDialog.tsx": {
-    "mtime": 1789481809.0876288,
-    "ast_hash": "74e68caf7335b92133a9bbe6e4c61765",
+    "mtime": 1789040482.588289,
+    "ast_hash": "af06fb2b21b97cf9f484de2b0f32c1bc",
     "semantic_hash": ""
   },
   "src/components/settings/ThemeEditor.tsx": {
@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "src/lib/vault.ts": {
-    "mtime": 1789421609.7205238,
-    "ast_hash": "b06ca9ba5237f43919c9cc9531868dff",
+    "mtime": 1789040482.5915089,
+    "ast_hash": "6b6151209ae281500f32809f4a146717",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -370,8 +370,8 @@
     "semantic_hash": "912ed2887ab8f9be43f625930982407a"
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1789481770.4043305,
-    "ast_hash": "74e2e8c531ac2ee793441966d2b3f4b4",
+    "mtime": 1789040482.5917592,
+    "ast_hash": "eaffe0f91826a9720f9b27e143f87acb",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -787,31 +787,6 @@
   "supabase/schema.sql": {
     "mtime": 1789040482.592574,
     "ast_hash": "096a2e79e128ecfcf20b765dda771f96",
-    "semantic_hash": ""
-  },
-  "src/components/editor/ConflictBanner.tsx": {
-    "mtime": 1789421664.9942918,
-    "ast_hash": "1008fd455fddac7f12c719c88a47cdbb",
-    "semantic_hash": ""
-  },
-  "src/lib/gitSync.ts": {
-    "mtime": 1789481746.2642193,
-    "ast_hash": "a4bf4e79df3a112789cb1e7bc80fdcb3",
-    "semantic_hash": ""
-  },
-  "src/lib/selfWriteRegistry.ts": {
-    "mtime": 1789421587.7621799,
-    "ast_hash": "00bcdffdc4f907f51d620b417519ebc1",
-    "semantic_hash": ""
-  },
-  "src/lib/vaultWatcher.ts": {
-    "mtime": 1789421618.2553387,
-    "ast_hash": "51ef2fa3213ca7c2a94a91cc5ca95b71",
-    "semantic_hash": ""
-  },
-  "git-sync-feature-design.md": {
-    "mtime": 1789415469.766801,
-    "ast_hash": "0b184ffa3bb88c850ab59c2064b6cf26",
     "semantic_hash": ""
   }
 }
