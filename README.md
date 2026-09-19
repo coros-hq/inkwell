@@ -2,10 +2,10 @@
   <img src="src/assets/inkwell-icon.svg" width="100" height="100" alt="inkwell logo" />
 
   <h1>inkwell</h1>
-  <p>A focused, beautiful markdown note-taking app for macOS.</p>
+  <p>A focused, beautiful markdown note-taking app.</p>
 
-  ![Version](https://img.shields.io/badge/version-0.7.8-orange?style=flat-square)
-  ![Platform](https://img.shields.io/badge/platform-macOS-black?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-0.8.0-orange?style=flat-square)
+  ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-black?style=flat-square)
   ![License](https://img.shields.io/badge/license-MIT-orange?style=flat-square&color=c47d2e)
 </div>
 
@@ -13,7 +13,7 @@
 
 ## Overview
 
-inkwell is a local-first markdown editor built as a native macOS desktop app. Notes are stored as plain `.md` files in a vault folder you own — no cloud, no accounts, no lock-in.
+inkwell is a local-first markdown editor built as a native desktop app for macOS, Windows, and Linux. Notes are stored as plain `.md` files in a vault folder you own — no cloud, no accounts, no lock-in.
 
 It pairs a distraction-free writing environment with a rich live preview, a Kanban board, a canvas drawing tool, a suite of themes, and deep integrations: a native MCP server so Claude can read and write your notes, and built-in GitHub sync to push your docs to any repository.
 
@@ -71,6 +71,11 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 - Pull the latest version of a file back into inkwell with one click
 - Works with any repo — great for keeping project READMEs and docs in sync
 
+**Whole-Vault Git Sync** *(new in v0.8)*
+- Sync an entire vault with a git remote — pull, commit, and push, driven by your system `git` (SSH agent / credential helper), no token stored by inkwell
+- Live vault watcher detects changes made on disk by `git pull`, iCloud/Dropbox/Syncthing, or an external editor
+- Conflict banner when the open note changed outside inkwell — choose "Keep mine" or "Reload from disk" without losing work
+
 **Claude MCP Integration** *(new in v0.3)*
 - A native Rust MCP server ships inside the app (`inkwell-mcp`)
 - Exposes `list_notes`, `read_note`, `create_note`, `update_note`, `search_notes`, `get_vault_info` tools
@@ -108,7 +113,9 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 - [Node.js](https://nodejs.org) 18+
 - [pnpm](https://pnpm.io)
 - [Rust](https://rustup.rs) (stable toolchain)
-- Xcode Command Line Tools (`xcode-select --install`)
+- macOS: Xcode Command Line Tools (`xcode-select --install`)
+- Linux: `libwebkit2gtk-4.1-dev`, `libappindicator3-dev`, `librsvg2-dev`, `patchelf`
+- Windows: [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/) and WebView2 (preinstalled on Windows 11)
 
 ### Development
 
@@ -128,9 +135,9 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
-The output `.app` and `.dmg` are written to `src-tauri/target/release/bundle/macos/`.
+The output bundles are written to `src-tauri/target/release/bundle/` (`.app`/`.dmg` on macOS, `.deb`/`.rpm`/`.AppImage` on Linux, `.exe`/`.msi` on Windows).
 
-To update an existing installation, drag the new `.app` onto the old one in `/Applications` and click **Replace**.
+On macOS, to update an existing installation, drag the new `.app` onto the old one in `/Applications` and click **Replace**.
 
 ### Build the MCP server
 
@@ -161,14 +168,14 @@ The MCP server reads the active vault path from `~/.inkwell/active-vault`, which
 inkwell/
 ├── src/
 │   ├── components/
-│   │   ├── editor/       # MarkdownEditor, RichPreview, AttachmentsBar, MediaPanel, ShareDialog
+│   │   ├── editor/       # MarkdownEditor, RichPreview, AttachmentsBar, MediaPanel, ShareDialog, ConflictBanner
 │   │   ├── layout/       # AppShell, Sidebar, NoteList, EditorPane
 │   │   ├── board/        # Kanban BoardView, KanbanColumn, TaskCard, TaskDrawer
 │   │   ├── canvas/       # CanvasView, CanvasToolbar, CanvasNotesSheet, canvasTypes, canvasTemplates
 │   │   ├── settings/     # SettingsDialog, ThemeEditor
 │   │   └── shared/       # Search, ContextMenu, DatePicker, GitHubSyncDialog, VaultPicker
 │   ├── store/            # Zustand store (useAppStore)
-│   ├── lib/              # vault.ts, github.ts, export.ts, themes, attachments, utils
+│   ├── lib/              # vault.ts, vaultWatcher.ts, gitSync.ts, github.ts, export.ts, themes, attachments, utils
 │   ├── styles/           # globals.css — CSS variables & theme definitions
 │   └── types/            # TypeScript interfaces
 └── src-tauri/
