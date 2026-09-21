@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "src/lib/editorExtensions.ts": {
-    "mtime": 1789992649.2034059,
-    "ast_hash": "d41fba2bb7f9a67e763edd54f0bf0f89",
+    "mtime": 1789989788.9896293,
+    "ast_hash": "cb8a506b9c30129156b8ceaf1a204e3c",
     "semantic_hash": ""
   },
   "src/lib/editorTypography.ts": {
@@ -815,8 +815,8 @@
     "semantic_hash": ""
   },
   "src/components/editor/MarkdownChart.tsx": {
-    "mtime": 1789992637.7633095,
-    "ast_hash": "a021295026aa68cadf3059d31f47ee3d",
+    "mtime": 1789989450.184419,
+    "ast_hash": "471d79d1ab90f8a4bec4625bd9025b99",
     "semantic_hash": ""
   },
   "src/lib/remarkChartCodeBlocks.ts": {

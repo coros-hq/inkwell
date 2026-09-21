@@ -1,11 +1,11 @@
 # Graph Report - inkwell  (2026-09-21)
 
 ## Corpus Check
-- 108 files · ~197,632 words
+- 108 files · ~197,366 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1213 nodes · 2492 edges · 112 communities (70 shown, 42 thin omitted)
+- 1213 nodes · 2489 edges · 112 communities (70 shown, 42 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 64 edges (avg confidence: 0.62)
 - Token cost: 0 input · 0 output
 
@@ -119,13 +119,13 @@
 - [[_COMMUNITY_EditSplitPreview View Modes|Edit/Split/Preview View Modes]]
 - [[_COMMUNITY_CheckboxWidget|CheckboxWidget]]
 - [[_COMMUNITY_ThemeEditor.tsx|ThemeEditor.tsx]]
-- [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
 - [[_COMMUNITY_local|local]]
+- [[_COMMUNITY_Identifier|Identifier]]
 - [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
 - [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `cn()` - 87 edges
+1. `cn()` - 85 edges
 2. `useAppStore` - 70 edges
 3. `CanvasView()` - 32 edges
 4. `readVaultFS()` - 22 edges
@@ -222,7 +222,7 @@ Nodes (14): App(), AppShell(), closeThisWindow(), QuickNoteCapture(), SearchOver
 
 ### Community 16 - "Tauri Desktop Capability Schema"
 Cohesion: 0.12
-Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArgs, Target (+8 more)
+Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArg, Target (+8 more)
 
 ### Community 17 - "Tauri macOS Capability Schema"
 Cohesion: 0.12
@@ -404,13 +404,13 @@ Nodes (62): JoinVaultDialog(), Props, AbbreviationsSection(), CustomThemeCard(),
 Cohesion: 0.67
 Nodes (3): Value, anyOf, description
 
-### Community 108 - "ShellScopeEntryAllowedArg"
-Cohesion: 0.67
-Nodes (3): ShellScopeEntryAllowedArg, anyOf, description
-
 ### Community 110 - "local"
 Cohesion: 0.22
 Nodes (9): Props, QuickNoteEditor, QuickNoteEditorHandle, QuickNoteEditorProps, autocompleteTheme, highlightMarkPlugin, markdownHighlighting, slashCommandCompletionBasic (+1 more)
+
+### Community 111 - "Identifier"
+Cohesion: 0.67
+Nodes (3): ShellScopeEntryAllowedArgs, anyOf, description
 
 ### Community 113 - "ShellScopeEntryAllowedArg"
 Cohesion: 0.50
@@ -435,7 +435,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What is the exact relationship between `CanvasView Component` and `excalidraw-frame.html (Iframe Bridge)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
 - **Why does `useAppStore` connect `Board/Task Card Components` to `App Shell & Note Editing`, `Editor Toolbar & Attachments`, `Canvas Shape Type Definitions`, `GitHubSyncDialog.tsx`, `Canvas Geometry & Rendering`, `index.ts`, `ShellScopeEntryAllowedArg`, `Board Drag & Attachments UI`, `BoardView.tsx`, `local`, `attachments.ts`, `Sidebar Drag-and-Drop`, `CanvasNotesSheet.tsx`, `CodeMirror Editor Decorations`, `FileEmbedWidget`, `Weekly Planner View`, `Note List & Deletion`, `Date Picker Component`?**
-  _High betweenness centrality (0.092) - this node is a cross-community bridge._
+  _High betweenness centrality (0.094) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `NPM Dependencies (runtime)` to `Editor Toolbar & Attachments`, `package.json Scripts`?**
   _High betweenness centrality (0.070) - this node is a cross-community bridge._
 - **Why does `react` connect `Editor Toolbar & Attachments` to `NPM Dependencies (runtime)`, `Export & Share Preview`?**

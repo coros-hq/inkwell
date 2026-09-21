@@ -6,7 +6,7 @@ import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { Image, Paperclip } from 'lucide-react'
 import {
   markdownHighlighting,
-  slashCommandCompletion,
+  slashCommandCompletionBasic,
   highlightMarkPlugin,
   tablePlugin,
   createFileEmbedPlugin,
@@ -134,7 +134,7 @@ export function MarkdownField({ value, onChange, placeholder, minHeight = '100px
         highlightMarkPlugin,
         tablePlugin,
         ...(vaultPath ? [createFileEmbedPlugin(vaultPath, handleRemoveEmbed)] : []),
-        slashCommandCompletion,
+        slashCommandCompletionBasic,
         autocompleteTheme,
         placeholderExt(placeholder ?? ''),
         EditorView.lineWrapping,

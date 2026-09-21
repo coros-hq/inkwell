@@ -7,7 +7,10 @@ import type { DecorationSet, ViewUpdate } from '@codemirror/view'
 import { StateField } from '@codemirror/state'
 import type { Range, EditorState } from '@codemirror/state'
 import katex from 'katex'
+import { createElement } from 'react'
+import { createRoot, type Root } from 'react-dom/client'
 import { useAppStore } from '../store/useAppStore'
+import { MarkdownChart } from '../components/editor/MarkdownChart'
 
 // ─── Syntax Highlight Style ──────────────────────────────────────────────────
 
@@ -208,9 +211,14 @@ const SLASH_COMMANDS = [
   { label: '/bold', displayLabel: 'Bold', detail: '**bold text**', apply: '****', boost: -1, type: 'ikbold' },
   { label: '/italic', displayLabel: 'Italic', detail: '*italic text*', apply: '**', boost: -1, type: 'ikitalic' },
   { label: '/video', displayLabel: 'Video Embed', detail: 'YouTube / Vimeo / Loom', apply: '__VIDEO_URL__', type: 'ikvideo' },
+  { label: '/chart', displayLabel: 'Chart', detail: 'Bar, line, pie & more — pick a type and fill in data', apply: '__CHART_DIALOG__' },
 ]
 
-function slashCompletion(context: CompletionContext): CompletionResult | null {
+// `/chart` opens a dialog that only the main note editor (MarkdownEditor,
+// via EditorPane's <ChartInsertDialog>) mounts — omit it from the smaller
+// slash menus (task descriptions, quick capture) that have nowhere to route
+// openChartInsertDialog()'s request to.
+function slashCompletion(context: CompletionContext, allowChart: boolean): CompletionResult | null {
   const line = context.state.doc.lineAt(context.pos)
   const before = context.state.sliceDoc(line.from, context.pos)
 
@@ -218,17 +226,25 @@ function slashCompletion(context: CompletionContext): CompletionResult | null {
   if (!match) return null
 
   const from = line.from + match[1].length
+  const commands = allowChart ? SLASH_COMMANDS : SLASH_COMMANDS.filter(cmd => cmd.apply !== '__CHART_DIALOG__')
 
   return {
     from,
     validFor: /^\/\w*$/,
-    options: SLASH_COMMANDS.map(cmd => ({
+    options: commands.map(cmd => ({
       label: cmd.label,
       displayLabel: cmd.displayLabel,
       detail: cmd.detail,
       boost: (cmd as any).boost,
       type: cmd.type,
       apply: (view: EditorView, _completion: unknown, slashFrom: number, slashTo: number) => {
+        if (cmd.apply === '__CHART_DIALOG__') {
+          // Clear the "/chart" text now; the dialog inserts the finished
+          // ```chart block at this position once the user confirms it.
+          view.dispatch({ changes: { from: slashFrom, to: slashTo, insert: '' } })
+          useAppStore.getState().openChartInsertDialog(slashFrom)
+          return
+        }
         if (cmd.apply === '__VIDEO_URL__') {
           // Insert on its own line, select "URL" so the user can paste immediately
           const line = view.state.doc.lineAt(slashFrom)
@@ -366,7 +382,15 @@ export function tryAbbreviationReplace(view: EditorView, pending: string): boole
 }
 
 export const slashCommandCompletion = autocompletion({
-  override: [slashCompletion, noteMentionCompletion, abbreviationCompletion],
+  override: [(ctx) => slashCompletion(ctx, true), noteMentionCompletion, abbreviationCompletion],
+  activateOnTyping: true,
+  closeOnBlur: true,
+})
+
+// Used by contexts with no <ChartInsertDialog> mounted (task descriptions,
+// quick capture) — same menu, minus "/chart".
+export const slashCommandCompletionBasic = autocompletion({
+  override: [(ctx) => slashCompletion(ctx, false), noteMentionCompletion, abbreviationCompletion],
   activateOnTyping: true,
   closeOnBlur: true,
 })
@@ -902,6 +926,120 @@ export const mathPreviewField = StateField.define<DecorationSet>({
   create: (state) => buildMathDecorations(state),
   update: (value, tr) => {
     if (tr.docChanged || tr.selection) return buildMathDecorations(tr.state)
+    return value
+  },
+  provide: (f) => EditorView.decorations.from(f),
+})
+
+// ─── Chart Live Preview (```chart fenced blocks) ──────────────────────────────
+// Mirrors the math widget above: a fenced ```chart block renders as the chart
+// itself in "Normal" mode, and reverts to raw JSON source whenever the
+// selection touches it, so it stays directly editable.
+
+class ChartWidget extends WidgetType {
+  private root: Root | null = null
+  private resizeObserver: ResizeObserver | null = null
+
+  constructor(readonly spec: string, readonly blockFrom: number, readonly blockTo: number) { super() }
+
+  eq(other: ChartWidget) {
+    return other.spec === this.spec && other.blockFrom === this.blockFrom && other.blockTo === this.blockTo
+  }
+
+  toDOM(view: EditorView) {
+    const el = document.createElement('div')
+    el.className = 'cm-chart-block'
+    // MarkdownChart normally gives itself vertical spacing via its own
+    // margin, but a child's CSS margin never counts toward *this* element's
+    // own measured height (it only collapses through) — CodeMirror sizes its
+    // block widgets off exactly that measurement, so the gap silently wasn't
+    // part of it. That made CM's line-height accounting fall short by one
+    // margin's worth for everything after the widget, misplacing clicks and
+    // arrow-key navigation on every following line. `bare` suppresses the
+    // component's own margin; padding here reproduces the same visual gap
+    // while actually counting toward el's box that CM measures.
+    el.style.padding = '1rem 0'
+    this.root = createRoot(el)
+    // Placing the cursor inside the block's own selection range is exactly
+    // what makes buildChartDecorations skip re-rendering it as a widget on
+    // the next update — reusing that reveal mechanism instead of a separate
+    // view-mode flag.
+    const onEditAsText = () => {
+      view.dispatch({ selection: { anchor: this.blockFrom } })
+      view.focus()
+    }
+    const onEditWithDialog = () => {
+      useAppStore.getState().openChartEditDialog(this.blockFrom, this.blockTo, this.spec)
+    }
+    this.root.render(createElement(MarkdownChart, { spec: this.spec, onEditAsText, onEditWithDialog, bare: true }))
+
+    // The chart's rendered height changes independently of any CodeMirror
+    // transaction — SVG layout settling, the data-table toggle, hover
+    // tooltips. Without telling CM to re-measure, its cached line/block
+    // geometry goes stale, so clicks and arrow-key navigation anywhere past
+    // this widget resolve to the wrong position until the next real edit
+    // forces a remeasure.
+    this.resizeObserver = new ResizeObserver(() => view.requestMeasure())
+    this.resizeObserver.observe(el)
+
+    return el
+  }
+
+  destroy() {
+    this.resizeObserver?.disconnect()
+    this.resizeObserver = null
+    // Deferred: React forbids unmounting synchronously from within certain
+    // CodeMirror update cycles (widget destroy can fire mid-render).
+    const root = this.root
+    this.root = null
+    if (root) queueMicrotask(() => root.unmount())
+  }
+
+  // Unlike KatexWidget (whose only interaction is "click anywhere to edit"),
+  // this widget owns real interactive controls — the edit-source menu, the
+  // data-table toggle, hover tooltips. Letting CodeMirror also process clicks
+  // here (ignoreEvent: false) raced with those handlers: a click on "Edit
+  // with chart builder" would also land inside the block's own range, which
+  // made the next decoration rebuild revert it to raw text out from under
+  // the click before React's onClick ran. The widget fully owns its events
+  // instead; onEditAsText already dispatches the selection-into-block change
+  // itself when that's actually what the user picked.
+  ignoreEvent() { return true }
+}
+
+function buildChartDecorations(state: EditorState): DecorationSet {
+  const doc = state.doc
+  const decos: Range<Decoration>[] = []
+
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name !== 'FencedCode') return
+
+      const firstLine = doc.lineAt(node.from)
+      const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
+      if (info !== 'chart') return
+      if (overlapsSelection(state, node.from, node.to)) return
+
+      const lastLine = doc.lineAt(node.to)
+      const innerFrom = firstLine.to + 1
+      const innerTo = lastLine.number > firstLine.number ? lastLine.from - 1 : node.to
+      const spec = innerFrom < innerTo ? doc.sliceString(innerFrom, innerTo).trim() : ''
+      if (!spec) return
+
+      decos.push(
+        Decoration.replace({ widget: new ChartWidget(spec, node.from, node.to), block: true })
+          .range(node.from, node.to),
+      )
+    },
+  })
+
+  return Decoration.set(decos, true)
+}
+
+export const chartPreviewField = StateField.define<DecorationSet>({
+  create: (state) => buildChartDecorations(state),
+  update: (value, tr) => {
+    if (tr.docChanged || tr.selection) return buildChartDecorations(tr.state)
     return value
   },
   provide: (f) => EditorView.decorations.from(f),

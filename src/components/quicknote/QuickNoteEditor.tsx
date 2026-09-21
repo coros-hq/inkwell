@@ -5,7 +5,7 @@ import { defaultKeymap, history, historyKeymap, undo, redo } from '@codemirror/c
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import {
   markdownHighlighting,
-  slashCommandCompletion,
+  slashCommandCompletionBasic,
   highlightMarkPlugin,
   tablePlugin,
   autocompleteTheme,
@@ -79,7 +79,7 @@ export const QuickNoteEditor = forwardRef<QuickNoteEditorHandle, QuickNoteEditor
           padding: '0 1px',
         },
         // Autocomplete (slash command / @-mention) popup styling lives in
-        // autocompleteTheme, bundled into slashCommandCompletion below.
+        // autocompleteTheme, bundled into slashCommandCompletionBasic below.
       })
 
       // Cmd/Ctrl+Enter saves, Escape cancels — placed ahead of the default
@@ -110,7 +110,7 @@ export const QuickNoteEditor = forwardRef<QuickNoteEditorHandle, QuickNoteEditor
           markdownHighlighting,
           highlightMarkPlugin,
           tablePlugin,
-          slashCommandCompletion,
+          slashCommandCompletionBasic,
           autocompleteTheme,
           placeholder('Quick note… (Markdown supported)'),
           EditorView.lineWrapping,

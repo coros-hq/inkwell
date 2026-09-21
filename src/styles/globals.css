@@ -48,6 +48,17 @@ html, body, #root {
     --tag-text:          209 39% 37%;
     --destructive:       4 62% 47%;
     --radius:            0.5rem;
+
+    /* Chart series — fixed categorical order, validated for CVD-safe adjacent
+       contrast (dataviz palette). Never reassign by rank or cycle past 8. */
+    --chart-1: #2a78d6;
+    --chart-2: #eb6834;
+    --chart-3: #1baf7a;
+    --chart-4: #eda100;
+    --chart-5: #e87ba4;
+    --chart-6: #008300;
+    --chart-7: #4a3aa7;
+    --chart-8: #e34948;
   }
 
   .dark {
@@ -72,6 +83,15 @@ html, body, #root {
     --tag-bg:            213 30% 18%;
     --tag-text:          209 55% 72%;
     --destructive:        4 68% 62%;
+
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --chart-3: #199e70;
+    --chart-4: #c98500;
+    --chart-5: #d55181;
+    --chart-6: #008300;
+    --chart-7: #9085e9;
+    --chart-8: #e66767;
   }
 }
 

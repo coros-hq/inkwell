@@ -21,6 +21,7 @@ import {
 import { MarkdownEditor } from "../editor/MarkdownEditor";
 import { SplitView } from "../editor/SplitView";
 import { EditorToolbar } from "../editor/EditorToolbar";
+import { ChartInsertDialog } from "../editor/ChartInsertDialog";
 import { NoteSearchBar } from "../editor/NoteSearchBar";
 import { LinksPanel } from "../editor/LinksPanel";
 import { MediaPanel } from "../editor/MediaPanel";
@@ -402,6 +403,10 @@ export function EditorPane() {
 
             {editorMode === "normal" && <EditorToolbar />}
             {editorMode === "normal" && <StructureRail content={note.content} scrollerEl={scrollerEl} />}
+            {/* Mounted for both modes — the "/chart" slash command is available in the
+                Markdown-mode source pane too (see SplitView), and needs somewhere to
+                route openChartInsertDialog()'s request regardless of which pane it fired from. */}
+            <ChartInsertDialog />
           </div>
         </EditorViewProvider>
       </div>

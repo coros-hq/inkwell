@@ -8,6 +8,8 @@ import rehypeRaw from 'rehype-raw'
 import rehypeKatex from 'rehype-katex'
 import { remarkHighlight } from '../../lib/remarkHighlight'
 import { remarkMathCodeBlocks } from '../../lib/remarkMathCodeBlocks'
+import { remarkChartCodeBlocks } from '../../lib/remarkChartCodeBlocks'
+import { MarkdownChart } from './MarkdownChart'
 import { useAppStore } from '../../store/useAppStore'
 import { formatFileSize } from '../../lib/attachments'
 import { navigateToNote } from '../../lib/noteReferences'
@@ -834,6 +836,8 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
       return <LocalImage absPath={absPath} alt={alt ?? ''} vaultPath={vaultPath ?? null} searchRoot={searchRoot} />
     },
 
+    'inkwell-chart': ({ spec }: any) => <MarkdownChart spec={spec} />,
+
     strong: ({ children }: any) => <strong className="font-semibold text-foreground">{children}</strong>,
     em:     ({ children }: any) => <em className="italic text-foreground">{children}</em>,
     mark:   ({ children }: any) => <mark className="bg-yellow-300/30 text-foreground rounded px-0.5">{children}</mark>,
@@ -860,7 +864,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
           ) : (
             <ReactMarkdown
               key={i}
-              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkHighlight]}
+              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkChartCodeBlocks, remarkHighlight]}
               rehypePlugins={[
                 [rehypeHighlight, { ignoreMissing: true }],
                 rehypeRaw,

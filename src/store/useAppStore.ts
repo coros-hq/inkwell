@@ -210,6 +210,16 @@ interface AppState {
   /** Split ratio (0–1, source pane share) for Markdown mode, remembered globally. */
   markdownSplitRatio: number;
   setMarkdownSplitRatio: (ratio: number) => void;
+  /**
+   * Drives the chart-builder dialog: "insert" (from the "/chart" slash command)
+   * inserts a fresh ```chart block at a doc position; "edit" (from an existing
+   * block's "Edit with chart builder" action) replaces that block's range with
+   * the edited data. Null when the dialog is closed.
+   */
+  chartInsertRequest: { mode: "insert"; pos: number } | { mode: "edit"; from: number; to: number; spec: string } | null;
+  openChartInsertDialog: (pos: number) => void;
+  openChartEditDialog: (from: number, to: number, spec: string) => void;
+  closeChartInsertDialog: () => void;
   theme: "dark" | "light";
   themeName: string;
   customThemes: CustomTheme[];
@@ -681,6 +691,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   defaultEditorMode: (localStorage.getItem("inkwell-default-editor-mode") as EditorMode | null) ?? "normal",
   noteEditorModes: loadNoteEditorModes(),
   markdownSplitRatio: Number(localStorage.getItem("inkwell-markdown-split-ratio")) || 0.5,
+  chartInsertRequest: null,
   theme: "dark",
   themeName: "midnight",
   customThemes: loadCustomThemes(),
@@ -913,6 +924,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.setItem("inkwell-markdown-split-ratio", String(clamped));
     set({ markdownSplitRatio: clamped });
   },
+
+  openChartInsertDialog: (pos) => set({ chartInsertRequest: { mode: "insert", pos } }),
+  openChartEditDialog: (from, to, spec) => set({ chartInsertRequest: { mode: "edit", from, to, spec } }),
+  closeChartInsertDialog: () => set({ chartInsertRequest: null }),
 
   setTheme: (name: string) => {
     const custom = get().customThemes.find((t) => t.id === name);
