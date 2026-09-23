@@ -205,8 +205,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/NoteList.tsx": {
-    "mtime": 1790000772.501062,
-    "ast_hash": "2d1fa652d9082ede6cb34b28e866e9d8",
+    "mtime": 1790001060.2972577,
+    "ast_hash": "5d7665d4ac74d9ad8d5f0767b497bd8c",
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "src/lib/editorExtensions.ts": {
-    "mtime": 1789992649.2034059,
-    "ast_hash": "d41fba2bb7f9a67e763edd54f0bf0f89",
+    "mtime": 1790164664.9704773,
+    "ast_hash": "6253e1ecacf2ca80add66a3eccfedb73",
     "semantic_hash": ""
   },
   "src/lib/editorTypography.ts": {

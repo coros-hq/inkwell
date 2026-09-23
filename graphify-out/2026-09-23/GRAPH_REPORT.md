@@ -1,11 +1,11 @@
 # Graph Report - inkwell  (2026-09-21)
 
 ## Corpus Check
-- 108 files · ~198,173 words
+- 108 files · ~198,204 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1215 nodes · 2496 edges · 122 communities (79 shown, 43 thin omitted)
+- 1215 nodes · 2496 edges · 123 communities (80 shown, 43 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 64 edges (avg confidence: 0.62)
 - Token cost: 0 input · 0 output
 
@@ -132,6 +132,7 @@
 - [[_COMMUNITY_VaultPicker.tsx|VaultPicker.tsx]]
 - [[_COMMUNITY_Attachment|Attachment]]
 - [[_COMMUNITY_BulletWidget|BulletWidget]]
+- [[_COMMUNITY_Identifier|Identifier]]
 - [[_COMMUNITY_ShellScopeEntryAllowedArgs|ShellScopeEntryAllowedArgs]]
 
 ## God Nodes (most connected - your core abstractions)
@@ -164,7 +165,7 @@
 ## Hyperedges (group relationships)
 - **Excalidraw Iframe Bridge Data Flow** — public_excalidraw_frame_html, public_excalidraw_frame_html_postmessage_protocol, public_excalidraw_frame_html_schedulechange, canvas_feature_design_data_flow, canvas_feature_design_storage_model [INFERRED 0.85]
 
-## Communities (122 total, 43 thin omitted)
+## Communities (123 total, 43 thin omitted)
 
 ### Community 0 - "App Shell & Note Editing"
 Cohesion: 0.36
@@ -231,8 +232,8 @@ Cohesion: 0.23
 Nodes (15): App(), AppShell(), closeThisWindow(), QuickNoteCapture(), SearchOverlay(), comboMatches(), isDarkTheme(), loadCustomThemes() (+7 more)
 
 ### Community 16 - "Tauri Desktop Capability Schema"
-Cohesion: 0.12
-Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArg, Target (+8 more)
+Cohesion: 0.13
+Nodes (15): anyOf, description, definitions, Application, Identifier, Number, PermissionEntry, Target (+7 more)
 
 ### Community 17 - "Tauri macOS Capability Schema"
 Cohesion: 0.12
@@ -251,12 +252,12 @@ Cohesion: 0.09
 Nodes (24): activeLineSet(), buildChartDecorations(), buildFileEmbedDecorations(), buildLiveMarkdownDecorations(), buildMathDecorations(), buildTableDecorations(), BUILT_IN_ABBREVIATIONS, codeBlockLineNumbers() (+16 more)
 
 ### Community 21 - "macOS Schema Property Defs"
-Cohesion: 0.15
-Nodes (13): properties, Identifier, description, oneOf, type, default, description, type (+5 more)
+Cohesion: 0.14
+Nodes (14): properties, default, description, type, type, default, description, type (+6 more)
 
 ### Community 23 - "Tauri Desktop Schema Properties"
-Cohesion: 0.15
-Nodes (13): properties, Identifier, description, oneOf, type, default, description, type (+5 more)
+Cohesion: 0.18
+Nodes (11): properties, default, description, type, description, type, description, identifier (+3 more)
 
 ### Community 24 - "NPM Dev Dependencies"
 Cohesion: 0.15
@@ -420,7 +421,7 @@ Nodes (6): ContextMenu(), ContextMenuItem, ContextMenuProps, Select(), SelectOpt
 
 ### Community 109 - "local"
 Cohesion: 0.50
-Nodes (4): default, description, type, description
+Nodes (4): default, description, type, local
 
 ### Community 110 - "local"
 Cohesion: 0.23
@@ -447,8 +448,8 @@ Cohesion: 0.22
 Nodes (8): isSelfWrite(), markSelfWrite(), recentWrites, deleteNoteFile(), renameItem(), FsWatchEvent, NOOP_HANDLE, VaultWatcherHandle
 
 ### Community 116 - "identifier"
-Cohesion: 0.50
-Nodes (4): default, description, type, description
+Cohesion: 0.67
+Nodes (3): ShellScopeEntryAllowedArg, anyOf, description
 
 ### Community 117 - "ShellScopeEntryAllowedArgs"
 Cohesion: 0.57
@@ -461,6 +462,10 @@ Nodes (5): VaultPicker(), addRecentVault(), getRecentVaults(), RecentVault, remo
 ### Community 119 - "Attachment"
 Cohesion: 0.60
 Nodes (4): AttachmentChip(), AttachmentChipProps, formatFileSize(), Attachment
+
+### Community 121 - "Identifier"
+Cohesion: 0.67
+Nodes (3): Identifier, description, oneOf
 
 ### Community 122 - "ShellScopeEntryAllowedArgs"
 Cohesion: 0.67

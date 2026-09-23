@@ -21,7 +21,7 @@ import { startVaultWatcher } from '../../lib/vaultWatcher'
 import { ConflictBanner } from '../editor/ConflictBanner'
 
 export function AppShell() {
-  const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
+  const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, noteSidebarMode, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoCommitTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -257,7 +257,7 @@ export function AppShell() {
 
       {activeView === 'notes' && (
         <>
-          <NoteList />
+          {noteSidebarMode === 'list' && <NoteList />}
           <EditorPane />
         </>
       )}

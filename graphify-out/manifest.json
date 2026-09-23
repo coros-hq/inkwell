@@ -10,8 +10,8 @@
     "semantic_hash": "a4038619f5414c01f04abbbdd4730820"
   },
   "package.json": {
-    "mtime": 1789669059.5282428,
-    "ast_hash": "bf5b5df83f7026e07e681d457c938a81",
+    "mtime": 1789993882.9556556,
+    "ast_hash": "ed8014d366718bf09fdad6d3e0db68b4",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -75,8 +75,8 @@
     "semantic_hash": "e8af9fdce60f99420547f58d511820e3"
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1789669063.828988,
-    "ast_hash": "9cb05ff561b8cc330bb9de2f2d154e29",
+    "mtime": 1789993882.955955,
+    "ast_hash": "a72fecbdff126359c619e589fd34a675",
     "semantic_hash": ""
   },
   "src/App.tsx": {
@@ -195,18 +195,18 @@
     "semantic_hash": ""
   },
   "src/components/layout/AppShell.tsx": {
-    "mtime": 1789858066.5941498,
-    "ast_hash": "0e97513c95b10e380abffb94ae64d87a",
+    "mtime": 1790000531.621278,
+    "ast_hash": "a3c1deb7dfe2659e3e50a9f520df3dea",
     "semantic_hash": ""
   },
   "src/components/layout/EditorPane.tsx": {
-    "mtime": 1789988387.7305424,
-    "ast_hash": "135b5f337f98b5538c3fcb652378697b",
+    "mtime": 1790000930.6781454,
+    "ast_hash": "0e5fe04d2fb4b3162f24ffcaaddb97bb",
     "semantic_hash": ""
   },
   "src/components/layout/NoteList.tsx": {
-    "mtime": 1789858066.594627,
-    "ast_hash": "9eae2d4f3361ea151c82c8f9e8eb5496",
+    "mtime": 1790001060.2972577,
+    "ast_hash": "5d7665d4ac74d9ad8d5f0767b497bd8c",
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "src/lib/editorExtensions.ts": {
-    "mtime": 1789992649.2034059,
-    "ast_hash": "d41fba2bb7f9a67e763edd54f0bf0f89",
+    "mtime": 1790164940.9638715,
+    "ast_hash": "8172104e519682d0c18116366c629d69",
     "semantic_hash": ""
   },
   "src/lib/editorTypography.ts": {
@@ -370,8 +370,8 @@
     "semantic_hash": "912ed2887ab8f9be43f625930982407a"
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1789989473.19139,
-    "ast_hash": "85d9df02894cf2da1924338fe8417f4f",
+    "mtime": 1790000522.8192844,
+    "ast_hash": "fc6ea5d7ff684988399866ab5ad46260",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -815,8 +815,8 @@
     "semantic_hash": ""
   },
   "src/components/editor/MarkdownChart.tsx": {
-    "mtime": 1789992637.7633095,
-    "ast_hash": "a021295026aa68cadf3059d31f47ee3d",
+    "mtime": 1789996845.541795,
+    "ast_hash": "65b5ae273b11eb8c5a1aa494759843f0",
     "semantic_hash": ""
   },
   "src/lib/remarkChartCodeBlocks.ts": {

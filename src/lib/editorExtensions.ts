@@ -32,7 +32,7 @@ export const inkwellHighlightStyle = HighlightStyle.define([
   { tag: tags.processingInstruction, color: 'hsl(var(--muted-foreground))', opacity: '0.6' },
   { tag: tags.punctuation, color: 'hsl(var(--muted-foreground))', opacity: '0.6' },
   { tag: tags.quote, color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' },
-  { tag: tags.list, color: 'hsl(var(--accent))' },
+  { tag: tags.list, color: 'hsl(var(--foreground))' },
   { tag: tags.meta, color: 'hsl(var(--muted-foreground))' },
 ])
 
@@ -501,6 +501,20 @@ class BulletWidget extends WidgetType {
   ignoreEvent() { return false }
 }
 
+// Renders an ordered-list number ("1.", "2)") in the body text colour instead
+// of the muted syntax-mark style it would otherwise inherit.
+class OrderedMarkWidget extends WidgetType {
+  constructor(readonly text: string) { super() }
+  eq(other: OrderedMarkWidget) { return other.text === this.text }
+  toDOM() {
+    const span = document.createElement('span')
+    span.className = 'cm-ordered-mark'
+    span.textContent = this.text
+    return span
+  }
+  ignoreEvent() { return false }
+}
+
 // Replaces a `---` / `***` / `___` thematic-break line with a rendered rule.
 // Revealed as raw text on the active line, like every other conceal here.
 class HorizontalRuleWidget extends WidgetType {
@@ -604,6 +618,9 @@ function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
 
         if (node.name === 'ListMark' && node.node.parent?.parent?.name === 'BulletList') {
           decos.push(Decoration.replace({ widget: new BulletWidget() }).range(node.from, node.to))
+        } else if (node.name === 'ListMark' && node.node.parent?.parent?.name === 'OrderedList') {
+          const text = view.state.doc.sliceString(node.from, node.to)
+          decos.push(Decoration.replace({ widget: new OrderedMarkWidget(text) }).range(node.from, node.to))
         }
       },
     })

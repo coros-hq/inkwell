@@ -1,4 +1,4 @@
-import { Star, Trash2, FileX } from 'lucide-react'
+import { Star, Trash2, FileX, List, SquareStack } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { TagChip } from '../shared/TagChip'
 import { formatDate } from '../../lib/utils'
@@ -13,13 +13,14 @@ export function NoteList() {
     folders,
     selectedNoteIds,
     selectedFolderId,
+    setNoteSidebarMode,
+    sidebarOpen,
     pinNote,
     moveNotes,
     bodyGlass,
     glassOpacity,
   } = useAppStore()
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date')
-  const [showPinned, setShowPinned] = useState(false)
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null)
 
   const folder = selectedFolderId
@@ -36,7 +37,6 @@ export function NoteList() {
   let displayNotes = folder
     ? folder.notes
     : notes.filter(n => n.folder === null)
-  if (showPinned) displayNotes = displayNotes.filter(n => n.pinned)
   displayNotes = [...displayNotes].sort((a, b) =>
     sortBy === 'date'
       ? b.updatedAt.getTime() - a.updatedAt.getTime()
@@ -85,12 +85,30 @@ export function NoteList() {
           moveNotes(ids, selectedFolderId)
         }}
       >
+        {/* Clears the macOS traffic-light overlay — normally reserved by the
+            Sidebar column, which is gone from the layout while it's collapsed. */}
+        {!sidebarOpen && <div className="w-20 shrink-0" data-tauri-drag-region />}
         <span className="text-[14px] font-bold text-foreground truncate">
           {selectedNoteIds.length > 1
             ? `${selectedNoteIds.length} selected`
             : (folder?.name ?? 'Unfiled')}
         </span>
         <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-0 bg-muted border border-border-strong rounded-md p-0.5">
+            <button
+              className="w-6 h-6 flex items-center justify-center rounded bg-card text-foreground shadow-sm"
+              title="Notes list"
+            >
+              <List className="w-3.5 h-3.5" />
+            </button>
+            <button
+              className="w-6 h-6 flex items-center justify-center rounded transition-colors text-muted-foreground hover:text-foreground"
+              onClick={() => setNoteSidebarMode('tabs')}
+              title="Switch to open tabs"
+            >
+              <SquareStack className="w-3.5 h-3.5" />
+            </button>
+          </div>
           <div className="flex items-center gap-0 bg-muted border border-border-strong rounded-md p-0.5">
             <button
               className={cn(
@@ -115,16 +133,6 @@ export function NoteList() {
               Name
             </button>
           </div>
-          <button
-            className={cn(
-              'w-7 h-7 flex items-center justify-center rounded-md transition-colors',
-              showPinned ? 'text-accent bg-active' : 'text-muted-foreground hover:text-foreground hover:bg-surface'
-            )}
-            onClick={() => setShowPinned(!showPinned)}
-            title="Show pinned only"
-          >
-            <Star className={cn('w-4 h-4', showPinned && 'fill-accent')} strokeWidth={2.25} />
-          </button>
         </div>
       </div>
 

@@ -107,8 +107,18 @@
   "105": "Edit/Split/Preview View Modes",
   "106": "CheckboxWidget",
   "107": "ThemeEditor.tsx",
+  "108": "ShellScopeEntryAllowedArg",
+  "109": "local",
   "110": "local",
-  "111": "Identifier",
-  "113": "ShellScopeEntryAllowedArg",
-  "115": "ShellScopeEntryAllowedArg"
+  "111": "ShellScopeEntryAllowedArg",
+  "112": "ShellScopeEntryAllowedArgs",
+  "113": "shortcuts.ts",
+  "114": "auth.ts",
+  "115": "vaultWatcher.ts",
+  "116": "identifier",
+  "117": "ShellScopeEntryAllowedArgs",
+  "118": "VaultPicker.tsx",
+  "119": "Attachment",
+  "120": "BulletWidget",
+  "122": "ShellScopeEntryAllowedArgs"
 }

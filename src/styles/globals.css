@@ -510,6 +510,10 @@ html[data-theme="onyx"] {
   font-weight: 700;
 }
 
+.cm-ordered-mark {
+  color: hsl(var(--foreground));
+}
+
 .cm-line.cm-line-codeblock {
   font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, SFMono-Regular, Menlo, monospace !important;
   font-size: 0.85em;

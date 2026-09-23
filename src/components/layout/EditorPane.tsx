@@ -9,6 +9,8 @@ import {
   Plus,
   GitBranch,
   Columns2,
+  List,
+  X,
 } from "lucide-react";
 import { ShareDialog } from "../editor/ShareDialog";
 import { GitHubSyncDialog } from "../shared/GitHubSyncDialog";
@@ -31,6 +33,59 @@ import { cn, glassBg } from "../../lib/utils";
 import { formatDate } from "../../lib/utils";
 import { comboMatches } from "../../lib/shortcuts";
 
+/** VSCode/Obsidian-style tab strip — shown instead of the NoteList column
+ *  when noteSidebarMode is 'tabs'. The leading button switches back. */
+function TabBar() {
+  const { notes, openTabs, lastSelectedNoteId, selectedNoteIds, selectNote, closeTab, setNoteSidebarMode, sidebarOpen } =
+    useAppStore();
+  const activeId = lastSelectedNoteId ?? selectedNoteIds[0] ?? null;
+
+  return (
+    <div className="h-9 shrink-0 flex items-stretch border-b border-border bg-surface/40 overflow-x-auto">
+      {/* Clears the macOS traffic-light overlay, which otherwise sits on top of
+          this row's content — the Sidebar column normally reserves this space
+          itself, but it's gone from the layout while the sidebar is collapsed. */}
+      {!sidebarOpen && <div className="w-20 shrink-0" data-tauri-drag-region />}
+      <button
+        className="w-9 shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface transition-colors border-r border-border"
+        onClick={() => setNoteSidebarMode("list")}
+        title="Show note list"
+      >
+        <List className="w-3.5 h-3.5" />
+      </button>
+      {openTabs.map((id) => {
+        const note = notes.find((n) => n.id === id);
+        if (!note) return null;
+        const isActive = id === activeId;
+        return (
+          <div
+            key={id}
+            className={cn(
+              "group flex items-center gap-2 px-3 min-w-[120px] max-w-[200px] border-r border-border cursor-pointer transition-colors shrink-0",
+              isActive
+                ? "bg-background text-foreground border-b-2 border-b-accent -mb-px"
+                : "text-muted-foreground hover:bg-surface hover:text-foreground",
+            )}
+            onClick={() => selectNote(id)}
+          >
+            <span className="flex-1 min-w-0 truncate text-[12.5px] font-medium">{note.title}</span>
+            <button
+              className="w-4 h-4 shrink-0 flex items-center justify-center rounded opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                closeTab(id);
+              }}
+              title="Close tab"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export function EditorPane() {
   const {
     notes,
@@ -38,6 +93,7 @@ export function EditorPane() {
     selectedNoteIds,
     lastSelectedNoteId,
     selectedFolderId,
+    noteSidebarMode,
     getEditorMode,
     setNoteEditorMode,
     pinNote,
@@ -184,25 +240,28 @@ export function EditorPane() {
 
   if (!note) {
     return (
-      <div
-        className={cn("flex-1 flex flex-col items-center justify-center gap-5", bodyGlass ? "backdrop-blur-2xl" : "bg-background")}
-        style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
-      >
-        <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-surface border border-border-strong shadow-sm">
-          <PenLine className="w-7 h-7 text-muted-foreground" strokeWidth={1.75} />
-        </div>
-        <div className="text-center">
-          <p className="text-[15px] font-bold text-foreground">Nothing open</p>
-          <p className="text-[13px] text-muted-foreground mt-1">Pick a note from the list, or start a new one.</p>
-        </div>
-        <button
-          onClick={handleNewNote}
-          className="flex items-center gap-1.5 h-9 px-4 rounded-full bg-accent text-accent-foreground text-[13px] font-semibold shadow-sm hover:opacity-90 transition-opacity"
-          title="New note"
+      <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {noteSidebarMode === "tabs" && <TabBar />}
+        <div
+          className={cn("flex-1 flex flex-col items-center justify-center gap-5", bodyGlass ? "backdrop-blur-2xl" : "bg-background")}
+          style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
         >
-          <Plus className="w-4 h-4" strokeWidth={2.5} />
-          New note
-        </button>
+          <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-surface border border-border-strong shadow-sm">
+            <PenLine className="w-7 h-7 text-muted-foreground" strokeWidth={1.75} />
+          </div>
+          <div className="text-center">
+            <p className="text-[15px] font-bold text-foreground">Nothing open</p>
+            <p className="text-[13px] text-muted-foreground mt-1">Pick a note from the list, or start a new one.</p>
+          </div>
+          <button
+            onClick={handleNewNote}
+            className="flex items-center gap-1.5 h-9 px-4 rounded-full bg-accent text-accent-foreground text-[13px] font-semibold shadow-sm hover:opacity-90 transition-opacity"
+            title="New note"
+          >
+            <Plus className="w-4 h-4" strokeWidth={2.5} />
+            New note
+          </button>
+        </div>
       </div>
     );
   }
@@ -225,6 +284,7 @@ export function EditorPane() {
       style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
     >
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+        {noteSidebarMode === "tabs" && <TabBar />}
         {/* Top bar — minimal: breadcrumb + title left, actions tucked right, no divider */}
         <div className="h-12 shrink-0 flex items-center px-5 gap-3" data-tauri-drag-region>
           {!sidebarOpen && (

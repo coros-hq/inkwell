@@ -199,6 +199,10 @@ interface AppState {
   selectedNoteIds: string[];
   lastSelectedNoteId: string | null;
   selectedFolderId: string | null;
+  /** Notes currently open as tabs, in tab order — separate from selectedNoteIds,
+   *  which tracks the (possibly multi-note) list selection for bulk actions. */
+  openTabs: string[];
+  closeTab: (id: string) => void;
   /** Global default editor mode applied to notes with no per-note override. */
   defaultEditorMode: EditorMode;
   setDefaultEditorMode: (mode: EditorMode) => void;
@@ -317,6 +321,10 @@ interface AppState {
   setActiveTask: (id: string | null) => void;
   sidebarOpen: boolean;
   toggleSidebar: () => void;
+  /** 'list' shows the NoteList column; 'tabs' hides it in favor of a
+   *  VSCode/Obsidian-style tab strip at the top of the editor pane. */
+  noteSidebarMode: "list" | "tabs";
+  setNoteSidebarMode: (mode: "list" | "tabs") => void;
   setActiveView: (view: ActiveView) => void;
   setSaveStatus: (status: "saved" | "saving" | "idle") => void;
   toggleSubtask: (taskId: string, subtaskId: string) => void;
@@ -688,6 +696,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedNoteIds: [],
   lastSelectedNoteId: null,
   selectedFolderId: null,
+  openTabs: [],
   defaultEditorMode: (localStorage.getItem("inkwell-default-editor-mode") as EditorMode | null) ?? "normal",
   noteEditorModes: loadNoteEditorModes(),
   markdownSplitRatio: Number(localStorage.getItem("inkwell-markdown-split-ratio")) || 0.5,
@@ -715,6 +724,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeTaskId: null,
   saveStatus: "saved",
   sidebarOpen: true,
+  noteSidebarMode:
+    (localStorage.getItem("inkwell-note-sidebar-mode") as "list" | "tabs" | null) ?? "list",
   prompt: null,
   confirm: null,
   updateInfo: null,
@@ -801,6 +812,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       activeBoardId: boards[0]?.id ?? null,
       selectedNoteIds: notes.length > 0 ? [notes[0].id] : [],
       lastSelectedNoteId: notes[0]?.id ?? null,
+      openTabs: notes.length > 0 ? [notes[0].id] : [],
       selectedFolderId: folders[0]?.id ?? null,
       activeView: "notes",
       gitSyncEnabled: false,
@@ -836,6 +848,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedNoteIds: [],
       lastSelectedNoteId: null,
       selectedFolderId: null,
+      openTabs: [],
     }),
 
   openPrompt: (config) => set({ prompt: config }),
@@ -848,7 +861,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!note) return;
 
     const { additive = false, range = false, orderedIds = [] } = options ?? {};
-    const { selectedNoteIds, lastSelectedNoteId } = get();
+    const { selectedNoteIds, lastSelectedNoteId, openTabs } = get();
 
     let nextIds: string[];
 
@@ -874,7 +887,28 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedNoteIds: nextIds,
       lastSelectedNoteId: id,
       selectedFolderId: note.folder,
+      openTabs: openTabs.includes(id) ? openTabs : [...openTabs, id],
     });
+  },
+
+  closeTab: (id) => {
+    const { openTabs, lastSelectedNoteId, selectedNoteIds } = get();
+    const idx = openTabs.indexOf(id);
+    if (idx === -1) return;
+    const nextTabs = openTabs.filter((t) => t !== id);
+    const wasActive =
+      lastSelectedNoteId === id ||
+      (selectedNoteIds.length === 1 && selectedNoteIds[0] === id);
+
+    if (wasActive) {
+      const neighborId = nextTabs[idx] ?? nextTabs[idx - 1] ?? null;
+      if (neighborId) {
+        get().selectNote(neighborId);
+      } else {
+        set({ selectedNoteIds: [], lastSelectedNoteId: null });
+      }
+    }
+    set({ openTabs: nextTabs });
   },
 
   clearNoteSelection: () =>
@@ -890,11 +924,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     const folder = findFolderById(get().folders, id);
     if (folder) {
       const firstNoteId = folder.notes[0]?.id ?? null;
-      set({
+      set((s) => ({
         selectedFolderId: id,
         selectedNoteIds: firstNoteId ? [firstNoteId] : [],
         lastSelectedNoteId: firstNoteId,
-      });
+        openTabs:
+          firstNoteId && !s.openTabs.includes(firstNoteId)
+            ? [...s.openTabs, firstNoteId]
+            : s.openTabs,
+      }));
     }
   },
 
@@ -1179,6 +1217,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedNoteIds: [id],
       lastSelectedNoteId: id,
       selectedFolderId: folderId,
+      openTabs: [...s.openTabs, id],
       folders: folderId
         ? addNoteToFolderTree(s.folders, folderId, newNote)
         : s.folders,
@@ -1194,12 +1233,15 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     const existing = notes.find((n) => n.path === path);
     if (existing) {
-      set({
+      set((s) => ({
         selectedNoteIds: [existing.id],
         lastSelectedNoteId: existing.id,
         selectedFolderId: null,
+        openTabs: s.openTabs.includes(existing.id)
+          ? s.openTabs
+          : [...s.openTabs, existing.id],
         activeView: "notes",
-      });
+      }));
       return;
     }
 
@@ -1212,6 +1254,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedNoteIds: [note.id],
       lastSelectedNoteId: note.id,
       selectedFolderId: null,
+      openTabs: [...s.openTabs, note.id],
       activeView: "notes",
     }));
   },
@@ -1585,6 +1628,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         selectedNoteIds,
         lastSelectedNoteId,
         selectedFolderId,
+        openTabs: s.openTabs.filter((tid) => !idSet.has(tid)),
       };
     });
   },
@@ -1631,6 +1675,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         selectedNoteIds,
         lastSelectedNoteId,
         selectedFolderId,
+        openTabs: s.openTabs.filter((tid) => !noteIdsToDelete.has(tid)),
       };
     });
   },
@@ -1638,6 +1683,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   setActiveTask: (id) => set({ activeTaskId: id }),
 
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+
+  setNoteSidebarMode: (mode) => {
+    localStorage.setItem("inkwell-note-sidebar-mode", mode);
+    set({ noteSidebarMode: mode });
+  },
 
   setActiveView: (view) => set({ activeView: view }),
 

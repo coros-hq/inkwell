@@ -136,11 +136,24 @@ function formatTick(n: number): string {
   return Math.abs(n) >= 1000 ? n.toLocaleString() : String(Math.round(n * 100) / 100)
 }
 
-/** Rounded-top, square-bottom bar path (4px radius, grows from the baseline). */
+/** Rounded-top, square-bottom bar path (6px radius, grows from the baseline). */
 function barPath(x: number, yTop: number, width: number, yBase: number): string {
-  const r = Math.min(4, width / 2, Math.max(0, yBase - yTop))
+  const r = Math.min(6, width / 2, Math.max(0, yBase - yTop))
   if (yBase - yTop <= 0) return ''
   return `M${x},${yBase} L${x},${yTop + r} A${r},${r} 0 0 1 ${x + r},${yTop} L${x + width - r},${yTop} A${r},${r} 0 0 1 ${x + width},${yTop + r} L${x + width},${yBase} Z`
+}
+
+/** A soft colored glow per series, keyed to that series' own color — a thin neon halo, not a shadow. */
+function ChartDefs({ ids }: { ids: string[] }) {
+  return (
+    <defs>
+      {ids.map((color, i) => (
+        <filter key={i} id={`chart-glow-${i}`} x="-60%" y="-60%" width="220%" height="220%">
+          <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor={color} floodOpacity="0.55" />
+        </filter>
+      ))}
+    </defs>
+  )
 }
 
 type Tooltip = { x: number; y: number; text: string } | null
@@ -228,6 +241,7 @@ function CartesianChart({ spec }: { spec: ChartSpec }) {
   return (
     <div className="relative not-prose">
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto block" role="img" aria-label={spec.title ?? `${spec.type} chart`}>
+        <ChartDefs ids={datasets.map((_, di) => SERIES_COLORS[di])} />
         {/* gridlines */}
         {ticks.map((t, i) => (
           <g key={i}>
@@ -261,6 +275,7 @@ function CartesianChart({ spec }: { spec: ChartSpec }) {
                   key={`${di}-${li}`}
                   d={barPath(x, top, groupW, base)}
                   fill={SERIES_COLORS[di]}
+                  filter={`url(#chart-glow-${di})`}
                   onMouseEnter={e => {
                     const r = (e.target as SVGElement).getBoundingClientRect()
                     const parent = (e.currentTarget as SVGElement).ownerSVGElement!.getBoundingClientRect()
@@ -281,7 +296,7 @@ function CartesianChart({ spec }: { spec: ChartSpec }) {
             return (
               <g key={di}>
                 {areaPath && <path d={areaPath} fill={SERIES_COLORS[di]} opacity={0.1} stroke="none" />}
-                <path d={linePath} fill="none" stroke={SERIES_COLORS[di]} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+                <path d={linePath} fill="none" stroke={SERIES_COLORS[di]} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" filter={`url(#chart-glow-${di})`} />
                 {points.map(([x, y], li) => (
                   <circle
                     key={li}
@@ -331,6 +346,7 @@ function PieChart({ spec, donut }: { spec: ChartSpec; donut: boolean }) {
   return (
     <div className="relative not-prose flex flex-col items-center">
       <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} role="img" aria-label={spec.title ?? 'pie chart'}>
+        <ChartDefs ids={slices.map(s => s.color)} />
         {slices.map((s, i) => {
           const [x1, y1] = arcPoint(s.start, r)
           const [x2, y2] = arcPoint(s.end, r)
