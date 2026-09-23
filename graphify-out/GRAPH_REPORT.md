@@ -1,7 +1,7 @@
 # Graph Report - inkwell  (2026-09-23)
 
 ## Corpus Check
-- 108 files · ~198,289 words
+- 108 files · ~198,262 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -10,7 +10,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `c90c2396`
+- Built from commit: `12271dd3`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -236,7 +236,7 @@ Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntr
 
 ### Community 17 - "Tauri macOS Capability Schema"
 Cohesion: 0.12
-Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArgs, Target (+8 more)
+Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArg, Target (+8 more)
 
 ### Community 18 - "Project README & Build Config"
 Cohesion: 0.33
@@ -460,7 +460,7 @@ Nodes (4): AttachmentChip(), AttachmentChipProps, formatFileSize(), Attachment
 
 ### Community 121 - "Identifier"
 Cohesion: 0.67
-Nodes (3): ShellScopeEntryAllowedArg, anyOf, description
+Nodes (3): ShellScopeEntryAllowedArgs, anyOf, description
 
 ## Ambiguous Edges - Review These
 - `CanvasView Component` → `excalidraw-frame.html (Iframe Bridge)`  [AMBIGUOUS]

@@ -10,8 +10,8 @@
     "semantic_hash": "a4038619f5414c01f04abbbdd4730820"
   },
   "package.json": {
-    "mtime": 1789993882.9556556,
-    "ast_hash": "ed8014d366718bf09fdad6d3e0db68b4",
+    "mtime": 1790165204.13557,
+    "ast_hash": "102c338451f6b8095100b9c4f34ff344",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -75,8 +75,8 @@
     "semantic_hash": "e8af9fdce60f99420547f58d511820e3"
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1789993882.955955,
-    "ast_hash": "a72fecbdff126359c619e589fd34a675",
+    "mtime": 1790165204.1360345,
+    "ast_hash": "b7f961d8314443719e6c982a339b4c6e",
     "semantic_hash": ""
   },
   "src/App.tsx": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
-    "mtime": 1789481246.5879414,
-    "ast_hash": "202141282bdd773bc6cd58b3f12bba9a",
+    "mtime": 1790165526.5736303,
+    "ast_hash": "f55bfe8edd43fbee60d50058c537540d",
     "semantic_hash": ""
   },
   "src/components/quicknote/QuickNoteCapture.tsx": {

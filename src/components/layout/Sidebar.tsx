@@ -291,7 +291,7 @@ function FolderRow({
   onCommitRename,
   onCancelRename,
 }: FolderRowProps) {
-  const { selectedFolderId, selectedNoteIds, selectFolder, toggleFolder, activeView, setActiveView, createNote } =
+  const { selectedNoteIds, toggleFolder, activeView, setActiveView, createNote } =
     useAppStore();
   const isRenamingThis = renamingId === folder.id;
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -303,11 +303,6 @@ function FolderRow({
     }
   }, [isRenamingThis]);
 
-  const isSelected = selectedFolderId === folder.id;
-  const hasSelectedNote = folder.notes.some((n) =>
-    selectedNoteIds.includes(n.id),
-  );
-  const isFolderActive = isSelected || hasSelectedNote;
   const noteOrderedIds = folder.notes.map((n) => n.id);
   const paddingLeft = folderPadding(depth);
   const dndId = `folder:${folder.id}`;
@@ -357,16 +352,16 @@ function FolderRow({
           className={cn(
             treeRowClass,
             "cursor-pointer",
-            !isFolderActive && !dropInto && "hover:bg-surface",
-            isFolderActive && !dropInto && "bg-active",
+            !dropInto && "hover:bg-surface",
             dropInto && "ring-2 ring-accent bg-accent/15",
             isDragging && "opacity-20 pointer-events-none",
           )}
           style={{ paddingLeft }}
           onClick={() => {
             if (isRenamingThis) return;
+            // Folders aren't selectable — a click only expands/collapses,
+            // leaving the active note untouched.
             toggleFolder(folder.id);
-            selectFolder(folder.id);
             if (activeView !== 'notes') setActiveView('notes');
           }}
           onDoubleClick={(e) => { e.stopPropagation(); onStartRename(folder.id); }}
@@ -375,8 +370,7 @@ function FolderRow({
         >
           <span
             className={cn(
-              "w-4 h-4 flex items-center justify-center shrink-0",
-              isFolderActive ? "text-accent" : "text-muted-foreground",
+              "w-4 h-4 flex items-center justify-center shrink-0 text-muted-foreground",
             )}
           >
             {folder.expanded ? (
@@ -387,8 +381,7 @@ function FolderRow({
           </span>
           <Folder
             className={cn(
-              "w-3.5 h-3.5 shrink-0",
-              isFolderActive ? "text-accent" : "text-muted-foreground",
+              "w-3.5 h-3.5 shrink-0 text-muted-foreground",
             )}
           />
           {isRenamingThis ? (
@@ -409,11 +402,9 @@ function FolderRow({
             <span
               className={cn(
                 "truncate",
-                isFolderActive
-                  ? "text-accent font-medium"
-                  : depth === 0
-                    ? "text-foreground font-medium"
-                    : "text-foreground",
+                depth === 0
+                  ? "text-foreground font-medium"
+                  : "text-foreground",
               )}
             >
               {folder.name}

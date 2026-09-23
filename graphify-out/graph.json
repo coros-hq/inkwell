@@ -2378,7 +2378,7 @@
       "source_location": "L6592",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_shellscopeentryallowedarg",
-      "community": 121,
+      "community": 17,
       "norm_label": "shellscopeentryallowedarg"
     },
     {
@@ -2388,7 +2388,7 @@
       "source_location": "L6593",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedarg_description",
-      "community": 121,
+      "community": 17,
       "norm_label": "description"
     },
     {
@@ -2398,7 +2398,7 @@
       "source_location": "L6594",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedarg_anyof",
-      "community": 121,
+      "community": 17,
       "norm_label": "anyof"
     },
     {
@@ -2408,7 +2408,7 @@
       "source_location": "L6620",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_shellscopeentryallowedargs",
-      "community": 17,
+      "community": 121,
       "norm_label": "shellscopeentryallowedargs"
     },
     {
@@ -2418,7 +2418,7 @@
       "source_location": "L6621",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedargs_description",
-      "community": 17,
+      "community": 121,
       "norm_label": "description"
     },
     {
@@ -2428,7 +2428,7 @@
       "source_location": "L6622",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedargs_anyof",
-      "community": 17,
+      "community": 121,
       "norm_label": "anyof"
     },
     {
@@ -6085,7 +6085,7 @@
       "label": "Sidebar()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L506",
+      "source_location": "L497",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_sidebar",
       "community": 25,
@@ -6095,7 +6095,7 @@
       "label": "findNotesInFolder()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1330",
+      "source_location": "L1321",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_findnotesinfolder",
       "community": 25,
@@ -6105,7 +6105,7 @@
       "label": "findFolderChildren()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1342",
+      "source_location": "L1333",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_findfolderchildren",
       "community": 25,
@@ -6115,7 +6115,7 @@
       "label": "flatFolders()",
       "file_type": "code",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1354",
+      "source_location": "L1345",
       "_origin": "ast",
       "id": "src_components_layout_sidebar_flatfolders",
       "community": 25,
@@ -26494,7 +26494,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1342",
+      "source_location": "L1333",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_findfolderchildren",
@@ -26504,7 +26504,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1330",
+      "source_location": "L1321",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_findnotesinfolder",
@@ -26514,7 +26514,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1354",
+      "source_location": "L1345",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_flatfolders",
@@ -26594,7 +26594,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L506",
+      "source_location": "L497",
       "weight": 1.0,
       "source": "src_components_layout_sidebar",
       "target": "src_components_layout_sidebar_sidebar",
@@ -26845,7 +26845,7 @@
       "context": "collection",
       "confidence": "INFERRED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L1284",
+      "source_location": "L1275",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_snapoverlaytocursor",
@@ -26867,7 +26867,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L312",
+      "source_location": "L307",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_folderrow",
       "target": "src_components_layout_sidebar_folderpadding",
@@ -26889,7 +26889,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L476",
+      "source_location": "L467",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_folderrow",
       "target": "src_components_layout_sidebar_notepadding",
@@ -26945,7 +26945,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L490",
+      "source_location": "L481",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_folderrow",
       "target": "src_lib_deleteactions_confirmdeletenote"
@@ -26956,7 +26956,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L357",
+      "source_location": "L352",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_folderrow",
       "target": "src_lib_utils_cn"
@@ -26977,7 +26977,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L845",
+      "source_location": "L836",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_findfolderchildren",
@@ -26988,7 +26988,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L816",
+      "source_location": "L807",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_findnotesinfolder",
@@ -26999,7 +26999,7 @@
       "context": "call",
       "confidence": "EXTRACTED",
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L623",
+      "source_location": "L614",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_components_layout_sidebar_flatfolders",
@@ -27011,7 +27011,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L875",
+      "source_location": "L866",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_deleteactions_confirmdeletefolderitem"
@@ -27022,7 +27022,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L897",
+      "source_location": "L888",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_deleteactions_confirmdeletenote"
@@ -27033,7 +27033,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L574",
+      "source_location": "L565",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_deleteactions_confirmdeleteselectednotes"
@@ -27044,7 +27044,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L961",
+      "source_location": "L952",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_utils_cn"
@@ -27055,7 +27055,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L966",
+      "source_location": "L957",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_lib_utils_glassbg"
@@ -27066,7 +27066,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/layout/Sidebar.tsx",
-      "source_location": "L532",
+      "source_location": "L523",
       "weight": 1.0,
       "source": "src_components_layout_sidebar_sidebar",
       "target": "src_store_useappstore_useappstore"
@@ -38886,5 +38886,5 @@
       "source_file": "public/excalidraw-frame.html"
     }
   ],
-  "built_at_commit": "c90c23966761d546e63dddab21985033256623cf"
+  "built_at_commit": "12271dd37681b8053b050c91ceba6075545a2e70"
 }
