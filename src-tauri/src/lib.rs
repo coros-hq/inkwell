@@ -51,6 +51,23 @@ fn set_vibrancy(window: tauri::WebviewWindow, enabled: bool, dark: bool) {
 /// Show the quick-note popup, focusing an existing instance instead of
 /// spawning a duplicate. This is invoked from the global shortcut and from
 /// the tray menu, so it works even while the main window is hidden.
+/// List the family names of every font installed on the system, sorted and
+/// de-duplicated, so the editor can offer local fonts. WKWebView/WebView2 can
+/// render any installed family by name, so the name alone is enough.
+#[tauri::command]
+async fn list_system_fonts() -> Vec<String> {
+    let mut db = fontdb::Database::new();
+    db.load_system_fonts();
+    let mut families: Vec<String> = db
+        .faces()
+        .flat_map(|face| face.families.iter().map(|(name, _)| name.clone()))
+        .filter(|name| !name.starts_with('.'))
+        .collect();
+    families.sort_by_key(|name| name.to_lowercase());
+    families.dedup();
+    families
+}
+
 fn show_quick_note_window(app: &tauri::AppHandle) {
     if let Some(win) = app.get_webview_window(QUICK_NOTE_LABEL) {
         let _ = win.center();
@@ -131,7 +148,7 @@ pub fn run() {
     }
 
     builder
-        .invoke_handler(tauri::generate_handler![set_vibrancy])
+        .invoke_handler(tauri::generate_handler![set_vibrancy, list_system_fonts])
         .setup(|app| {
             #[cfg(desktop)]
             {

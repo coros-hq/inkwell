@@ -778,6 +778,167 @@ export const tablePlugin = ViewPlugin.fromClass(
   { decorations: v => v.decorations }
 )
 
+// ─── Table Live Preview (GFM tables) ──────────────────────────────────────────
+// Same reveal model as math/chart: a GFM table renders as a real <table> in
+// "Normal" mode and reverts to raw pipe source whenever the selection touches
+// it. Clicking a cell drops the cursor into that cell's source text.
+
+type TableAlign = 'left' | 'center' | 'right' | null
+
+interface TableCell { text: string; from: number }
+interface TableRow { cells: TableCell[] }
+
+// Split a table row on unescaped '|' (outer pipes optional), keeping each
+// cell's absolute doc offset so a click can map back to the source.
+function splitTableRow(text: string, lineFrom: number): TableCell[] {
+  const cells: TableCell[] = []
+  let start = 0
+  let end = text.length
+  const lead = text.match(/^\s*\|/)
+  if (lead) start = lead[0].length
+  const trail = text.match(/\|\s*$/)
+  if (trail && trail.index! >= start) end = trail.index!
+
+  let cellStart = start
+  for (let i = start; i <= end; i++) {
+    if (i === end || (text[i] === '|' && text[i - 1] !== '\\')) {
+      const raw = text.slice(cellStart, i)
+      const leading = raw.length - raw.trimStart().length
+      cells.push({ text: raw.trim(), from: lineFrom + cellStart + leading })
+      cellStart = i + 1
+    }
+  }
+  return cells
+}
+
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+}
+
+// Minimal inline markdown for cell content: code, bold, italic, strike, links.
+function renderInlineCell(src: string): string {
+  const codes: string[] = []
+  let s = src.replace(/\\\|/g, '|').replace(/`([^`]+)`/g, (_, c) => {
+    codes.push(`<code>${escapeHtml(c)}</code>`)
+    return `\u0000${codes.length - 1}\u0000`
+  })
+  s = escapeHtml(s)
+    .replace(/\*\*([^*]+)\*\*|__([^_]+)__/g, (_, a, b) => `<strong>${a ?? b}</strong>`)
+    .replace(/(^|[^*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>')
+    .replace(/(^|[^\w_])_([^_\s][^_]*)_(?!\w)/g, '$1<em>$2</em>')
+    .replace(/~~([^~]+)~~/g, '<del>$1</del>')
+    .replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<span class="cm-md-table-link">$1</span>')
+  return s.replace(/\u0000(\d+)\u0000/g, (_, n) => codes[Number(n)])
+}
+
+class TableWidget extends WidgetType {
+  constructor(
+    readonly source: string,
+    readonly header: TableRow,
+    readonly aligns: TableAlign[],
+    readonly body: TableRow[],
+  ) { super() }
+
+  eq(other: TableWidget) {
+    return other.source === this.source &&
+      other.header.cells[0]?.from === this.header.cells[0]?.from
+  }
+
+  toDOM(view: EditorView) {
+    const wrap = document.createElement('div')
+    wrap.className = 'cm-md-table-wrap'
+    const table = document.createElement('table')
+    table.className = 'cm-md-table'
+    const cols = Math.max(this.header.cells.length, this.aligns.length)
+
+    const makeRow = (row: TableRow, tag: 'th' | 'td') => {
+      const tr = document.createElement('tr')
+      for (let c = 0; c < cols; c++) {
+        const cell = row.cells[c]
+        const el = document.createElement(tag)
+        const align = this.aligns[c]
+        if (align) el.style.textAlign = align
+        el.innerHTML = cell ? renderInlineCell(cell.text) : ''
+        if (cell) {
+          el.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return
+            e.preventDefault()
+            view.dispatch({ selection: { anchor: cell.from + cell.text.length } })
+            view.focus()
+          })
+        }
+        tr.appendChild(el)
+      }
+      return tr
+    }
+
+    const thead = document.createElement('thead')
+    thead.appendChild(makeRow(this.header, 'th'))
+    table.appendChild(thead)
+    if (this.body.length) {
+      const tbody = document.createElement('tbody')
+      for (const row of this.body) tbody.appendChild(makeRow(row, 'td'))
+      table.appendChild(tbody)
+    }
+    wrap.appendChild(table)
+    return wrap
+  }
+
+  // Cells own their mousedown (mapping to exact source offsets).
+  ignoreEvent() { return true }
+}
+
+function buildTablePreviewDecorations(state: EditorState): DecorationSet {
+  const doc = state.doc
+  const decos: Range<Decoration>[] = []
+
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name !== 'Table') return
+      const firstLine = doc.lineAt(node.from)
+      const lastLine = doc.lineAt(node.to)
+      const from = firstLine.from
+      const to = lastLine.to
+      if (lastLine.number - firstLine.number < 1) return false
+      if (overlapsSelection(state, from, to)) return false
+
+      const lines = []
+      for (let n = firstLine.number; n <= lastLine.number; n++) lines.push(doc.line(n))
+      // Lezer's GFM Table node guarantees line 2 is the delimiter row.
+      const sepLine = lines[1]
+
+      const aligns: TableAlign[] = splitTableRow(sepLine.text, sepLine.from).map(({ text }) => {
+        const l = text.startsWith(':')
+        const r = text.endsWith(':')
+        return l && r ? 'center' : r ? 'right' : l ? 'left' : null
+      })
+      const header: TableRow = { cells: splitTableRow(lines[0].text, lines[0].from) }
+      const body: TableRow[] = lines.slice(2)
+        .filter(l => l.text.trim())
+        .map(l => ({ cells: splitTableRow(l.text, l.from) }))
+
+      decos.push(
+        Decoration.replace({
+          widget: new TableWidget(doc.sliceString(from, to), header, aligns, body),
+          block: true,
+        }).range(from, to),
+      )
+      return false
+    },
+  })
+
+  return Decoration.set(decos, true)
+}
+
+export const tablePreviewField = StateField.define<DecorationSet>({
+  create: (state) => buildTablePreviewDecorations(state),
+  update: (value, tr) => {
+    if (tr.docChanged || tr.selection) return buildTablePreviewDecorations(tr.state)
+    return value
+  },
+  provide: (f) => EditorView.decorations.from(f),
+})
+
 // ─── ==Highlight== Mark Decoration ───────────────────────────────────────────
 
 export const highlightMarkPlugin = ViewPlugin.fromClass(

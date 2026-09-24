@@ -9,7 +9,7 @@ import { useAppStore } from '../../store/useAppStore'
 import { saveNote } from '../../lib/fs'
 import { cn, glassBg } from '../../lib/utils'
 
-import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, mathPreviewField, chartPreviewField } from '../../lib/editorExtensions'
+import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, mathPreviewField, chartPreviewField, tablePreviewField } from '../../lib/editorExtensions'
 import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
 import { useEditorViewRef } from './EditorViewContext'
 import { deleteAttachmentFile, makeAttachmentMarkdown } from '../../lib/attachments'
@@ -100,6 +100,54 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
       },
       '.cm-math-block .katex-display': {
         margin: '0',
+      },
+      // Rendered GFM table (Normal mode live preview)
+      '.cm-md-table-wrap': {
+        // padding, not margin: CM measures the widget's own box
+        padding: '8px 0',
+        overflowX: 'auto',
+      },
+      '.cm-md-table': {
+        width: '100%',
+        borderCollapse: 'separate',
+        borderSpacing: '0',
+        border: '1px solid hsl(var(--border))',
+        borderRadius: '8px',
+        overflow: 'hidden',
+        fontSize: '0.92em',
+        lineHeight: '1.5',
+      },
+      '.cm-md-table th, .cm-md-table td': {
+        padding: '7px 12px',
+        textAlign: 'left',
+        verticalAlign: 'top',
+        borderBottom: '1px solid hsl(var(--border))',
+        cursor: 'text',
+      },
+      '.cm-md-table th + th, .cm-md-table td + td': {
+        borderLeft: '1px solid hsl(var(--border))',
+      },
+      '.cm-md-table tbody tr:last-child td': {
+        borderBottom: 'none',
+      },
+      '.cm-md-table th': {
+        fontWeight: '600',
+        color: 'hsl(var(--foreground))',
+        backgroundColor: 'hsl(var(--surface))',
+      },
+      '.cm-md-table tbody tr:nth-child(even) td': {
+        backgroundColor: 'hsl(var(--surface) / 0.45)',
+      },
+      '.cm-md-table code': {
+        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+        fontSize: '0.9em',
+        padding: '1px 5px',
+        borderRadius: '4px',
+        backgroundColor: 'hsl(var(--muted-foreground) / 0.12)',
+      },
+      '.cm-md-table-link': {
+        color: 'hsl(var(--accent))',
+        textDecoration: 'underline',
       },
       // ==Highlight== mark
       '.cm-highlight-mark': {
@@ -270,7 +318,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         // code-only tags (keyword, string, number, …) still get coloured.
         codeHighlighting,
         markdownHighlighting,
-        ...(liveConceal ? [liveMarkdownPlugin, mathPreviewField, chartPreviewField] : []),
+        ...(liveConceal ? [liveMarkdownPlugin, mathPreviewField, chartPreviewField, tablePreviewField] : []),
         highlightMarkPlugin,
         tablePlugin,
         createFileEmbedPlugin(vaultPath ?? '', handleRemoveEmbed, useAppStore.getState().notes.find(n => n.id === noteId)?.searchRoot),

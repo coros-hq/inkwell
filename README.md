@@ -4,7 +4,7 @@
   <h1>inkwell</h1>
   <p>A focused, beautiful markdown note-taking app.</p>
 
-  ![Version](https://img.shields.io/badge/version-0.8.0-orange?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-0.8.5-orange?style=flat-square)
   ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-black?style=flat-square)
   ![License](https://img.shields.io/badge/license-MIT-orange?style=flat-square&color=c47d2e)
 </div>
@@ -15,7 +15,7 @@
 
 inkwell is a local-first markdown editor built as a native desktop app for macOS, Windows, and Linux. Notes are stored as plain `.md` files in a vault folder you own — no cloud, no accounts, no lock-in.
 
-It pairs a distraction-free writing environment with a rich live preview, a Kanban board, a canvas drawing tool, a suite of themes, and deep integrations: a native MCP server so Claude can read and write your notes, and built-in GitHub sync to push your docs to any repository.
+It pairs a distraction-free writing environment with a rich live preview, charts, a Kanban board, a canvas drawing tool, a suite of themes, and deep integrations: a native MCP server so Claude can read and write your notes, and built-in GitHub sync to push your docs to any repository.
 
 ---
 
@@ -26,6 +26,8 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 - Live split-view preview with full GFM rendering (tables, task lists, strikethrough)
 - Syntax-highlighted code blocks that adapt to the active theme
 - LaTeX math via KaTeX *(new in v0.7.8)* — inline `$…$`, display `$$…$$`, and fenced ` ```math ` / ` ```latex ` blocks, rendered live in the editor and preview
+- GFM tables rendered as styled tables right in the editor *(new in v0.8.5)*
+- Charts *(new in v0.8.2)* — bar, line, area, pie, and donut charts from a ` ```chart ` JSON block, rendered live in the editor and preview; build them visually with the chart builder or edit the source directly
 - Inline code, blockquotes, ==highlights==, and embedded images
 - Attach files to any note — images, PDFs, and documents stored alongside your vault
 - Embed attachments inline with `![[filename]]` syntax
@@ -41,6 +43,9 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 - Kanban board view with columns, cards, due dates, subtasks, and comments
 - Note links panel — link notes to each other and track references
 - Full-text search across all notes (⌘K)
+- Two ways to browse notes *(new in v0.8.3)*: the classic note list column, or open notes as tabs across the top of the editor
+- Live vault watcher picks up changes made on disk by iCloud/Dropbox/Syncthing, git, or an external editor
+- Conflict banner when the open note changed outside inkwell — choose "Keep mine" or "Reload from disk" without losing work
 - Pinned notes and trash with soft-delete
 
 **Canvas** *(new in v0.4)*
@@ -54,10 +59,11 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 - Diagram templates — Flowchart and Mind Map starters with one click
 - Canvas state auto-saved to `{vault}/.inkwell/canvas.json`
 
-**Themes**
+**Themes & Typography**
 - 8 built-in themes: Midnight, Parchment, Ink, Dusk, Forest, Sepia, Gruvbox, Fog
 - Custom theme builder with live preview
 - Syntax highlight colours automatically follow the active theme
+- Use any font installed on your computer as the editor font *(new in v0.8.5)* — searchable picker in Settings → Editor
 
 **Export & Share**
 - Export notes as Markdown, standalone HTML, or PDF
@@ -70,11 +76,6 @@ It pairs a distraction-free writing environment with a rich live preview, a Kanb
 - Push any note directly to a repository as a `.md` file
 - Pull the latest version of a file back into inkwell with one click
 - Works with any repo — great for keeping project READMEs and docs in sync
-
-**Whole-Vault Git Sync** *(new in v0.8)*
-- Sync an entire vault with a git remote — pull, commit, and push, driven by your system `git` (SSH agent / credential helper), no token stored by inkwell
-- Live vault watcher detects changes made on disk by `git pull`, iCloud/Dropbox/Syncthing, or an external editor
-- Conflict banner when the open note changed outside inkwell — choose "Keep mine" or "Reload from disk" without losing work
 
 **Claude MCP Integration** *(new in v0.3)*
 - A native Rust MCP server ships inside the app (`inkwell-mcp`)
@@ -168,18 +169,18 @@ The MCP server reads the active vault path from `~/.inkwell/active-vault`, which
 inkwell/
 ├── src/
 │   ├── components/
-│   │   ├── editor/       # MarkdownEditor, RichPreview, AttachmentsBar, MediaPanel, ShareDialog, ConflictBanner
+│   │   ├── editor/       # MarkdownEditor, RichPreview, MarkdownChart, ChartInsertDialog, AttachmentsBar, MediaPanel, ShareDialog, ConflictBanner
 │   │   ├── layout/       # AppShell, Sidebar, NoteList, EditorPane
 │   │   ├── board/        # Kanban BoardView, KanbanColumn, TaskCard, TaskDrawer
 │   │   ├── canvas/       # CanvasView, CanvasToolbar, CanvasNotesSheet, canvasTypes, canvasTemplates
-│   │   ├── settings/     # SettingsDialog, ThemeEditor
+│   │   ├── settings/     # SettingsDialog, ThemeEditor, FontPicker
 │   │   └── shared/       # Search, ContextMenu, DatePicker, GitHubSyncDialog, VaultPicker
 │   ├── store/            # Zustand store (useAppStore)
-│   ├── lib/              # vault.ts, vaultWatcher.ts, gitSync.ts, github.ts, export.ts, themes, attachments, utils
+│   ├── lib/              # vault.ts, vaultWatcher.ts, github.ts, export.ts, editorExtensions, systemFonts, themes, attachments, utils
 │   ├── styles/           # globals.css — CSS variables & theme definitions
 │   └── types/            # TypeScript interfaces
 └── src-tauri/
-    ├── src/lib.rs         # Tauri commands (vibrancy, file rename, etc.)
+    ├── src/lib.rs         # Tauri commands (vibrancy, system font list, etc.)
     ├── mcp-server/        # inkwell-mcp — Rust MCP server for Claude
     └── tauri.conf.json    # Window config, permissions
 ```

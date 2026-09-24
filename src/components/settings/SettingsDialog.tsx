@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail, RefreshCw } from 'lucide-react'
+import { getVersion } from '@tauri-apps/api/app'
+import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail } from 'lucide-react'
 import { useAppStore, type Abbreviation } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { THEMES, DARK_THEMES, LIGHT_THEMES, type CustomTheme } from '../../lib/themes'
 import { ThemeEditor } from './ThemeEditor'
+import { FontPicker } from './FontPicker'
 import {
   pickVaultDirectory, readVaultFS, addRecentVault,
   getRecentVaults, removeRecentVault, writeBoardsFile, writeTeamData, type RecentVault,
@@ -63,8 +65,6 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ className?
   { id: 'abbreviations', label: 'Abbreviations', icon: List },
   { id: 'vault', label: 'Vaults', icon: Folder },
   { id: 'github', label: 'GitHub', icon: GitBranch },
-  { id: 'sync', label: 'Sync', icon: RefreshCw },
-  { id: 'team', label: 'Team', icon: Users },
   { id: 'about', label: 'About', icon: Info },
 ]
 
@@ -75,6 +75,11 @@ export function SettingsDialog() {
   const [section, setSection] = useState<Section>('themes')
   // null = grid, undefined = new, CustomTheme = edit existing
   const [editingTheme, setEditingTheme] = useState<CustomTheme | null | undefined>(null)
+  const [appVersion, setAppVersion] = useState('')
+
+  useEffect(() => {
+    getVersion().then(setAppVersion).catch(() => {})
+  }, [])
 
   const {
     theme, toggleTheme, themeName, setTheme,
@@ -346,19 +351,12 @@ export function SettingsDialog() {
               {/* ── Editor ── */}
               {section === 'editor' && (
                 <>
-                  <SettingRow label="Font family" description="The typeface used in the editor">
-                    <select
+                  <SettingRow label="Font family" description="The typeface used in the editor — pick a built-in or any font installed on your system">
+                    <FontPicker
                       value={editorFontFamily}
-                      onChange={e => setEditorSettings({ editorFontFamily: e.target.value })}
-                      className={cn(
-                        'text-xs bg-surface border border-border rounded-md px-2.5 py-1.5',
-                        'text-foreground focus:outline-none focus:ring-1 focus:ring-accent',
-                      )}
-                    >
-                      {FONT_OPTIONS.map(o => (
-                        <option key={o.label} value={o.value}>{o.label}</option>
-                      ))}
-                    </select>
+                      onChange={v => setEditorSettings({ editorFontFamily: v })}
+                      presets={FONT_OPTIONS}
+                    />
                   </SettingRow>
 
                   <SettingRow label="Font size" description="Base size for editor text">
@@ -519,7 +517,7 @@ export function SettingsDialog() {
                     />
                     <div>
                       <p className="text-sm font-semibold text-foreground">inkwell</p>
-                      <p className="text-xs text-muted-foreground">Version 0.7.0</p>
+                      <p className="text-xs text-muted-foreground">Version {appVersion}</p>
                     </div>
                   </div>
 

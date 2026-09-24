@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/settings/SettingsDialog.tsx": {
-    "mtime": 1790285700.04771,
-    "ast_hash": "194d389fd568a702eb1f66c5f12f08bf",
+    "mtime": 1790285107.663218,
+    "ast_hash": "d0c05d8644a84f3c5942652142e4e903",
     "semantic_hash": ""
   },
   "src/components/settings/ThemeEditor.tsx": {

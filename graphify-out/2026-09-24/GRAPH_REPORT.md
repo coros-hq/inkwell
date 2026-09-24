@@ -1,7 +1,7 @@
 # Graph Report - inkwell  (2026-09-24)
 
 ## Corpus Check
-- 110 files · ~199,635 words
+- 110 files · ~199,633 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -230,7 +230,7 @@ Nodes (9): EditorPane(), NoteList(), TagChip(), TagChipProps, confirmDeleteNote(
 
 ### Community 16 - "Tauri Desktop Capability Schema"
 Cohesion: 0.12
-Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArg, Target (+8 more)
+Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArgs, Target (+8 more)
 
 ### Community 17 - "Tauri macOS Capability Schema"
 Cohesion: 0.12
@@ -430,7 +430,7 @@ Nodes (5): confirmDeleteFolder(), confirmDeleteFolderById(), confirmDeleteFolder
 
 ### Community 113 - "shortcuts.ts"
 Cohesion: 0.67
-Nodes (3): ShellScopeEntryAllowedArgs, anyOf, description
+Nodes (3): ShellScopeEntryAllowedArg, anyOf, description
 
 ### Community 114 - "auth.ts"
 Cohesion: 0.33
