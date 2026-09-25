@@ -10,6 +10,7 @@
     "opener:default",
     "updater:default",
     "process:default",
+    "deep-link:default",
     "dialog:allow-open",
     "dialog:allow-save",
     "fs:allow-read-dir",

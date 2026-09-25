@@ -1,7 +1,7 @@
 {
   "name": "inkwell",
   "private": true,
-  "version": "0.8.5",
+  "version": "0.9.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -33,6 +33,7 @@
     "@replit/codemirror-vim": "^6.4.0",
     "@supabase/supabase-js": "^2.112.0",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-deep-link": "^2.4.10",
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-opener": "^2",
@@ -58,6 +59,8 @@
     "roughjs": "^4.6.6",
     "tailwind-merge": "^3.6.0",
     "unist-util-visit": "^5.1.0",
+    "y-codemirror.next": "^0.3.6",
+    "y-protocols": "^1.0.7",
     "yjs": "^13.6.31",
     "zustand": "^5.0.14"
   },

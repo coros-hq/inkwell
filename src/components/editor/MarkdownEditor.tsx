@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { EditorState } from '@codemirror/state'
 import { EditorView, keymap, drawSelection } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, undo, redo } from '@codemirror/commands'
@@ -7,6 +7,9 @@ import { languages } from '@codemirror/language-data'
 import { vim } from '@replit/codemirror-vim'
 import { useAppStore } from '../../store/useAppStore'
 import { saveNote } from '../../lib/fs'
+import { writeNoteFile } from '../../lib/vault'
+import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next'
+import { getVaultSession, type NoteBinding } from '../../lib/sync/vaultSession'
 import { cn, glassBg } from '../../lib/utils'
 
 import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, mathPreviewField, chartPreviewField, tablePreviewField } from '../../lib/editorExtensions'
@@ -30,7 +33,30 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useEditorViewRef()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { updateNote, setSaveStatus, theme, vaultPath, editorFontSize, editorFontFamily, editorLineHeight, removeAttachment, addAttachment, bodyGlass, glassOpacity, vimModeEnabled } = useAppStore()
+  const { updateNote, setSaveStatus, theme, vaultPath, editorFontSize, editorFontFamily, editorLineHeight, removeAttachment, addAttachment, bodyGlass, glassOpacity, vimModeEnabled, sharedVault } = useAppStore()
+
+  // Shared vault: bind the editor to the note's live Y.Text so concurrent
+  // edits merge character-by-character and remote cursors show. Local vaults
+  // (and the brief moment before the binding resolves) use plain content.
+  const [binding, setBinding] = useState<NoteBinding | null>(null)
+  const sharedKey = sharedVault ? `${sharedVault.vaultId}:${sharedVault.role}` : null
+  useEffect(() => {
+    if (!sharedKey || !vaultPath) return
+    const session = getVaultSession(vaultPath)
+    if (!session) return
+    let released = false
+    let bound: NoteBinding | null = null
+    session.bindNote(noteId).then(b => {
+      if (released) { b.release(); return }
+      bound = b
+      setBinding(b)
+    }).catch(console.error)
+    return () => {
+      released = true
+      bound?.release()
+      setBinding(null)
+    }
+  }, [noteId, vaultPath, sharedKey])
 
   const editorFontStyles = {
     fontFamily: editorFontFamily,
@@ -217,15 +243,23 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
       }
     }
 
+    const undoFn = (view: EditorView) => (binding ? binding.undoManager.undo() !== null : undo(view))
+    const redoFn = (view: EditorView) => (binding ? binding.undoManager.redo() !== null : redo(view))
+
     const state = EditorState.create({
-      doc: content,
+      doc: binding ? binding.ytext.toString() : content,
       extensions: [
         // Must be the first extension — it needs to see keystrokes before the
         // default keymap does so it can interpret them as vim motions/commands
         // instead of plain text input while in Normal/Visual mode.
         ...(vimModeEnabled ? [vim({ status: true })] : []),
-        history(),
-        keymap.of([...defaultKeymap, ...historyKeymap]),
+        ...(binding
+          ? [
+              yCollab(binding.ytext, binding.awareness, { undoManager: binding.undoManager }),
+              keymap.of([...yUndoManagerKeymap, ...defaultKeymap]),
+              ...(binding.readOnly ? [EditorState.readOnly.of(true), EditorView.editable.of(false)] : []),
+            ]
+          : [history(), keymap.of([...defaultKeymap, ...historyKeymap])]),
         // Render selection ourselves so `.cm-selectionBackground` (styled
         // translucent in customTheme) applies. Without this CodeMirror falls
         // back to the opaque native browser highlight, which turns a selection
@@ -238,8 +272,8 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         // redirect through CodeMirror's own undo/redo commands instead.
         EditorView.domEventHandlers({
           beforeinput: (event, view) => {
-            if (event.inputType === 'historyUndo') { event.preventDefault(); undo(view); return true }
-            if (event.inputType === 'historyRedo') { event.preventDefault(); redo(view); return true }
+            if (event.inputType === 'historyUndo') { event.preventDefault(); undoFn(view); return true }
+            if (event.inputType === 'historyRedo') { event.preventDefault(); redoFn(view); return true }
             if ((event.inputType === 'insertText' || event.inputType === 'insertFromPaste') && event.data) {
               if (tryAbbreviationReplace(view, event.data)) {
                 event.preventDefault()
@@ -335,9 +369,13 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
           setSaveStatus('saving')
           if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
           saveTimerRef.current = setTimeout(async () => {
+            // Final flush through the same writers updateNote uses — a raw
+            // saveNote() here used to strip the frontmatter (and with it the
+            // note's stable id) from every edited note.
             const note = useAppStore.getState().notes.find(n => n.id === noteId)
             if (note) {
-              await saveNote(note.path, newContent)
+              if (note.external) await saveNote(note.path, note.content)
+              else await writeNoteFile(note)
             }
             setSaveStatus('saved')
           }, 800)
@@ -354,18 +392,19 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
       viewRef.current = null
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [noteId, theme, editorFontSize, editorFontFamily, editorLineHeight, bodyGlass, glassOpacity, vimModeEnabled, liveConceal])
+  }, [noteId, theme, editorFontSize, editorFontFamily, editorLineHeight, bodyGlass, glassOpacity, vimModeEnabled, liveConceal, binding])
 
   useEffect(() => {
     const view = viewRef.current
-    if (!view) return
+    // Bound editors get remote changes straight from the Y.Text.
+    if (!view || binding) return
     const current = view.state.doc.toString()
     if (current !== content) {
       view.dispatch({
         changes: { from: 0, to: current.length, insert: content },
       })
     }
-  }, [content])
+  }, [content, binding])
 
   return (
     <div

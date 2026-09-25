@@ -77,6 +77,9 @@ importers:
       '@tauri-apps/api':
         specifier: ^2
         version: 2.11.0
+      '@tauri-apps/plugin-deep-link':
+        specifier: ^2.4.10
+        version: 2.4.10
       '@tauri-apps/plugin-dialog':
         specifier: ^2.7.1
         version: 2.7.1
@@ -152,6 +155,12 @@ importers:
       unist-util-visit:
         specifier: ^5.1.0
         version: 5.1.0
+      y-codemirror.next:
+        specifier: ^0.3.6
+        version: 0.3.6(@codemirror/state@6.6.0)(@codemirror/view@6.43.1)(yjs@13.6.31)
+      y-protocols:
+        specifier: ^1.0.7
+        version: 1.0.7(yjs@13.6.31)
       yjs:
         specifier: ^13.6.31
         version: 13.6.31
@@ -1570,6 +1579,9 @@ packages:
     resolution: {integrity: sha512-bk3HemqvGRoy+5D/dVMUQHKMYLglD0jVnMm/0iGMH6ufZ+p8r14m6BpIixwij3PBvZdvORUp1YifTD8QxVZ1Nw==}
     engines: {node: '>= 10'}
     hasBin: true
+
+  '@tauri-apps/plugin-deep-link@2.4.10':
+    resolution: {integrity: sha512-SuXI47ORUzYuwG6c8dluLDrStTvli5bAZDRa2+VuUEzK/9TEa7FZz7UKXBQriL7+CPFXRHQsz5tSocc47tRXQQ==}
 
   '@tauri-apps/plugin-dialog@2.7.1':
     resolution: {integrity: sha512-OK1UBXYt+ojcmxMktzzuyonYIFta8CmAASpX+CA+DTGK24KlHjhYI6x2iOJ/TjZF4N7/ACK1oFmEOjIY9IhzOQ==}
@@ -3042,6 +3054,19 @@ packages:
     resolution: {integrity: sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==}
     engines: {node: '>= 8'}
     hasBin: true
+
+  y-codemirror.next@0.3.6:
+    resolution: {integrity: sha512-GnmVXhTe+UtoFbbaSdwhq6gdAQZdIY9az0Xj6HR2J4PO6Yw4w3xaaSssU+6T72WhXAI0wf9FbuY2s0Ms+WrexA==}
+    peerDependencies:
+      '@codemirror/state': ^6.0.0
+      '@codemirror/view': ^6.0.0
+      yjs: ^13.5.6
+
+  y-protocols@1.0.7:
+    resolution: {integrity: sha512-YSVsLoXxO67J6eE/nV4AtFtT3QEotZf5sK5BHxFBXso7VDUT3Tx07IfA6hsu5Q5OmBdMkQVmFZ9QOA7fikWvnw==}
+    engines: {node: '>=16.0.0', npm: '>=8.0.0'}
+    peerDependencies:
+      yjs: ^13.0.0
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
@@ -4537,6 +4562,10 @@ snapshots:
       '@tauri-apps/cli-win32-arm64-msvc': 2.11.2
       '@tauri-apps/cli-win32-ia32-msvc': 2.11.2
       '@tauri-apps/cli-win32-x64-msvc': 2.11.2
+
+  '@tauri-apps/plugin-deep-link@2.4.10':
+    dependencies:
+      '@tauri-apps/api': 2.11.0
 
   '@tauri-apps/plugin-dialog@2.7.1':
     dependencies:
@@ -6434,6 +6463,18 @@ snapshots:
   which@2.0.2:
     dependencies:
       isexe: 2.0.0
+
+  y-codemirror.next@0.3.6(@codemirror/state@6.6.0)(@codemirror/view@6.43.1)(yjs@13.6.31):
+    dependencies:
+      '@codemirror/state': 6.6.0
+      '@codemirror/view': 6.43.1
+      lib0: 0.2.117
+      yjs: 13.6.31
+
+  y-protocols@1.0.7(yjs@13.6.31):
+    dependencies:
+      lib0: 0.2.117
+      yjs: 13.6.31
 
   yallist@3.1.1: {}
 

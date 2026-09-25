@@ -22,7 +22,7 @@ const NOOP_HANDLE: VaultWatcherHandle = { stop: () => {} }
 
 export async function startVaultWatcher(
   vaultPath: string,
-  onExternalChange: () => void,
+  onExternalChange: (paths: string[]) => void,
 ): Promise<VaultWatcherHandle> {
   if (!isTauri) return NOOP_HANDLE
 
@@ -36,10 +36,13 @@ export async function startVaultWatcher(
       (event: FsWatchEvent) => {
         if (stopped) return
         const paths = event?.paths ?? []
-        const external = paths.some(
-          (p) => !isSelfWrite(p) && !p.includes('/.git/') && !p.endsWith('/.git'),
+        const external = paths.filter(
+          (p) =>
+            !isSelfWrite(p) &&
+            !p.includes('/.git/') && !p.endsWith('/.git') &&
+            !p.includes('/.inkwell/sync/'),
         )
-        if (external) onExternalChange()
+        if (external.length) onExternalChange(external)
       },
       { recursive: true, delayMs: 500 },
     )

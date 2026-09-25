@@ -10,8 +10,8 @@
     "semantic_hash": "a4038619f5414c01f04abbbdd4730820"
   },
   "package.json": {
-    "mtime": 1790347897.3358567,
-    "ast_hash": "9648c89135321ddd7150cc20c8527940",
+    "mtime": 1790342281.339119,
+    "ast_hash": "737ce029ca339270dad621bbe88a85ce",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -75,8 +75,8 @@
     "semantic_hash": "e8af9fdce60f99420547f58d511820e3"
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1790347897.3362515,
-    "ast_hash": "18767b349c8b90045cfc2bbb187142bd",
+    "mtime": 1790345520.4636295,
+    "ast_hash": "d3a95dfb7d4caec607bd6511e35b684e",
     "semantic_hash": ""
   },
   "src/App.tsx": {
@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/settings/SettingsDialog.tsx": {
-    "mtime": 1790346856.6233869,
-    "ast_hash": "f78ddee7869e60188278b886b7e34e29",
+    "mtime": 1790345500.9097917,
+    "ast_hash": "c27a95e217d8808e56e1adc9d33e8bfb",
     "semantic_hash": ""
   },
   "src/components/settings/ThemeEditor.tsx": {
@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "supabase/schema.sql": {
-    "mtime": 1790347463.5211208,
-    "ast_hash": "4ef7cc97e2af4a72f87ee5a6af55f482",
+    "mtime": 1790345715.3562512,
+    "ast_hash": "1d821279c84e063ff837b17bf10cda1e",
     "semantic_hash": ""
   },
   "src/components/editor/ConflictBanner.tsx": {
@@ -870,8 +870,8 @@
     "semantic_hash": ""
   },
   "src/lib/sync/vaultSession.ts": {
-    "mtime": 1790348232.758188,
-    "ast_hash": "db082332536974431291677aceb8685e",
+    "mtime": 1790345647.388975,
+    "ast_hash": "43cff1ad89f1ef3c532b5cd49d17f37e",
     "semantic_hash": ""
   },
   "supabase/migrations/0002_collab.sql": {

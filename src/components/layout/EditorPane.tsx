@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { ShareDialog } from "../editor/ShareDialog";
+import { PresenceAvatars } from "../collab/PresenceAvatars";
 import { GitHubSyncDialog } from "../shared/GitHubSyncDialog";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppStore } from "../../store/useAppStore";
@@ -412,6 +413,8 @@ export function EditorPane() {
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
+
+            <PresenceAvatars noteId={note.id} />
 
             <ShareDialog note={note} vaultPath={vaultPath ?? undefined} />
 

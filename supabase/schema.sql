@@ -4,9 +4,10 @@
 -- Run it once, by hand, in the Supabase SQL editor for the project referenced
 -- by VITE_SUPABASE_URL in .env.
 --
--- Scope: whole-vault sharing, async sync (no presence/live-cursors), boards +
--- (later) note content synced via Yjs CRDT updates. Binary attachments are
--- explicitly out of scope for v1 (see vault-attachments bucket note at the end).
+-- Then apply supabase/migrations/0002_collab.sql, which supersedes parts of
+-- this file: per-vault roles (vault_members), invite links, role-based RLS on
+-- the CRDT tables, private Realtime channels (live edits + presence travel
+-- over Broadcast, not postgres_changes) and the vault-attachments bucket.
 
 -- ── Teams ───────────────────────────────────────────────────────────────────
 
@@ -18,17 +19,6 @@ create table teams (
 );
 
 alter table teams enable row level security;
-
-create policy teams_select on teams for select
-  using (
-    auth.uid() = owner_id
-    or exists (
-      select 1 from team_members m
-      where m.team_id = teams.id
-        and m.user_id = auth.uid()
-        and m.status = 'active'
-    )
-  );
 
 create policy teams_insert on teams for insert
   with check (auth.uid() = owner_id);
@@ -56,23 +46,32 @@ create table team_members (
 
 alter table team_members enable row level security;
 
+-- Membership check used by the teams and team_members policies. It must be
+-- security definer: if those policies queried each other's tables directly,
+-- Postgres would reject every read with "infinite recursion detected in
+-- policy". Declared after team_members, which it reads.
+create or replace function public.is_team_member(p_team uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (select 1 from teams t where t.id = p_team and t.owner_id = auth.uid())
+      or exists (
+        select 1 from team_members m
+        where m.team_id = p_team and m.user_id = auth.uid() and m.status = 'active'
+      );
+$$;
+
+create policy teams_select on teams for select
+  using (owner_id = auth.uid() or public.is_team_member(id));
+
 -- A caller can see membership rows for any team they belong to (or own), plus
 -- their own pending invite row (by email) so they can discover it before
 -- joining.
 create policy team_members_select on team_members for select
-  using (
-    email = auth.jwt() ->> 'email'
-    or exists (
-      select 1 from teams t
-      where t.id = team_members.team_id and t.owner_id = auth.uid()
-    )
-    or exists (
-      select 1 from team_members m2
-      where m2.team_id = team_members.team_id
-        and m2.user_id = auth.uid()
-        and m2.status = 'active'
-    )
-  );
+  using (email = lower(auth.jwt() ->> 'email') or public.is_team_member(team_id));
 
 -- Only the team owner can create invites.
 create policy team_members_insert on team_members for insert

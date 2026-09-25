@@ -19,7 +19,7 @@ import {
   slugifyTitle,
 } from "../lib/utils";
 import { genId } from "../lib/id";
-import { getSyncHandle, pushLocalBoardsState, pushNoteContent } from "../lib/sync/yjsSync";
+import { getVaultSession, type Peer, type SyncStatus, type VaultRole } from "../lib/sync/vaultSession";
 import {
   writeNoteFile,
   deleteNoteFile,
@@ -55,6 +55,19 @@ import { saveNote } from "../lib/fs";
 import { loadShortcuts, saveShortcuts, DEFAULT_SHORTCUTS } from "../lib/shortcuts";
 import { checkForAppUpdate } from "../lib/updateCheck";
 import type { Update } from "@tauri-apps/plugin-updater";
+
+export interface SharedVaultInfo {
+  vaultId: string;
+  teamId: string | null;
+  role: VaultRole;
+}
+
+export interface RefreshOptions {
+  /** Absolute paths whose on-disk content should replace the in-memory note
+   * body. Notes not listed keep their current content (new notes always take
+   * disk content). Omit to adopt disk content for every note. */
+  adoptContentFor?: Set<string>;
+}
 
 // ─── Active-vault state file ──────────────────────────────────────────────────
 // Written to ~/.inkwell/active-vault whenever the user opens a vault.
@@ -370,10 +383,19 @@ interface AppState {
   addBoardTaskComment: (taskId: string, content: string) => void;
 
   // ─── Team sync ──────────────────────────────────────────────────────────────
-  /** Non-null once the active vault is linked to a cloud team vault (see .inkwell/team.json). */
-  sharedVault: { vaultId: string; teamId: string } | null;
-  setSharedVault: (shared: { vaultId: string; teamId: string } | null) => void;
-  /** Applied when a remote peer's board/column/task change arrives via yjsSync — a plain
+  /** Non-null once the active vault is linked to a cloud vault (see .inkwell/team.json). */
+  sharedVault: SharedVaultInfo | null;
+  setSharedVault: (shared: SharedVaultInfo | null) => void;
+  /** Other people currently in this shared vault (Realtime Presence). */
+  peers: Peer[];
+  setPeers: (peers: Peer[]) => void;
+  /** Rows applied during a catch-up in progress (e.g. first download after joining). */
+  syncProgress: number | null;
+  setSyncProgress: (rows: number | null) => void;
+  /** One-off message about the shared vault (e.g. access revoked). */
+  collabNotice: string | null;
+  setCollabNotice: (notice: string | null) => void;
+  /** Applied when a remote peer's board/column/task change arrives via vaultSession — a plain
    * set(), same shape as openVault, so it flows through the existing debounced-save path. */
   applyRemoteBoardsUpdate: (
     boards: Board[],
@@ -382,8 +404,8 @@ interface AppState {
   ) => void;
   /** Cloud sync status for the active shared vault — distinct from saveStatus
    * (which tracks the local-disk write on every keystroke). Idle when unshared. */
-  syncStatus: "idle" | "syncing" | "synced" | "error";
-  setSyncStatus: (status: "idle" | "syncing" | "synced" | "error") => void;
+  syncStatus: SyncStatus;
+  setSyncStatus: (status: SyncStatus) => void;
 
   // ─── Git sync ───────────────────────────────────────────────────────────────
   // Opt-in, per-vault, whole-vault sync over the system `git` binary — no token
@@ -408,7 +430,7 @@ interface AppState {
   /** Re-reads the vault from disk and folds in external changes (git pull,
    * iCloud/Dropbox/Syncthing, a manual edit) without resetting selection or
    * the open editor — see vaultWatcher.ts, which calls this on fs change events. */
-  refreshVaultFromDisk: () => Promise<void>;
+  refreshVaultFromDisk: (opts?: RefreshOptions) => Promise<void>;
   resolveConflictKeepMine: () => void;
   resolveConflictReloadFromDisk: () => void;
   /** Commits (never pushes) if gitAutoCommit is on and the tree is dirty —
@@ -680,11 +702,10 @@ function flushBoards(
   // 2. Async disk write (portable across machines)
   writeBoardsFile(vaultPath, data).catch(console.error);
   // 3. Push to the shared doc if this vault is synced — a no-op for unshared
-  // vaults (getSyncHandle returns undefined) and for updates that originated
+  // vaults (no session) and for updates that originated
   // remotely (state already matches the doc, so the diff-patch finds nothing
   // to change and no outbound update is generated).
-  const handle = getSyncHandle(vaultPath);
-  if (handle) pushLocalBoardsState(handle, { boards, boardColumns, boardTasks });
+  getVaultSession(vaultPath)?.pushBoards({ boards, boardColumns, boardTasks });
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -737,6 +758,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeBoardTaskId: null,
   sharedVault: null,
   syncStatus: "idle",
+  peers: [],
+  syncProgress: null,
+  collabNotice: null,
 
   gitSyncEnabled: false,
   gitAutoCommit: false,
@@ -1488,8 +1512,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         })),
       };
     });
-    const { vaultPath, sharedVault } = get();
-    if (vaultPath && sharedVault) pushNoteContent(vaultPath, sharedVault.vaultId, id, content);
   },
 
   applyRemoteNoteUpdate: (id, content) => {
@@ -2083,8 +2105,15 @@ export const useAppStore = create<AppState>((set, get) => ({
     flushBoards(vaultPath, boards, boardColumns, boardTasks);
   },
 
-  setSharedVault: (shared) => set({ sharedVault: shared, syncStatus: shared ? "synced" : "idle" }),
+  setSharedVault: (shared) =>
+    set((s) => ({
+      sharedVault: shared,
+      syncStatus: shared ? (s.sharedVault ? s.syncStatus : "syncing") : "idle",
+    })),
   setSyncStatus: (status) => set({ syncStatus: status }),
+  setPeers: (peers) => set({ peers }),
+  setSyncProgress: (rows) => set({ syncProgress: rows }),
+  setCollabNotice: (notice) => set({ collabNotice: notice }),
 
   applyRemoteBoardsUpdate: (boards, boardColumns, boardTasks) => {
     set({ boards, boardColumns, boardTasks });
@@ -2094,13 +2123,33 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   // ─── Git sync ───────────────────────────────────────────────────────────────
 
-  refreshVaultFromDisk: async () => {
+  refreshVaultFromDisk: async (opts) => {
     const { vaultPath } = get();
     if (!vaultPath) return;
-    const data = await readVaultFS(vaultPath);
-    if (!data) return;
+    const read = await readVaultFS(vaultPath);
+    if (!read || get().vaultPath !== vaultPath) return;
 
     set((s) => {
+      let data = read;
+      const adopt = opts?.adoptContentFor;
+      if (adopt) {
+        // Keep in-memory bodies for notes whose file wasn't named as changed —
+        // disk may lag the store by an in-flight write, and in a shared vault
+        // note bodies arrive through the sync session, not the filesystem.
+        const current = new Map(s.notes.map((n) => [n.id, n]));
+        const keep = (n: Note): Note => {
+          const cur = current.get(n.id);
+          if (!cur || adopt.has(n.path)) return n;
+          return { ...n, content: cur.content, title: cur.title, wordCount: cur.wordCount, updatedAt: cur.updatedAt };
+        };
+        const expanded = new Map<string, boolean>();
+        const collect = (fs: Folder[]) => fs.forEach((f) => { expanded.set(f.id, f.expanded); collect(f.children); });
+        collect(s.folders);
+        const remap = (fs: Folder[]): Folder[] =>
+          fs.map((f) => ({ ...f, expanded: expanded.get(f.id) ?? f.expanded, notes: f.notes.map(keep), children: remap(f.children) }));
+        data = { ...read, notes: read.notes.map(keep), folders: remap(read.folders) };
+      }
+
       const primaryId = s.lastSelectedNoteId ?? s.selectedNoteIds[0] ?? null;
       const currentPrimary = primaryId ? s.notes.find((n) => n.id === primaryId) : undefined;
       const incomingPrimary = primaryId ? data.notes.find((n) => n.id === primaryId) : undefined;

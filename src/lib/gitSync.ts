@@ -96,9 +96,11 @@ export async function isGitRepo(vaultPath: string): Promise<boolean> {
   }
 }
 
-const DEFAULT_GITIGNORE = `# Written by inkwell — OS cruft only; .inkwell/app.json IS tracked.
+const DEFAULT_GITIGNORE = `# Written by inkwell — .inkwell/app.json IS tracked.
 .DS_Store
 Thumbs.db
+# Device-local team-sync state (see src/lib/sync/docStore.ts)
+.inkwell/sync/
 `
 
 export async function writeDefaultGitignore(vaultPath: string): Promise<void> {

@@ -131,6 +131,23 @@ function serializeFrontmatter(meta: FrontmatterMeta, body: string): string {
   return `---\nid: ${meta.id}\ncreated: ${meta.created}\nupdated: ${meta.updated}\npinned: ${meta.pinned}\ntags: ${tagStr}\n---\n\n${body}`
 }
 
+// Notes read from a file without an `id:` in its frontmatter get a fresh
+// random id on every read until something writes the file back. Harmless for
+// a local vault, but a shared vault needs stable ids across devices — the sync
+// session persists these before sharing them (see vaultSession.ts).
+const ephemeralNoteIds = new Set<string>()
+
+export function isEphemeralNoteId(id: string): boolean {
+  return ephemeralNoteIds.has(id)
+}
+
+function noteIdFromMeta(meta: Partial<FrontmatterMeta>): string {
+  if (meta.id) return meta.id
+  const id = genId('note')
+  ephemeralNoteIds.add(id)
+  return id
+}
+
 // ── Filesystem helpers ────────────────────────────────────────────────────────
 
 interface FSEntry { name: string; path: string; isDirectory: boolean }
@@ -245,7 +262,7 @@ async function readDirectory(
     try {
       const raw = await readTextFile(file.path)
       const { meta, body } = parseFrontmatter(raw)
-      const id = meta.id ?? genId('note')
+      const id = noteIdFromMeta(meta)
       const noteMeta = appData.noteMeta?.[id] ?? { attachments: [], linkedItems: [] }
       const note: Note = {
         id,
@@ -313,7 +330,7 @@ export async function readVaultFS(vaultPath: string): Promise<VaultData | null> 
     try {
       const raw = await readTextFile(file.path)
       const { meta, body } = parseFrontmatter(raw)
-      const id = meta.id ?? genId('note')
+      const id = noteIdFromMeta(meta)
       const noteMeta = appData.noteMeta?.[id] ?? { attachments: [], linkedItems: [] }
       allNotes.push({
         id,
@@ -383,6 +400,7 @@ export async function writeNoteFile(note: Note): Promise<void> {
   }
   markSelfWrite(note.path)
   await writeTextFile(note.path, serializeFrontmatter(meta, note.content))
+  ephemeralNoteIds.delete(note.id)
 }
 
 export async function deleteNoteFile(absolutePath: string): Promise<void> {
@@ -453,8 +471,11 @@ export async function writeAppData(vaultPath: string, data: AppData): Promise<vo
 
 export interface TeamData {
   vaultId: string
-  teamId: string
+  /** Team the vault was shared through, if any — access itself is per-vault. */
+  teamId: string | null
   sharedAt: string
+  /** Last known role on this device; the server's vault_role() is authoritative. */
+  role?: 'owner' | 'editor' | 'viewer'
 }
 
 export async function readTeamData(vaultPath: string): Promise<TeamData | null> {
@@ -476,6 +497,18 @@ export async function writeTeamData(vaultPath: string, data: TeamData): Promise<
     markSelfWrite(`${dir}/${TEAM_FILE}`)
     await writeTextFile(`${dir}/${TEAM_FILE}`, JSON.stringify(data, null, 2))
   } catch (e) { console.error('Failed to write team data:', e) }
+}
+
+export async function removeTeamData(vaultPath: string): Promise<void> {
+  if (!isTauri) return
+  try {
+    const { remove, exists } = await import('@tauri-apps/plugin-fs')
+    const filePath = `${vaultPath}/${INKWELL_DIR}/${TEAM_FILE}`
+    if (await exists(filePath)) {
+      markSelfWrite(filePath)
+      await remove(filePath)
+    }
+  } catch (e) { console.error('Failed to remove team data:', e) }
 }
 
 // ── Board data (boards.json) ──────────────────────────────────────────────────

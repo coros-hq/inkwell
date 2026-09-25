@@ -1,11 +1,11 @@
 # Graph Report - inkwell  (2026-09-25)
 
 ## Corpus Check
-- 118 files · ~210,422 words
+- 118 files · ~210,241 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1355 nodes · 2924 edges · 123 communities (81 shown, 42 thin omitted)
+- 1355 nodes · 2924 edges · 124 communities (82 shown, 42 thin omitted)
 - Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 70 edges (avg confidence: 0.64)
 - Token cost: 0 input · 0 output
 
@@ -131,6 +131,7 @@
 - [[_COMMUNITY_description|description]]
 - [[_COMMUNITY_CanvasNotesSheet.tsx|CanvasNotesSheet.tsx]]
 - [[_COMMUNITY_useAppStore|useAppStore]]
+- [[_COMMUNITY_BulletWidget|BulletWidget]]
 - [[_COMMUNITY_Identifier|Identifier]]
 - [[_COMMUNITY_auth.ts|auth.ts]]
 - [[_COMMUNITY_writeAppData|writeAppData]]
@@ -165,7 +166,7 @@
 ## Hyperedges (group relationships)
 - **Excalidraw Iframe Bridge Data Flow** — public_excalidraw_frame_html, public_excalidraw_frame_html_postmessage_protocol, public_excalidraw_frame_html_schedulechange, canvas_feature_design_data_flow, canvas_feature_design_storage_model [INFERRED 0.85]
 
-## Communities (123 total, 42 thin omitted)
+## Communities (124 total, 42 thin omitted)
 
 ### Community 0 - "App Shell & Note Editing"
 Cohesion: 0.17
@@ -352,8 +353,8 @@ Cohesion: 0.11
 Nodes (19): ActiveDrag, BoardView(), ColGap(), DropIndicator, COLOR_DOT, KanbanColumn(), RoleSelect(), ConflictBanner() (+11 more)
 
 ### Community 48 - "JoinVaultDialog.tsx"
-Cohesion: 0.18
-Nodes (18): App(), AppShell(), closeThisWindow(), QuickNoteCapture(), SearchOverlay(), onAuthStateChange(), CustomTheme, DARK_THEMES (+10 more)
+Cohesion: 0.17
+Nodes (21): App(), AppShell(), closeThisWindow(), QuickNoteCapture(), SearchOverlay(), onAuthStateChange(), isDarkTheme(), loadCustomThemes() (+13 more)
 
 ### Community 50 - "Default Capability Manifest"
 Cohesion: 0.33
@@ -381,7 +382,7 @@ Nodes (4): description, required, type, Capability
 
 ### Community 56 - "FileEmbedWidget"
 Cohesion: 0.18
-Nodes (14): ColorRow(), DARK_DEFAULTS, LIGHT_DEFAULTS, normalizeHex(), ThemeEditor(), ThemeEditorProps, ALL_VAR_NAMES, clamp() (+6 more)
+Nodes (11): ColorRow(), DARK_DEFAULTS, LIGHT_DEFAULTS, normalizeHex(), ThemeEditor(), ThemeEditorProps, CustomTheme, DARK_THEMES (+3 more)
 
 ### Community 57 - "macOS Schema Capability Type"
 Cohesion: 0.50
@@ -392,8 +393,8 @@ Cohesion: 0.16
 Nodes (19): SyncSection(), describeError(), git(), gitAddAll(), GitCommandError, gitCommit(), gitCurrentBranch(), gitHasRemoteBranch() (+11 more)
 
 ### Community 59 - "gitSync.ts"
-Cohesion: 0.28
-Nodes (13): inputCls, Props, ROLE_LABEL, ShareVaultDialog(), createInviteLink(), inviteToVault(), listMyTeams(), listVaultMembers() (+5 more)
+Cohesion: 0.16
+Nodes (22): inputCls, Props, ROLE_LABEL, ShareVaultDialog(), TeamSection(), acceptPendingInvites(), createInviteLink(), createTeam() (+14 more)
 
 ### Community 60 - "macOS Schema Identifier Type"
 Cohesion: 0.40
@@ -412,16 +413,16 @@ Cohesion: 0.67
 Nodes (3): index.html Vite Entry Point, React 19 + TypeScript, Vite Build Tool
 
 ### Community 73 - "ShellScopeEntryAllowedArg"
-Cohesion: 0.08
-Nodes (31): AbbreviationsSection(), CustomThemeCard(), FONT_OPTIONS, FONT_SIZE_OPTIONS, LINE_HEIGHT_OPTIONS, NAV_ITEMS, Section, SettingsDialog() (+23 more)
+Cohesion: 0.15
+Nodes (21): AbbreviationsSection(), CustomThemeCard(), FONT_OPTIONS, FONT_SIZE_OPTIONS, formatVaultDate(), LINE_HEIGHT_OPTIONS, NAV_ITEMS, Section (+13 more)
 
 ### Community 107 - "ThemeEditor.tsx"
 Cohesion: 0.67
 Nodes (3): Value, anyOf, description
 
 ### Community 108 - "ShellScopeEntryAllowedArg"
-Cohesion: 0.14
-Nodes (23): CollabGlobals(), JoinVaultDialog(), linkedVaultIds(), Props, getSession(), clearSyncData(), folderHasContent(), joinVaultInto() (+15 more)
+Cohesion: 0.27
+Nodes (11): CollabGlobals(), JoinVaultDialog(), linkedVaultIds(), Props, folderHasContent(), joinVaultInto(), acceptInviteLink(), getMyVaultRole() (+3 more)
 
 ### Community 110 - "local"
 Cohesion: 0.27
@@ -440,8 +441,8 @@ Cohesion: 0.67
 Nodes (3): ShellScopeEntryAllowedArgs, anyOf, description
 
 ### Community 114 - "auth.ts"
-Cohesion: 0.44
-Nodes (9): formatVaultDate(), VaultSection(), VaultPicker(), addRecentVault(), getRecentVaults(), pickVaultDirectory(), RecentVault, removeRecentVault() (+1 more)
+Cohesion: 0.21
+Nodes (11): ShortcutsSection(), DEFAULT_SHORTCUTS, eventToCombo(), formatCombo(), hasModifier(), loadShortcuts(), MOD_LABELS, MOD_SYMBOLS (+3 more)
 
 ### Community 115 - "vaultWatcher.ts"
 Cohesion: 0.05
@@ -463,13 +464,17 @@ Nodes (9): Props, QuickNoteEditor, QuickNoteEditorHandle, QuickNoteEditorProps, 
 Cohesion: 0.33
 Nodes (9): PresenceAvatars(), STATUS_DOT, STATUS_LABEL, SplitView(), EditorPane(), TabBar(), confirmDeleteSelectedNotes(), comboMatches() (+1 more)
 
+### Community 120 - "BulletWidget"
+Cohesion: 0.33
+Nodes (10): getSession(), clearSyncData(), leaveVaultOnThisDevice(), revokeLocalAccess(), shareVault(), startVaultSync(), stopVaultSync(), createSharedVault() (+2 more)
+
 ### Community 121 - "Identifier"
 Cohesion: 0.67
 Nodes (3): ShellScopeEntryAllowedArgs, anyOf, description
 
 ### Community 122 - "auth.ts"
-Cohesion: 0.43
-Nodes (5): Props, SignInDialog(), signIn(), signUp(), supabase
+Cohesion: 0.36
+Nodes (6): Props, SignInDialog(), signIn(), signOut(), signUp(), supabase
 
 ### Community 123 - "writeAppData"
 Cohesion: 0.57

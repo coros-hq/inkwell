@@ -16,9 +16,11 @@ import { confirmDeleteNote, confirmDeleteSelectedNotes, confirmDeleteFolderById 
 import { readVaultFS, writeAppData, readAppData, addRecentVault, getLastVaultPath } from '../../lib/vault'
 import type { AppData } from '../../lib/vault'
 import { comboMatches } from '../../lib/shortcuts'
-import { resumeVaultSyncIfShared } from '../../lib/sync/yjsSync'
+import { startVaultSync, stopVaultSync } from '../../lib/sync/vaultSession'
+import { onAuthStateChange } from '../../lib/auth'
 import { startVaultWatcher } from '../../lib/vaultWatcher'
 import { ConflictBanner } from '../editor/ConflictBanner'
+import { CollabGlobals } from '../collab/CollabGlobals'
 
 export function AppShell() {
   const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, noteSidebarMode, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
@@ -85,7 +87,6 @@ export function AppShell() {
     readVaultFS(lastPath).then((data) => {
       addRecentVault(lastPath)
       openVault(lastPath, data)
-      resumeVaultSyncIfShared(lastPath).catch(console.error)
     }).catch(() => {
       // Silently fail — vault picker will be shown instead
     })
@@ -137,8 +138,8 @@ export function AppShell() {
     if (!vaultPath) return
     let handle: { stop: () => void } | null = null
     let cancelled = false
-    startVaultWatcher(vaultPath, () => {
-      useAppStore.getState().refreshVaultFromDisk().catch(console.error)
+    startVaultWatcher(vaultPath, (paths) => {
+      useAppStore.getState().refreshVaultFromDisk({ adoptContentFor: new Set(paths) }).catch(console.error)
     }).then((h) => {
       if (cancelled) h.stop()
       else handle = h
@@ -146,6 +147,23 @@ export function AppShell() {
     return () => {
       cancelled = true
       handle?.stop()
+    }
+  }, [vaultPath])
+
+  // Team sync: one live session for the open vault when it's linked to a
+  // cloud vault (.inkwell/team.json) — a no-op for local-only vaults. Restarted
+  // on sign-in/out so a fresh login picks up syncing without a relaunch.
+  useEffect(() => {
+    if (!vaultPath) return
+    startVaultSync(vaultPath).catch(console.error)
+    const unsubscribe = onAuthStateChange((session) => {
+      if (useAppStore.getState().vaultPath !== vaultPath) return
+      if (session) startVaultSync(vaultPath).catch(console.error)
+      else stopVaultSync().catch(console.error)
+    })
+    return () => {
+      unsubscribe()
+      stopVaultSync().catch(console.error)
     }
   }, [vaultPath])
 
@@ -248,7 +266,12 @@ export function AppShell() {
   }, [])
 
   if (!vaultPath) {
-    return <VaultPicker />
+    return (
+      <>
+        <VaultPicker />
+        <CollabGlobals />
+      </>
+    )
   }
 
   return (
@@ -272,6 +295,7 @@ export function AppShell() {
       <NamePromptDialog />
       <ConfirmDialog />
       <ConflictBanner />
+      <CollabGlobals />
     </div>
   )
 }

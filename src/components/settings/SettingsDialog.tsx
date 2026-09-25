@@ -9,9 +9,8 @@ import { ThemeEditor } from './ThemeEditor'
 import { FontPicker } from './FontPicker'
 import {
   pickVaultDirectory, readVaultFS, addRecentVault,
-  getRecentVaults, removeRecentVault, writeBoardsFile, writeTeamData, type RecentVault,
+  getRecentVaults, removeRecentVault, writeBoardsFile, type RecentVault,
 } from '../../lib/vault'
-import { genId } from '../../lib/id'
 import {
   getGithubToken, setGithubToken, getGithubOwner, setGithubOwner, listRepos, type GhRepo,
 } from '../../lib/github'
@@ -19,11 +18,12 @@ import { SHORTCUT_DEFS, formatCombo, hasModifier, eventToCombo } from '../../lib
 import { getSession, signOut, type Session } from '../../lib/auth'
 import {
   listMyTeams, createTeam, listTeamMembers, inviteMember, removeMember, acceptPendingInvites,
-  createSharedVault, type Team, type TeamMember,
+  type Team, type TeamMember,
 } from '../../lib/team'
 import { SignInDialog } from '../shared/SignInDialog'
 import { JoinVaultDialog } from './JoinVaultDialog'
-import { closeVaultSync, resumeVaultSyncIfShared, openVaultSync, pushLocalBoardsState } from '../../lib/sync/yjsSync'
+import { stopVaultSync } from '../../lib/sync/vaultSession'
+import { ShareVaultDialog } from '../collab/ShareVaultDialog'
 import { isGitRepo, gitRemoteUrl as gitGetRemoteUrl } from '../../lib/gitSync'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -65,6 +65,7 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ className?
   { id: 'abbreviations', label: 'Abbreviations', icon: List },
   { id: 'vault', label: 'Vaults', icon: Folder },
   { id: 'github', label: 'GitHub', icon: GitBranch },
+  { id: 'team', label: 'Team', icon: Users },
   { id: 'about', label: 'About', icon: Info },
 ]
 
@@ -933,48 +934,18 @@ function formatVaultDate(iso: string | Date): string {
 }
 
 function VaultSection({ onClose }: { onClose: () => void }) {
-  const { vaultPath, openVault, sharedVault, setSharedVault, syncStatus } = useAppStore()
+  const { vaultPath, openVault, sharedVault, syncStatus, syncProgress } = useAppStore()
   const [recents, setRecents] = useState<RecentVault[]>([])
   const [switching, setSwitching] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const [myTeam, setMyTeam] = useState<Team | null>(null)
-  const [sharing, setSharing] = useState(false)
-  const [shareStatus, setShareStatus] = useState<{ ok: boolean; msg: string } | null>(null)
+  const [showShare, setShowShare] = useState(false)
   const [showJoin, setShowJoin] = useState(false)
 
   // Reload recents whenever vaultPath changes, filtering out the active vault
   useEffect(() => {
     setRecents(getRecentVaults().filter(v => v.path !== vaultPath))
   }, [vaultPath])
-
-  // Load the caller's team (if any) so "Share with team" can be offered
-  useEffect(() => {
-    listMyTeams().then(teams => setMyTeam(teams[0] ?? null)).catch(() => setMyTeam(null))
-  }, [])
-
-  const handleShare = async () => {
-    if (!vaultPath || !myTeam) return
-    setSharing(true)
-    setShareStatus(null)
-    try {
-      const session = await getSession()
-      if (!session) throw new Error('Sign in first (see the Team tab).')
-      const clientVaultKey = genId('vault')
-      const name = vaultPath.split('/').pop() ?? 'Vault'
-      const vault = await createSharedVault(myTeam.id, name, clientVaultKey, session.user.id)
-      await writeTeamData(vaultPath, { vaultId: vault.id, teamId: myTeam.id, sharedAt: new Date().toISOString() })
-      const { boards, boardColumns, boardTasks } = useAppStore.getState()
-      const handle = await openVaultSync(vaultPath, vault.id, session.user.id, () => {})
-      pushLocalBoardsState(handle, { boards, boardColumns, boardTasks })
-      setSharedVault({ vaultId: vault.id, teamId: myTeam.id })
-      setShareStatus({ ok: true, msg: 'Shared. Teammates can join it from their Team tab.' })
-    } catch (e) {
-      setShareStatus({ ok: false, msg: e instanceof Error ? e.message : 'Failed to share vault.' })
-    } finally {
-      setSharing(false)
-    }
-  }
 
   const switchTo = async (path: string, empty = false) => {
     setError(null)
@@ -984,13 +955,11 @@ function VaultSection({ onClose }: { onClose: () => void }) {
       const { vaultPath: currentPath, boards, boardColumns, boardTasks } = useAppStore.getState()
       if (currentPath && currentPath !== path) {
         await writeBoardsFile(currentPath, { version: 1, boards, boardColumns, boardTasks })
-        closeVaultSync(currentPath)
-        useAppStore.getState().setSharedVault(null)
+        await stopVaultSync()
       }
       const data = empty ? null : await readVaultFS(path)
       addRecentVault(path)
-      openVault(path, data)
-      await resumeVaultSyncIfShared(path)
+      openVault(path, data) // AppShell starts syncing it if it's a shared vault
       onClose()
     } catch {
       setError("Couldn't open this vault. The folder may have moved or been deleted.")
@@ -1047,27 +1016,33 @@ function VaultSection({ onClose }: { onClose: () => void }) {
       <div>
         <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-2">Team</p>
         {sharedVault ? (
-          <div className={cn(
-            'flex items-center gap-2 px-3 py-2.5 rounded-lg border',
-            syncStatus === 'error' ? 'border-red-500/30 bg-red-500/8' : 'border-green-500/30 bg-green-500/8',
-          )}>
+          <button
+            onClick={() => setShowShare(true)}
+            className={cn(
+              'w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-colors hover:bg-surface',
+              syncStatus === 'error' ? 'border-red-500/30 bg-red-500/8' : 'border-green-500/30 bg-green-500/8',
+            )}
+          >
             <Users className={cn('w-3.5 h-3.5 shrink-0', syncStatus === 'error' ? 'text-red-400' : 'text-green-400')} />
-            <span className="text-xs text-foreground">
-              {syncStatus === 'syncing' ? 'Syncing…' : syncStatus === 'error' ? 'Sync error — will retry' : 'Synced with team'}
+            <span className="flex-1 text-xs text-foreground">
+              {syncProgress !== null
+                ? `Downloading… ${syncProgress} changes applied`
+                : syncStatus === 'syncing' ? 'Syncing…'
+                : syncStatus === 'offline' ? 'Offline — changes sync when you reconnect'
+                : syncStatus === 'error' ? 'Sync error — will retry'
+                : 'Synced with your team'}
             </span>
-          </div>
+            <span className="text-[10px] text-muted-foreground shrink-0">
+              {sharedVault.role === 'owner' ? 'Owner' : sharedVault.role === 'editor' ? 'Can edit' : 'Can view'} · Manage
+            </span>
+          </button>
         ) : (
           <div className="flex items-center gap-2">
             <button
-              onClick={handleShare}
-              disabled={sharing || !myTeam}
-              title={!myTeam ? 'Create a team first (see the Team tab)' : undefined}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-medium bg-accent text-white hover:opacity-90 transition-colors',
-                (sharing || !myTeam) && 'opacity-40 pointer-events-none',
-              )}
+              onClick={() => setShowShare(true)}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-accent text-white hover:opacity-90 transition-colors"
             >
-              {sharing ? 'Sharing…' : 'Share with team'}
+              Share vault
             </button>
             <span className="text-border text-xs">·</span>
             <button
@@ -1078,11 +1053,7 @@ function VaultSection({ onClose }: { onClose: () => void }) {
             </button>
           </div>
         )}
-        {shareStatus && (
-          <p className={cn('text-[11px] mt-1.5', shareStatus.ok ? 'text-green-400' : 'text-red-400')}>
-            {shareStatus.msg}
-          </p>
-        )}
+        <ShareVaultDialog open={showShare} onClose={() => setShowShare(false)} />
         <JoinVaultDialog open={showJoin} onClose={() => setShowJoin(false)} />
       </div>
 
@@ -1512,8 +1483,10 @@ function TeamSection() {
   const [checkingSession, setCheckingSession] = useState(true)
   const [showSignIn, setShowSignIn] = useState(false)
 
+  const [teams, setTeams] = useState<Team[]>([])
   const [activeTeam, setActiveTeam] = useState<Team | null>(null)
   const [members, setMembers] = useState<TeamMember[]>([])
+  const [creatingTeam, setCreatingTeam] = useState(false)
 
   const [newTeamName, setNewTeamName] = useState('')
   const [inviteEmail, setInviteEmail] = useState('')
@@ -1523,12 +1496,14 @@ function TeamSection() {
   const loadTeams = async (currentSession: Session) => {
     await acceptPendingInvites(currentSession.user.id, currentSession.user.email ?? '')
     const myTeams = await listMyTeams()
-    // v1: a user belongs to at most one team's worth of UI at a time — the
-    // first team (owned or joined) becomes "active". Multi-team switching is
-    // future work.
-    const active = myTeams[0] ?? null
-    setActiveTeam(active)
-    setMembers(active ? await listTeamMembers(active.id) : [])
+    setTeams(myTeams)
+    await selectTeam(myTeams[0] ?? null)
+  }
+
+  const selectTeam = async (team: Team | null) => {
+    setActiveTeam(team)
+    setCreatingTeam(false)
+    setMembers(team ? await listTeamMembers(team.id) : [])
   }
 
   useEffect(() => {
@@ -1552,6 +1527,7 @@ function TeamSection() {
   const handleSignOut = async () => {
     await signOut()
     setSession(null)
+    setTeams([])
     setActiveTeam(null)
     setMembers([])
   }
@@ -1563,8 +1539,8 @@ function TeamSection() {
     try {
       const team = await createTeam(newTeamName.trim(), session.user.id)
       setNewTeamName('')
-      setActiveTeam(team)
-      setMembers([])
+      setTeams(ts => [...ts, team])
+      await selectTeam(team)
     } catch (e) {
       setStatus({ ok: false, msg: e instanceof Error ? e.message : 'Failed to create team.' })
     } finally {
@@ -1642,7 +1618,7 @@ function TeamSection() {
       </div>
 
       {/* Team */}
-      {!activeTeam ? (
+      {!activeTeam || creatingTeam ? (
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">
             Create a team
@@ -1668,16 +1644,41 @@ function TeamSection() {
             </button>
           </div>
           <p className="text-[10px] text-tertiary">
-            Teams let you share a whole vault (notes + boards) with collaborators.
+            A team is a group you can share vaults with in one step. You can also share a vault
+            with individual people from its Share dialog.
           </p>
+          {activeTeam && (
+            <button onClick={() => setCreatingTeam(false)} className="text-[11px] text-muted-foreground hover:text-foreground">
+              Cancel
+            </button>
+          )}
         </div>
       ) : (
         <>
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-2">Team</p>
-            <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Team</p>
+              <button
+                onClick={() => setCreatingTeam(true)}
+                className="flex items-center gap-1 text-[10px] font-medium text-accent hover:opacity-75 transition-opacity"
+              >
+                <Plus className="w-3 h-3" />
+                New team
+              </button>
+            </div>
+            <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border">
               <Users className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-              <span className="text-xs font-medium text-foreground truncate">{activeTeam.name}</span>
+              {teams.length > 1 ? (
+                <select
+                  value={activeTeam.id}
+                  onChange={e => selectTeam(teams.find(t => t.id === e.target.value) ?? null)}
+                  className="flex-1 bg-transparent text-xs font-medium text-foreground focus:outline-none cursor-pointer"
+                >
+                  {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              ) : (
+                <span className="text-xs font-medium text-foreground truncate">{activeTeam.name}</span>
+              )}
             </div>
           </div>
 

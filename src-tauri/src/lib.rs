@@ -118,7 +118,9 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_process::init());
+        .plugin(tauri_plugin_process::init())
+        // inkwell://join/<token> vault invite links (see src/lib/team.ts).
+        .plugin(tauri_plugin_deep_link::init());
 
     #[cfg(desktop)]
     {
