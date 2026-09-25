@@ -11,6 +11,12 @@ import { createClient } from '@supabase/supabase-js'
 const url = import.meta.env.VITE_SUPABASE_URL || 'https://placeholder.supabase.co'
 const anonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'placeholder-anon-key'
 
+/** False for a build made without the Supabase env vars (e.g. a CI release
+ * missing its secrets) — team features can say so instead of "Load failed". */
+export const isSupabaseConfigured = Boolean(
+  import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+)
+
 export const supabase = createClient(url, anonKey, {
   auth: {
     persistSession: true,
