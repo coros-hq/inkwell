@@ -69,15 +69,21 @@ jobs:
       # Vite bakes VITE_* values into the bundle at build time, and .env is
       # git-ignored — without these secrets the release talks to a placeholder
       # Supabase URL and every sign-in/sync request fails ("Load failed").
-      - name: Check Supabase config
+      - name: Check release config
         shell: bash
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          HAS_RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
         run: |
           if [ -z "$VITE_SUPABASE_URL" ] || [ -z "$VITE_SUPABASE_PUBLISHABLE_KEY" ]; then
             echo "::error::Set the VITE_SUPABASE_URL and VITE_SUPABASE_PUBLISHABLE_KEY repository secrets."
             exit 1
+          fi
+          if [ "$HAS_RELEASE_TOKEN" = "true" ]; then
+            echo "Release will be published with RELEASE_TOKEN."
+          else
+            echo "::warning::RELEASE_TOKEN is not set — publishing with the built-in GITHUB_TOKEN."
           fi
 
       - name: Build and publish release
