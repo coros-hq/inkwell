@@ -104,6 +104,22 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         borderLeftColor: 'hsl(var(--accent))',
         borderLeftWidth: '2px',
       },
+      // Collaborators' carets (y-codemirror.next). The package hides the name
+      // label until hover and sets it in `serif` — keep it always visible and
+      // in the UI font so you can tell at a glance who is typing where.
+      '.cm-ySelectionCaretDot': { display: 'none' },
+      '.cm-ySelectionInfo': {
+        opacity: '1',
+        top: '-18px',
+        left: '-1px',
+        padding: '0 5px',
+        borderRadius: '4px 4px 4px 0',
+        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontSize: '11px',
+        fontWeight: '500',
+        lineHeight: '16px',
+        pointerEvents: 'none',
+      },
       '.cm-selectionBackground': {
         backgroundColor: 'hsl(var(--accent) / 0.2) !important',
       },

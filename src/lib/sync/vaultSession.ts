@@ -108,6 +108,24 @@ export function colorForUser(userId: string): string {
   return PEER_COLORS[Math.abs(h) % PEER_COLORS.length]
 }
 
+type AwarenessState = { user?: { id?: string; name?: string } } & Record<string, unknown>
+
+/** Keep the local state plus one state per person (by user id, or by name for
+ * builds that don't send an id): the one whose cursor moved most recently. */
+function dedupeByPerson(
+  states: Map<number, AwarenessState>, localId: number, movedAt: Map<number, number>,
+): Map<number, AwarenessState> {
+  const newest = new Map<string, number>()
+  for (const [id, st] of states) {
+    const person = st.user?.id ?? st.user?.name
+    if (id === localId || !person) continue
+    const best = newest.get(person)
+    if (best === undefined || (movedAt.get(id) ?? 0) > (movedAt.get(best) ?? 0)) newest.set(person, id)
+  }
+  const keep = new Set(newest.values())
+  return new Map([...states].filter(([id, st]) => id === localId || keep.has(id) || !(st.user?.id ?? st.user?.name)))
+}
+
 function noteDocName(id: string): string {
   return `note:${id}`
 }
@@ -311,8 +329,11 @@ class VaultSession {
       .filter(e => e.pins === 0 && !e.dirty && !this.remoteDirty.has(e.name))
       .sort((a, b) => a.lastUsed - b.lastUsed)
     for (const e of idle.slice(0, this.docs.size - MAX_CACHED_DOCS)) {
+      // Destroying the doc destroys its Awareness too; a reload gets a new
+      // Y.Doc (new clientID), so a fresh Awareness is safe then.
       e.doc.destroy()
       this.docs.delete(e.name)
+      if (e.name.startsWith('note:')) this.awarenesses.delete(e.name.slice('note:'.length))
     }
   }
 
@@ -887,19 +908,46 @@ class VaultSession {
       useAppStore.getState().applyRemoteNoteUpdate(noteId, ytext.toString())
     }
 
+    // One Awareness per loaded doc, kept across bind/release. Peers only accept
+    // an awareness update whose clock is higher than the last one they saw for
+    // this clientID (= the doc's clientID), so recreating it — clock back to 0 —
+    // would make them ignore our cursor until the new clock caught up.
+    const color = colorForUser(this.userId)
+    const user = { id: this.userId, name: this.email.split('@')[0], color, colorLight: `${color}33` }
     let aw = this.awarenesses.get(noteId)
-    if (!aw) {
+    if (aw) {
+      if (aw.getLocalState() === null) aw.setLocalState({ user })
+    } else {
       aw = new Awareness(entry.doc)
       this.awarenesses.set(noteId, aw)
-      const color = colorForUser(this.userId)
-      aw.setLocalStateField('user', { name: this.email.split('@')[0], color, colorLight: `${color}33` })
+      aw.setLocalStateField('user', user)
       const awRef = aw
       aw.on('update', ({ added, updated, removed }: { added: number[]; updated: number[]; removed: number[] }, origin: unknown) => {
         if (origin !== 'local') return
         this.sendAwareness(noteId, awRef, [...added, ...updated, ...removed])
       })
-      this.presenceChannel?.send({ type: 'broadcast', event: 'aw-req', payload: { d: noteId } }).catch(() => {})
+      // Once a peer has left (or timed out), forget its clock. A client that
+      // recreates its Awareness restarts at clock 0 (older builds do this on
+      // every note switch) and would otherwise be ignored as stale forever.
+      // Also remember when each peer last actually moved (heartbeats don't
+      // count — they don't change the state), for dedupeByPerson below.
+      const movedAt = new Map<number, number>()
+      aw.on('change', ({ added, updated, removed }: { added: number[]; updated: number[]; removed: number[] }) => {
+        const now = Date.now()
+        for (const id of [...added, ...updated]) movedAt.set(id, now)
+        for (const id of removed) {
+          movedAt.delete(id)
+          if (id !== awRef.clientID) awRef.meta.delete(id)
+        }
+      })
+      // y-codemirror.next draws a caret for every state getStates() returns.
+      // A person can have several (stale copies from a reopened note, an app
+      // restart, older builds), so show only their most recently moved one.
+      const allStates = aw.getStates.bind(aw)
+      aw.getStates = () => dedupeByPerson(allStates(), awRef.clientID, movedAt)
     }
+    // Ask peers already in this note to resend their cursors.
+    this.presenceChannel?.send({ type: 'broadcast', event: 'aw-req', payload: { d: noteId } }).catch(() => {})
 
     const undoManager = new Y.UndoManager(ytext)
     this.currentNoteId = noteId
@@ -914,11 +962,8 @@ class VaultSession {
       release: () => {
         undoManager.destroy()
         entry.pins = Math.max(0, entry.pins - 1)
-        if (entry.pins === 0) {
-          removeAwarenessStates(awareness, [awareness.clientID], 'local')
-          awareness.destroy()
-          this.awarenesses.delete(noteId)
-        }
+        // Tell peers we left, but keep the Awareness (and its clock) for next time.
+        if (entry.pins === 0) removeAwarenessStates(awareness, [awareness.clientID], 'local')
         if (this.currentNoteId === noteId) {
           this.currentNoteId = null
           void this.trackPresence()
@@ -1051,4 +1096,11 @@ export async function joinVaultInto(
   const data = await readVaultFS(path)
   addRecentVault(path)
   useAppStore.getState().openVault(path, data ?? { folders: [], notes: [], tasks: [], boards: [], boardColumns: [], boardTasks: [] })
+}
+
+// Dev only: hot-reloading this module would start a second session next to the
+// old one (duplicate cursors, double sends). Stop the old one and reload.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => { void active?.stop() })
+  import.meta.hot.accept(() => window.location.reload())
 }

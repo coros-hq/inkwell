@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { X } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { INVITE_LINK_PREFIX } from '../../lib/team'
+import { AUTH_CALLBACK_PREFIX, completeAuthCallback } from '../../lib/auth'
 import { JoinVaultDialog } from '../settings/JoinVaultDialog'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
@@ -10,6 +11,7 @@ const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
  * App-wide collaboration plumbing, mounted whether or not a vault is open:
  *  - opens the Join dialog for inkwell://join/<token> invite links (on launch
  *    and while running)
+ *  - finishes sign-in from inkwell://auth/callback email confirmation links
  *  - shows one-off notices from the sync session (e.g. access revoked)
  */
 export function CollabGlobals() {
@@ -23,6 +25,12 @@ export function CollabGlobals() {
     const handle = (urls: string[] | null) => {
       const link = urls?.find(u => u.startsWith(INVITE_LINK_PREFIX))
       if (link) setInviteLink(link)
+      const authLink = urls?.find(u => u.startsWith(AUTH_CALLBACK_PREFIX))
+      if (authLink) {
+        completeAuthCallback(authLink)
+          .then(() => setCollabNotice('Email confirmed — you’re signed in.'))
+          .catch(e => setCollabNotice(e instanceof Error ? e.message : 'Could not confirm your email.'))
+      }
     }
     import('@tauri-apps/plugin-deep-link').then(async ({ getCurrent, onOpenUrl }) => {
       handle(await getCurrent().catch(() => null))

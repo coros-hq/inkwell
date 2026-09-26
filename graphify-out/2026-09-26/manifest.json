@@ -870,8 +870,8 @@
     "semantic_hash": ""
   },
   "src/lib/sync/vaultSession.ts": {
-    "mtime": 1790461452.3678715,
-    "ast_hash": "f51175e51722f176af6a343349f3ffb4",
+    "mtime": 1790460915.8844566,
+    "ast_hash": "0e1307fb39052054fb1da6b602394c68",
     "semantic_hash": ""
   },
   "supabase/migrations/0002_collab.sql": {

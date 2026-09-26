@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
-import { X, Link2, Copy, Check, LogOut, UserPlus } from 'lucide-react'
+import { X, Link2, Copy, Check, LogOut, UserPlus, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { useAppStore } from '../../store/useAppStore'
 import { getSession } from '../../lib/auth'
@@ -17,12 +17,13 @@ interface Props {
 
 const ROLE_LABEL: Record<VaultRole, string> = { owner: 'Owner', editor: 'Can edit', viewer: 'Can view' }
 
+// Inputs, selects and buttons share one fixed height so they line up in a row.
 const inputCls = cn(
-  'px-3 py-2 rounded-lg text-xs bg-surface border border-border',
+  'h-8 px-3 rounded-lg text-xs bg-surface border border-border',
   'text-foreground placeholder:text-tertiary',
   'focus:outline-none focus:border-accent/50 transition-colors',
 )
-const primaryBtn = 'px-3 py-2 rounded-lg text-xs font-medium bg-accent text-white hover:opacity-90 transition-colors disabled:opacity-40'
+const primaryBtn = 'h-8 px-3 rounded-lg text-xs font-medium bg-accent text-white hover:opacity-90 transition-colors disabled:opacity-40'
 
 function RoleSelect({ value, onChange, allowOwner = false, disabled }: {
   value: VaultRole
@@ -30,17 +31,22 @@ function RoleSelect({ value, onChange, allowOwner = false, disabled }: {
   allowOwner?: boolean
   disabled?: boolean
 }) {
+  // appearance-none: the native macOS select ignores height and draws its own
+  // bezel, so it never matches the input/button next to it.
   return (
-    <select
-      value={value}
-      disabled={disabled}
-      onChange={e => onChange(e.target.value as VaultRole)}
-      className={cn(inputCls, 'py-1.5 pr-6 cursor-pointer disabled:cursor-default disabled:opacity-60')}
-    >
-      {allowOwner && <option value="owner">{ROLE_LABEL.owner}</option>}
-      <option value="editor">{ROLE_LABEL.editor}</option>
-      <option value="viewer">{ROLE_LABEL.viewer}</option>
-    </select>
+    <div className="relative shrink-0">
+      <select
+        value={value}
+        disabled={disabled}
+        onChange={e => onChange(e.target.value as VaultRole)}
+        className={cn(inputCls, 'appearance-none pr-7 cursor-pointer disabled:cursor-default disabled:opacity-60')}
+      >
+        {allowOwner && <option value="owner">{ROLE_LABEL.owner}</option>}
+        <option value="editor">{ROLE_LABEL.editor}</option>
+        <option value="viewer">{ROLE_LABEL.viewer}</option>
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+    </div>
   )
 }
 
@@ -158,12 +164,15 @@ export function ShareVaultDialog({ open, onClose }: Props) {
               </Dialog.Description>
               <div className="space-y-1.5 mb-4">
                 <label className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Access</label>
-                <select value={teamId} onChange={e => setTeamId(e.target.value)} className={cn(inputCls, 'w-full')}>
-                  <option value="">Only people I invite</option>
-                  {teams.map(t => (
-                    <option key={t.id} value={t.id}>Everyone in {t.name} (can edit)</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select value={teamId} onChange={e => setTeamId(e.target.value)} className={cn(inputCls, 'w-full appearance-none pr-7 cursor-pointer')}>
+                    <option value="">Only people I invite</option>
+                    {teams.map(t => (
+                      <option key={t.id} value={t.id}>Everyone in {t.name} (can edit)</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
+                </div>
               </div>
               <button onClick={handleShare} disabled={busy || !vaultPath} className={primaryBtn}>
                 {busy ? 'Sharing…' : 'Share vault'}
