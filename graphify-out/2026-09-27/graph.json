@@ -1828,7 +1828,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_identifier_description",
-      "community": 21,
+      "community": 56,
       "norm_label": "description"
     },
     {
@@ -1848,7 +1848,7 @@
       "source_location": "L51",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_properties_description",
-      "community": 56,
+      "community": 21,
       "norm_label": "description"
     },
     {
@@ -1858,7 +1858,7 @@
       "source_location": "L52",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_description_description",
-      "community": 56,
+      "community": 21,
       "norm_label": "description"
     },
     {
@@ -1868,7 +1868,7 @@
       "source_location": "L53",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_description_default",
-      "community": 56,
+      "community": 21,
       "norm_label": "default"
     },
     {
@@ -1878,7 +1878,7 @@
       "source_location": "L54",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_description_type",
-      "community": 56,
+      "community": 21,
       "norm_label": "type"
     },
     {
@@ -2268,7 +2268,7 @@
       "source_location": "L2378",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_identifier",
-      "community": 21,
+      "community": 56,
       "norm_label": "identifier"
     },
     {
@@ -2278,7 +2278,7 @@
       "source_location": "L2380",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_identifier_oneof",
-      "community": 21,
+      "community": 56,
       "norm_label": "oneof"
     },
     {
@@ -6635,7 +6635,7 @@
       "label": "CustomThemeCard()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1777",
+      "source_location": "L1770",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_customthemecard",
       "community": 59,
@@ -6645,7 +6645,7 @@
       "label": "ToggleSwitch()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1851",
+      "source_location": "L1844",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_toggleswitch",
       "community": 59,
@@ -6655,7 +6655,7 @@
       "label": "SettingRow()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1872",
+      "source_location": "L1865",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_settingrow",
       "community": 59,
@@ -6665,7 +6665,7 @@
       "label": "AboutLink()",
       "file_type": "code",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1888",
+      "source_location": "L1881",
       "_origin": "ast",
       "id": "src_components_settings_settingsdialog_aboutlink",
       "community": 59,
@@ -30495,7 +30495,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1888",
+      "source_location": "L1881",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_aboutlink",
@@ -30505,7 +30505,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1777",
+      "source_location": "L1770",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_customthemecard",
@@ -30585,7 +30585,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1872",
+      "source_location": "L1865",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_settingrow",
@@ -30645,7 +30645,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1851",
+      "source_location": "L1844",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog",
       "target": "src_components_settings_settingsdialog_toggleswitch",
@@ -31711,7 +31711,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1795",
+      "source_location": "L1788",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_customthemecard",
       "target": "src_lib_utils_cn"
@@ -31722,7 +31722,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/settings/SettingsDialog.tsx",
-      "source_location": "L1857",
+      "source_location": "L1850",
       "weight": 1.0,
       "source": "src_components_settings_settingsdialog_toggleswitch",
       "target": "src_lib_utils_cn"

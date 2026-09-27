@@ -8,6 +8,7 @@
 -- this file: per-vault roles (vault_members), invite links, role-based RLS on
 -- the CRDT tables, private Realtime channels (live edits + presence travel
 -- over Broadcast, not postgres_changes) and the vault-attachments bucket.
+-- Finally apply supabase/migrations/0003_team_limit.sql (max 2 owned teams).
 
 -- ── Teams ───────────────────────────────────────────────────────────────────
 

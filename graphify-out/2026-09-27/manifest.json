@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/settings/SettingsDialog.tsx": {
-    "mtime": 1790475541.2558038,
-    "ast_hash": "9609405534919fc2fe92c27606d46348",
+    "mtime": 1790475364.21646,
+    "ast_hash": "aaad3633c2252da6f0f926e44f5e0bd7",
     "semantic_hash": ""
   },
   "src/components/settings/ThemeEditor.tsx": {
@@ -780,8 +780,8 @@
     "semantic_hash": ""
   },
   "supabase/schema.sql": {
-    "mtime": 1790475372.011135,
-    "ast_hash": "4ae44941209b8de81dc12d5c829dca8a",
+    "mtime": 1790347463.5211208,
+    "ast_hash": "4ef7cc97e2af4a72f87ee5a6af55f482",
     "semantic_hash": ""
   },
   "src/components/editor/ConflictBanner.tsx": {

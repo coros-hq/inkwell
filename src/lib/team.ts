@@ -30,7 +30,17 @@ export async function listMyTeams(): Promise<Team[]> {
   return data as Team[]
 }
 
+/** Max teams one account can own. Mirrored server-side by migrations/0003_team_limit.sql. */
+export const MAX_OWNED_TEAMS = 2
+
 export async function createTeam(name: string, ownerId: string): Promise<Team> {
+  const { count, error: countError } = await supabase
+    .from('teams')
+    .select('id', { count: 'exact', head: true })
+    .eq('owner_id', ownerId)
+  if (countError) throw new Error(countError.message)
+  if ((count ?? 0) >= MAX_OWNED_TEAMS) throw new Error(`You can own at most ${MAX_OWNED_TEAMS} teams.`)
+
   const { data, error } = await supabase
     .from('teams')
     .insert({ name, owner_id: ownerId })

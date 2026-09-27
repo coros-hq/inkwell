@@ -1,7 +1,7 @@
 # Graph Report - inkwell  (2026-09-27)
 
 ## Corpus Check
-- 119 files · ~211,763 words
+- 119 files · ~211,712 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
@@ -244,8 +244,8 @@ Cohesion: 0.08
 Nodes (28): activeLineSet(), buildChartDecorations(), buildFileEmbedDecorations(), buildLiveMarkdownDecorations(), buildMathDecorations(), buildTableDecorations(), buildTablePreviewDecorations(), BUILT_IN_ABBREVIATIONS (+20 more)
 
 ### Community 21 - "macOS Schema Property Defs"
-Cohesion: 0.15
-Nodes (13): properties, Identifier, description, oneOf, type, default, description, type (+5 more)
+Cohesion: 0.14
+Nodes (14): properties, default, description, type, type, default, description, type (+6 more)
 
 ### Community 23 - "Tauri Desktop Schema Properties"
 Cohesion: 0.15
@@ -372,8 +372,8 @@ Cohesion: 0.50
 Nodes (4): description, required, type, Capability
 
 ### Community 56 - "FileEmbedWidget"
-Cohesion: 0.50
-Nodes (4): default, description, type, description
+Cohesion: 0.67
+Nodes (3): Identifier, description, oneOf
 
 ### Community 57 - "macOS Schema Capability Type"
 Cohesion: 0.50

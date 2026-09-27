@@ -17,7 +17,7 @@ import {
 import { SHORTCUT_DEFS, formatCombo, hasModifier, eventToCombo } from '../../lib/shortcuts'
 import { getSession, signOut, type Session } from '../../lib/auth'
 import {
-  listMyTeams, createTeam, listTeamMembers, inviteMember, removeMember, acceptPendingInvites,
+  listMyTeams, createTeam, MAX_OWNED_TEAMS, listTeamMembers, inviteMember, removeMember, acceptPendingInvites,
   type Team, type TeamMember,
 } from '../../lib/team'
 import { SignInDialog } from '../shared/SignInDialog'
@@ -1532,8 +1532,11 @@ function TeamSection() {
     setMembers([])
   }
 
+  const ownedTeamCount = session ? teams.filter(t => t.owner_id === session.user.id).length : 0
+  const atTeamLimit = ownedTeamCount >= MAX_OWNED_TEAMS
+
   const handleCreateTeam = async () => {
-    if (!session || !newTeamName.trim()) return
+    if (!session || !newTeamName.trim() || atTeamLimit) return
     setBusy(true)
     setStatus(null)
     try {
@@ -1618,7 +1621,7 @@ function TeamSection() {
       </div>
 
       {/* Team */}
-      {!activeTeam || creatingTeam ? (
+      {!activeTeam || (creatingTeam && !atTeamLimit) ? (
         <div className="space-y-1.5">
           <label className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">
             Create a team
@@ -1658,13 +1661,15 @@ function TeamSection() {
           <div>
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Team</p>
-              <button
-                onClick={() => setCreatingTeam(true)}
-                className="flex items-center gap-1 text-[10px] font-medium text-accent hover:opacity-75 transition-opacity"
-              >
-                <Plus className="w-3 h-3" />
-                New team
-              </button>
+              {!atTeamLimit && (
+                <button
+                  onClick={() => setCreatingTeam(true)}
+                  className="flex items-center gap-1 text-[10px] font-medium text-accent hover:opacity-75 transition-opacity"
+                >
+                  <Plus className="w-3 h-3" />
+                  New team
+                </button>
+              )}
             </div>
             <div className="flex items-center gap-3 px-3 py-2 rounded-lg border border-border">
               <Users className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
@@ -1680,6 +1685,15 @@ function TeamSection() {
                 <span className="text-xs font-medium text-foreground truncate">{activeTeam.name}</span>
               )}
             </div>
+            {atTeamLimit && (
+              <div className="flex items-start gap-2.5 mt-2 px-3 py-2.5 rounded-lg bg-accent/8 border border-accent/20">
+                <Info className="w-3.5 h-3.5 text-accent shrink-0 mt-px" />
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  You've reached the limit of {MAX_OWNED_TEAMS} teams per account, so you can't create
+                  another one. You can still invite members to your existing teams.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">
