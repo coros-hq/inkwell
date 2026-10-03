@@ -12,7 +12,7 @@ import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next'
 import { getVaultSession, type NoteBinding } from '../../lib/sync/vaultSession'
 import { cn, glassBg } from '../../lib/utils'
 
-import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, mathPreviewField, chartPreviewField, tablePreviewField } from '../../lib/editorExtensions'
+import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField } from '../../lib/editorExtensions'
 import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
 import { useEditorViewRef } from './EditorViewContext'
 import { deleteAttachmentFile, makeAttachmentMarkdown } from '../../lib/attachments'
@@ -368,7 +368,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         // code-only tags (keyword, string, number, …) still get coloured.
         codeHighlighting,
         markdownHighlighting,
-        ...(liveConceal ? [liveMarkdownPlugin, mathPreviewField, chartPreviewField, tablePreviewField] : []),
+        ...(liveConceal ? [liveMarkdownPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField] : []),
         highlightMarkPlugin,
         tablePlugin,
         createFileEmbedPlugin(vaultPath ?? '', handleRemoveEmbed, useAppStore.getState().notes.find(n => n.id === noteId)?.searchRoot),

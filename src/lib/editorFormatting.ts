@@ -109,3 +109,88 @@ export function applyFormatAction(view: EditorView, action: FormatAction) {
   if (action.type === 'inline') applyInlineFormat(view, action.prefix, action.suffix)
   else applyBlockFormat(view, action.prefix)
 }
+
+// ─── Colors ──────────────────────────────────────────────────────────────────
+// Highlight and text color are inline HTML so they stay plain-text portable:
+//   <mark class="hl-yellow">text</mark>   <span class="tc-red">text</span>
+// The classes are defined in globals.css (palette in lib/palette.ts).
+
+export type ColorKind = 'highlight' | 'text'
+
+const COLOR_TAGS: Record<ColorKind, { tag: 'mark' | 'span'; prefix: 'hl' | 'tc' }> = {
+  highlight: { tag: 'mark', prefix: 'hl' },
+  text: { tag: 'span', prefix: 'tc' },
+}
+
+/** Wrap the selection in a color tag, swap the color if it's already wrapped
+ *  in one of the same kind, or unwrap when `color` is null. */
+export function applyColorFormat(view: EditorView, kind: ColorKind, color: string | null) {
+  const { tag, prefix } = COLOR_TAGS[kind]
+  const openRe = new RegExp(`<${tag} class="${prefix}-[a-z]+">`)
+  const close = `</${tag}>`
+  const open = (c: string) => `<${tag} class="${prefix}-${c}">`
+  const { state } = view
+
+  const spec = state.changeByRange(range => {
+    const selected = state.sliceDoc(range.from, range.to)
+
+    // Selection includes the tags themselves.
+    const whole = selected.match(new RegExp(`^(<${tag} class="${prefix}-[a-z]+">)([\\s\\S]*)${close}$`))
+    if (whole) {
+      const inner = whole[2]
+      const insert = color ? open(color) + inner + close : inner
+      return { changes: { from: range.from, to: range.to, insert }, range: EditorSelection.range(range.from, range.from + insert.length) }
+    }
+
+    // Tags sit just outside the selection / cursor.
+    const lineFrom = state.doc.lineAt(range.from).from
+    const beforeText = state.sliceDoc(lineFrom, range.from)
+    const openMatch = beforeText.match(new RegExp(`${openRe.source}$`))
+    if (openMatch && state.sliceDoc(range.to, range.to + close.length) === close) {
+      const openFrom = range.from - openMatch[0].length
+      const changes = color
+        ? [{ from: openFrom, to: range.from, insert: open(color) }]
+        : [{ from: openFrom, to: range.from, insert: '' }, { from: range.to, to: range.to + close.length, insert: '' }]
+      const shift = color ? open(color).length - openMatch[0].length : -openMatch[0].length
+      return { changes, range: EditorSelection.range(range.from + shift, range.to + shift) }
+    }
+
+    if (!color) return { range }
+    const o = open(color)
+    return {
+      changes: { from: range.from, to: range.to, insert: o + selected + close },
+      range: EditorSelection.range(range.from + o.length, range.from + o.length + selected.length),
+    }
+  })
+  view.dispatch(spec)
+  view.focus()
+}
+
+// ─── Per-item bullet color ───────────────────────────────────────────────────
+// Stored as an empty tag right after the list marker: `- <i class="bc-red"></i>item`.
+// Hidden in the preview/live editor; the item's marker takes the color.
+
+export const BULLET_TAG_RE = /^(\s*(?:[-*+]|\d+[.)])[ \t]+)(<i class="bc-([a-z]+)"><\/i>)?/
+const TASK_RE = /^\s*(?:[-*+]|\d+[.)])[ \t]+\[[ xX]\]/
+
+/** Color (or with null, reset) the marker of every list item the selection touches. */
+export function applyBulletColorFormat(view: EditorView, color: string | null) {
+  const { state } = view
+  const changes: { from: number; to: number; insert: string }[] = []
+  const done = new Set<number>()
+  for (const r of state.selection.ranges) {
+    const first = state.doc.lineAt(r.from).number
+    const last = state.doc.lineAt(r.to).number
+    for (let n = first; n <= last; n++) {
+      if (done.has(n)) continue
+      done.add(n)
+      const line = state.doc.line(n)
+      const m = line.text.match(BULLET_TAG_RE)
+      if (!m || TASK_RE.test(line.text)) continue
+      const at = line.from + m[1].length
+      changes.push({ from: at, to: at + (m[2]?.length ?? 0), insert: color ? `<i class="bc-${color}"></i>` : '' })
+    }
+  }
+  if (changes.length) view.dispatch({ changes })
+  view.focus()
+}

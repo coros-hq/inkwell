@@ -689,3 +689,47 @@ html[data-theme="onyx"] {
 .katex-error {
   color: hsl(var(--destructive, 0 72% 51%));
 }
+
+/* ── Text highlight / color classes (palette in src/lib/palette.ts) ─────────── */
+
+.hl-gray { background: rgb(139 141 152 / 0.3); }
+.tc-gray { color: #8b8d98; }
+.hl-red { background: rgb(229 72 77 / 0.3); }
+.tc-red { color: #e5484d; }
+.hl-orange { background: rgb(247 107 21 / 0.3); }
+.tc-orange { color: #f76b15; }
+.hl-yellow { background: rgb(229 180 0 / 0.3); }
+.tc-yellow { color: #e5b400; }
+.hl-green { background: rgb(48 164 108 / 0.3); }
+.tc-green { color: #30a46c; }
+.hl-blue { background: rgb(62 99 221 / 0.3); }
+.tc-blue { color: #3e63dd; }
+.hl-purple { background: rgb(142 78 198 / 0.3); }
+.tc-purple { color: #8e4ec6; }
+.hl-pink { background: rgb(214 64 159 / 0.3); }
+.tc-pink { color: #d6409f; }
+
+mark[class*="hl-"] { color: inherit; border-radius: 2px; }
+.cm-line .hl-gray, .cm-line .hl-red, .cm-line .hl-orange, .cm-line .hl-yellow,
+.cm-line .hl-green, .cm-line .hl-blue, .cm-line .hl-purple, .cm-line .hl-pink { border-radius: 2px; }
+.cm-color-tag { opacity: 0.35; }
+
+/* ── Per-item bullet color: `- <i class="bc-red"></i>item` ─────────────────── */
+
+i[class^="bc-"] { display: none; }
+li:has(> i.bc-gray)::marker { color: #8b8d98; }
+.cm-bullet-dot.bc-gray, .cm-ordered-mark.bc-gray { color: #8b8d98; }
+li:has(> i.bc-red)::marker { color: #e5484d; }
+.cm-bullet-dot.bc-red, .cm-ordered-mark.bc-red { color: #e5484d; }
+li:has(> i.bc-orange)::marker { color: #f76b15; }
+.cm-bullet-dot.bc-orange, .cm-ordered-mark.bc-orange { color: #f76b15; }
+li:has(> i.bc-yellow)::marker { color: #e5b400; }
+.cm-bullet-dot.bc-yellow, .cm-ordered-mark.bc-yellow { color: #e5b400; }
+li:has(> i.bc-green)::marker { color: #30a46c; }
+.cm-bullet-dot.bc-green, .cm-ordered-mark.bc-green { color: #30a46c; }
+li:has(> i.bc-blue)::marker { color: #3e63dd; }
+.cm-bullet-dot.bc-blue, .cm-ordered-mark.bc-blue { color: #3e63dd; }
+li:has(> i.bc-purple)::marker { color: #8e4ec6; }
+.cm-bullet-dot.bc-purple, .cm-ordered-mark.bc-purple { color: #8e4ec6; }
+li:has(> i.bc-pink)::marker { color: #d6409f; }
+.cm-bullet-dot.bc-pink, .cm-ordered-mark.bc-pink { color: #d6409f; }

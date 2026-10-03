@@ -11,6 +11,9 @@ import { createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { useAppStore } from '../store/useAppStore'
 import { MarkdownChart } from '../components/editor/MarkdownChart'
+import { DataTable } from '../components/editor/DataTable'
+import { BoardEmbed, TaskEmbed } from '../components/editor/BoardEmbeds'
+import { defaultTableSpec, tableBlock } from './dataTable'
 
 // ─── Syntax Highlight Style ──────────────────────────────────────────────────
 
@@ -205,12 +208,15 @@ const SLASH_COMMANDS = [
   { label: '/todo', displayLabel: 'To-do', detail: '- [ ] Checkbox item', apply: '- [ ] ', type: 'iktodo' },
   { label: '/quote', displayLabel: 'Quote', detail: '> Blockquote', apply: '> ', type: 'ikquote' },
   { label: '/code', displayLabel: 'Code Block', detail: 'Fenced code block', apply: '```\n\n```', type: 'ikcode' },
-  { label: '/table', displayLabel: 'Table', detail: '3-column table', apply: '| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Cell     | Cell     | Cell     |\n', type: 'iktable' },
+  { label: '/table', displayLabel: 'Table', detail: 'Custom columns & data, like Notion', apply: '__DATA_TABLE__', type: 'iktable' },
+  { label: '/mdtable', displayLabel: 'Markdown Table', detail: 'Plain 3-column pipe table', apply: '| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Cell     | Cell     | Cell     |\n', type: 'iktable' },
   { label: '/highlight', displayLabel: 'Highlight', detail: '==highlighted text==', apply: '====', boost: -1, type: 'ikhighlight' },
   { label: '/divider', displayLabel: 'Divider', detail: '--- Horizontal rule', apply: '---\n', type: 'ikdivider' },
   { label: '/bold', displayLabel: 'Bold', detail: '**bold text**', apply: '****', boost: -1, type: 'ikbold' },
   { label: '/italic', displayLabel: 'Italic', detail: '*italic text*', apply: '**', boost: -1, type: 'ikitalic' },
   { label: '/video', displayLabel: 'Video Embed', detail: 'YouTube / Vimeo / Loom', apply: '__VIDEO_URL__', type: 'ikvideo' },
+  { label: '/board', displayLabel: 'Board', detail: 'Embed a kanban board from the Board view', apply: '__BOARD_REF__', type: 'ikboard' },
+  { label: '/task', displayLabel: 'Task', detail: 'Link a task from a board', apply: '__TASK_REF__', type: 'iktask' },
   { label: '/chart', displayLabel: 'Chart', detail: 'Bar, line, pie & more — pick a type and fill in data', apply: '__CHART_DIALOG__' },
 ]
 
@@ -226,7 +232,7 @@ function slashCompletion(context: CompletionContext, allowChart: boolean): Compl
   if (!match) return null
 
   const from = line.from + match[1].length
-  const commands = allowChart ? SLASH_COMMANDS : SLASH_COMMANDS.filter(cmd => cmd.apply !== '__CHART_DIALOG__')
+  const commands = allowChart ? SLASH_COMMANDS : SLASH_COMMANDS.filter(cmd => !['__CHART_DIALOG__', '__BOARD_REF__', '__TASK_REF__'].includes(cmd.apply))
 
   return {
     from,
@@ -243,6 +249,21 @@ function slashCompletion(context: CompletionContext, allowChart: boolean): Compl
           // ```chart block at this position once the user confirms it.
           view.dispatch({ changes: { from: slashFrom, to: slashTo, insert: '' } })
           useAppStore.getState().openChartInsertDialog(slashFrom)
+          return
+        }
+        if (cmd.apply === '__BOARD_REF__' || cmd.apply === '__TASK_REF__') {
+          view.dispatch({ changes: { from: slashFrom, to: slashTo, insert: '' } })
+          useAppStore.getState().openBoardRefDialog(slashFrom, cmd.apply === '__TASK_REF__' ? 'task' : 'board')
+          return
+        }
+        if (cmd.apply === '__DATA_TABLE__') {
+          const line = view.state.doc.lineAt(slashFrom)
+          const needsLeading = slashFrom !== line.from || line.text.trim().length > 0
+          const block = (needsLeading ? '\n' : '') + tableBlock(defaultTableSpec()) + '\n'
+          view.dispatch({
+            changes: { from: slashFrom, to: slashTo, insert: block },
+            selection: { anchor: slashFrom + block.length },
+          })
           return
         }
         if (cmd.apply === '__VIDEO_URL__') {
@@ -492,9 +513,11 @@ const CONCEALED_MARK_NODES = new Set([
 ])
 
 class BulletWidget extends WidgetType {
+  constructor(readonly color: string = '') { super() }
+  eq(other: BulletWidget) { return other.color === this.color }
   toDOM() {
     const span = document.createElement('span')
-    span.className = 'cm-bullet-dot'
+    span.className = 'cm-bullet-dot' + (this.color ? ` bc-${this.color}` : '')
     span.textContent = '•'
     return span
   }
@@ -504,11 +527,11 @@ class BulletWidget extends WidgetType {
 // Renders an ordered-list number ("1.", "2)") in the body text colour instead
 // of the muted syntax-mark style it would otherwise inherit.
 class OrderedMarkWidget extends WidgetType {
-  constructor(readonly text: string) { super() }
-  eq(other: OrderedMarkWidget) { return other.text === this.text }
+  constructor(readonly text: string, readonly color: string = '') { super() }
+  eq(other: OrderedMarkWidget) { return other.text === this.text && other.color === this.color }
   toDOM() {
     const span = document.createElement('span')
-    span.className = 'cm-ordered-mark'
+    span.className = 'cm-ordered-mark' + (this.color ? ` bc-${this.color}` : '')
     span.textContent = this.text
     return span
   }
@@ -616,11 +639,26 @@ function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
           return
         }
 
-        if (node.name === 'ListMark' && node.node.parent?.parent?.name === 'BulletList') {
-          decos.push(Decoration.replace({ widget: new BulletWidget() }).range(node.from, node.to))
-        } else if (node.name === 'ListMark' && node.node.parent?.parent?.name === 'OrderedList') {
-          const text = view.state.doc.sliceString(node.from, node.to)
-          decos.push(Decoration.replace({ widget: new OrderedMarkWidget(text) }).range(node.from, node.to))
+        if (node.name === 'ListMark') {
+          const kind = node.node.parent?.parent?.name
+          if (kind !== 'BulletList' && kind !== 'OrderedList') return
+          const line = view.state.doc.lineAt(node.from)
+          const tag = line.text.slice(node.to - line.from).match(/^[ \t]+<i class="bc-([a-z]+)"><\/i>/)
+          const color = tag?.[1] ?? ''
+          if (tag) {
+            // Hide the color tag unless the cursor is on this line.
+            const onLine = view.state.selection.ranges.some(r => r.from <= line.to && r.to >= line.from)
+            if (!onLine) {
+              const tagFrom = node.to + tag[0].indexOf('<')
+              decos.push(Decoration.replace({}).range(tagFrom, node.to + tag[0].length))
+            }
+          }
+          if (kind === 'BulletList') {
+            decos.push(Decoration.replace({ widget: new BulletWidget(color) }).range(node.from, node.to))
+          } else {
+            const text = view.state.doc.sliceString(node.from, node.to)
+            decos.push(Decoration.replace({ widget: new OrderedMarkWidget(text, color) }).range(node.from, node.to))
+          }
         }
       },
     })
@@ -958,6 +996,8 @@ export const highlightMarkPlugin = ViewPlugin.fromClass(
   { decorations: v => v.decorations }
 )
 
+const COLOR_TAG_RE = /(<(mark|span) class="((?:hl|tc)-[a-z]+)">)[^<\n]*(<\/\2>)/g
+
 function buildHighlightDecorations(view: EditorView): DecorationSet {
   const marks: Range<Decoration>[] = []
   const re = /==([^=\n]+)==/g
@@ -970,6 +1010,18 @@ function buildHighlightDecorations(view: EditorView): DecorationSet {
       const start = from + match.index
       const end = start + match[0].length
       marks.push(Decoration.mark({ class: 'cm-highlight-mark' }).range(start, end))
+    }
+
+    // <mark class="hl-red">…</mark> / <span class="tc-red">…</span>: tint the
+    // inner text with the same class the preview uses, dim the tags.
+    COLOR_TAG_RE.lastIndex = 0
+    while ((match = COLOR_TAG_RE.exec(text)) !== null) {
+      const start = from + match.index
+      const openEnd = start + match[1].length
+      const closeStart = start + match[0].length - match[4].length
+      if (closeStart > openEnd) marks.push(Decoration.mark({ class: match[3] }).range(openEnd, closeStart))
+      marks.push(Decoration.mark({ class: 'cm-color-tag' }).range(start, openEnd))
+      marks.push(Decoration.mark({ class: 'cm-color-tag' }).range(closeStart, start + match[0].length))
     }
   }
 
@@ -1218,6 +1270,176 @@ export const chartPreviewField = StateField.define<DecorationSet>({
   create: (state) => buildChartDecorations(state),
   update: (value, tr) => {
     if (tr.docChanged || tr.selection) return buildChartDecorations(tr.state)
+    return value
+  },
+  provide: (f) => EditorView.decorations.from(f),
+})
+
+// ─── Data Table Live Preview (```table fenced blocks) ─────────────────────────
+// Same reveal model as charts: the block renders as an interactive, editable
+// table in "Normal" mode and reverts to raw JSON when the selection touches it.
+// Edits are written straight back into the block's range.
+
+class DataTableWidget extends WidgetType {
+  private root: Root | null = null
+  private resizeObserver: ResizeObserver | null = null
+
+  constructor(readonly spec: string, readonly blockFrom: number, readonly blockTo: number) { super() }
+
+  eq(other: DataTableWidget) {
+    return other.spec === this.spec && other.blockFrom === this.blockFrom && other.blockTo === this.blockTo
+  }
+
+  toDOM(view: EditorView) {
+    const el = document.createElement('div')
+    el.className = 'cm-data-table-block'
+    // Padding (not the component's margin) so the gap counts toward the
+    // height CodeMirror measures — see ChartWidget for the full story.
+    el.style.padding = '0.5rem 0'
+    this.root = createRoot(el)
+
+    const onEditAsText = () => {
+      view.dispatch({ selection: { anchor: this.blockFrom } })
+      view.focus()
+    }
+    const onChange = (next: string) => {
+      const current = view.state.sliceDoc(this.blockFrom, this.blockTo)
+      const m = current.match(/^(\s*(?:`{3,}|~{3,}))table[^\n]*\n/)
+      const fence = m ? m[1].trim() : '```'
+      // No explicit selection: it already sits outside the block (the widget
+      // only exists then), and CodeMirror maps it through the change.
+      view.dispatch({ changes: { from: this.blockFrom, to: this.blockTo, insert: fence + 'table\n' + next + '\n' + fence } })
+    }
+    this.root.render(createElement(DataTable, { spec: this.spec, onChange, onEditAsText }))
+
+    this.resizeObserver = new ResizeObserver(() => view.requestMeasure())
+    this.resizeObserver.observe(el)
+    return el
+  }
+
+  destroy() {
+    this.resizeObserver?.disconnect()
+    this.resizeObserver = null
+    const root = this.root
+    this.root = null
+    if (root) queueMicrotask(() => root.unmount())
+  }
+
+  // The table owns its own inputs and menus; CodeMirror must not also react.
+  ignoreEvent() { return true }
+}
+
+function buildDataTableDecorations(state: EditorState): DecorationSet {
+  const doc = state.doc
+  const decos: Range<Decoration>[] = []
+
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name !== 'FencedCode') return
+
+      const firstLine = doc.lineAt(node.from)
+      const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
+      if (info !== 'table') return
+      if (overlapsSelection(state, node.from, node.to)) return
+
+      const lastLine = doc.lineAt(node.to)
+      const innerFrom = firstLine.to + 1
+      const innerTo = lastLine.number > firstLine.number ? lastLine.from - 1 : node.to
+      const spec = innerFrom < innerTo ? doc.sliceString(innerFrom, innerTo).trim() : ''
+      if (!spec) return
+
+      decos.push(
+        Decoration.replace({ widget: new DataTableWidget(spec, node.from, node.to), block: true })
+          .range(node.from, node.to),
+      )
+    },
+  })
+
+  return Decoration.set(decos, true)
+}
+
+export const dataTablePreviewField = StateField.define<DecorationSet>({
+  create: (state) => buildDataTableDecorations(state),
+  update: (value, tr) => {
+    if (tr.docChanged || tr.selection) return buildDataTableDecorations(tr.state)
+    return value
+  },
+  provide: (f) => EditorView.decorations.from(f),
+})
+
+// ─── Board / Task embeds (```board / ```task fenced blocks) ───────────────────
+// The block body is just the board or task id; the card/kanban is rendered
+// live from the store, so it always reflects the current board state.
+
+class RefEmbedWidget extends WidgetType {
+  private root: Root | null = null
+  private resizeObserver: ResizeObserver | null = null
+
+  constructor(readonly kind: 'board' | 'task', readonly id: string, readonly blockFrom: number, readonly blockTo: number) { super() }
+
+  eq(other: RefEmbedWidget) {
+    return other.kind === this.kind && other.id === this.id && other.blockFrom === this.blockFrom && other.blockTo === this.blockTo
+  }
+
+  toDOM(view: EditorView) {
+    const el = document.createElement('div')
+    el.className = 'cm-ref-embed-block'
+    el.style.padding = '0.5rem 0'
+    this.root = createRoot(el)
+    const onRemove = () => view.dispatch({ changes: { from: this.blockFrom, to: this.blockTo, insert: '' } })
+    this.root.render(
+      this.kind === 'board'
+        ? createElement(BoardEmbed, { boardId: this.id, onRemove })
+        : createElement(TaskEmbed, { taskId: this.id, onRemove }),
+    )
+    this.resizeObserver = new ResizeObserver(() => view.requestMeasure())
+    this.resizeObserver.observe(el)
+    return el
+  }
+
+  destroy() {
+    this.resizeObserver?.disconnect()
+    this.resizeObserver = null
+    const root = this.root
+    this.root = null
+    if (root) queueMicrotask(() => root.unmount())
+  }
+
+  ignoreEvent() { return true }
+}
+
+function buildRefEmbedDecorations(state: EditorState): DecorationSet {
+  const doc = state.doc
+  const decos: Range<Decoration>[] = []
+
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name !== 'FencedCode') return
+      const firstLine = doc.lineAt(node.from)
+      const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
+      if (info !== 'board' && info !== 'task') return
+      if (overlapsSelection(state, node.from, node.to)) return
+
+      const lastLine = doc.lineAt(node.to)
+      const innerFrom = firstLine.to + 1
+      const innerTo = lastLine.number > firstLine.number ? lastLine.from - 1 : node.to
+      const id = innerFrom < innerTo ? doc.sliceString(innerFrom, innerTo).trim() : ''
+      if (!id) return
+
+      decos.push(
+        Decoration.replace({ widget: new RefEmbedWidget(info, id, node.from, node.to), block: true })
+          .range(node.from, node.to),
+      )
+    },
+  })
+
+  return Decoration.set(decos, true)
+}
+
+export const refEmbedPreviewField = StateField.define<DecorationSet>({
+  create: (state) => buildRefEmbedDecorations(state),
+  update: (value, tr) => {
+    if (tr.docChanged || tr.selection) return buildRefEmbedDecorations(tr.state)
     return value
   },
   provide: (f) => EditorView.decorations.from(f),

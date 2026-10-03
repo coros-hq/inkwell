@@ -9,7 +9,13 @@ import rehypeKatex from 'rehype-katex'
 import { remarkHighlight } from '../../lib/remarkHighlight'
 import { remarkMathCodeBlocks } from '../../lib/remarkMathCodeBlocks'
 import { remarkChartCodeBlocks } from '../../lib/remarkChartCodeBlocks'
+import { remarkTableCodeBlocks } from '../../lib/remarkTableCodeBlocks'
 import { MarkdownChart } from './MarkdownChart'
+import { DataTable } from './DataTable'
+import { BoardEmbed, TaskEmbed } from './BoardEmbeds'
+import { remarkBoardCodeBlocks } from '../../lib/remarkBoardCodeBlocks'
+import { openBoard, openTask } from '../../lib/boardRefs'
+import { cn } from '../../lib/utils'
 import { useAppStore } from '../../store/useAppStore'
 import { formatFileSize } from '../../lib/attachments'
 import { navigateToNote } from '../../lib/noteReferences'
@@ -621,6 +627,46 @@ function preprocessMarkdown(md: string): string {
   )
 }
 
+const TABLE_BLOCK_RE = /^(`{3,}|~{3,})table[^\S\n]*\n[\s\S]*?\n\1[^\S\n]*$/gm
+
+/** Interactive ```table block in the preview. Edits are written back into the
+ *  note by replacing the Nth table fence, N being this table's position among
+ *  all tables in the committed DOM (same approach as the task checkboxes). */
+function PreviewDataTable({ spec, containerRef, noteId, readOnly }: {
+  spec: string
+  containerRef: React.RefObject<HTMLDivElement | null>
+  noteId?: string
+  readOnly: boolean
+}) {
+  const hostRef = useRef<HTMLDivElement>(null)
+  const { updateNote } = useAppStore()
+
+  const handleChange = useCallback((next: string) => {
+    const container = containerRef.current
+    const host = hostRef.current
+    if (!container || !host) return
+    const index = Array.from(container.querySelectorAll('[data-inkwell-table]')).indexOf(host.firstElementChild as Element)
+    if (index === -1) return
+
+    const state = useAppStore.getState()
+    const targetId = noteId ?? state.lastSelectedNoteId ?? state.selectedNoteIds[0]
+    const note = targetId ? state.notes.find(n => n.id === targetId) : undefined
+    if (!targetId || !note) return
+
+    const blocks = [...note.content.matchAll(TABLE_BLOCK_RE)]
+    if (blocks.length <= index) return
+    const m = blocks[index]
+    const replacement = `${m[1]}table\n${next}\n${m[1]}`
+    updateNote(targetId, note.content.slice(0, m.index) + replacement + note.content.slice(m.index! + m[0].length))
+  }, [containerRef, noteId, updateNote])
+
+  return (
+    <div ref={hostRef}>
+      <DataTable spec={spec} onChange={readOnly ? undefined : handleChange} />
+    </div>
+  )
+}
+
 export function RichPreview({ content, noteId, searchQuery = '', searchMatchIndex = 0, forExport = false, onScrollerReady }: RichPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -823,6 +869,17 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
           </button>
         )
       }
+      const refMatch = typeof href === 'string' ? href.match(/^(board|task):\/\/([a-zA-Z0-9_-]+)$/) : null
+      if (refMatch) {
+        return (
+          <button
+            onClick={() => (refMatch[1] === 'board' ? openBoard(refMatch[2]) : openTask(refMatch[2]))}
+            className="text-accent underline underline-offset-2 hover:opacity-80 cursor-pointer inline"
+          >
+            {children}
+          </button>
+        )
+      }
       return <a href={href} className="text-accent underline underline-offset-2 hover:opacity-80">{children}</a>
     },
     hr: () => <hr className="border-border my-6" />,
@@ -837,15 +894,22 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
     },
 
     'inkwell-chart': ({ spec }: any) => <MarkdownChart spec={spec} />,
+    'inkwell-board': ({ rid }: any) => <BoardEmbed boardId={rid} />,
+    'inkwell-task': ({ rid }: any) => <TaskEmbed taskId={rid} />,
+    'inkwell-table': ({ spec }: any) => (
+      <PreviewDataTable spec={spec} containerRef={containerRef} noteId={noteId} readOnly={forExport} />
+    ),
 
     strong: ({ children }: any) => <strong className="font-semibold text-foreground">{children}</strong>,
     em:     ({ children }: any) => <em className="italic text-foreground">{children}</em>,
-    mark:   ({ children }: any) => <mark className="bg-yellow-300/30 text-foreground rounded px-0.5">{children}</mark>,
+    mark:   ({ children, className }: any) => (
+      <mark className={cn('text-foreground rounded px-0.5', className ?? 'bg-yellow-300/30')}>{children}</mark>
+    ),
   }
 
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto px-10 pt-16 pb-24 antialiased">
-      <div ref={containerRef} className="max-w-[740px] mx-auto font-sans text-[15.5px] leading-[1.7] text-foreground">
+      <div ref={containerRef} className="inkwell-preview-root max-w-[740px] mx-auto font-sans text-[15.5px] leading-[1.7] text-foreground">
         <ExportModeContext.Provider value={forExport}>
         {segments.map((seg, i) =>
           seg.kind === 'embed' ? (
@@ -864,7 +928,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
           ) : (
             <ReactMarkdown
               key={i}
-              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkChartCodeBlocks, remarkHighlight]}
+              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkChartCodeBlocks, remarkTableCodeBlocks, remarkBoardCodeBlocks, remarkHighlight]}
               rehypePlugins={[
                 [rehypeHighlight, { ignoreMissing: true }],
                 rehypeRaw,
@@ -872,7 +936,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
               ]}
               components={mdComponents}
               urlTransform={(url) => {
-                if (url.startsWith('note://')) return url
+                if (/^(note|board|task):\/\//.test(url)) return url
                 if (/^(https?:|mailto:|#|\/)/.test(url)) return url
                 return undefined
               }}

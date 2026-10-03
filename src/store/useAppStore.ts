@@ -237,6 +237,10 @@ interface AppState {
   openChartInsertDialog: (pos: number) => void;
   openChartEditDialog: (from: number, to: number, spec: string) => void;
   closeChartInsertDialog: () => void;
+  /** Drives the board/task picker ("/board", "/task", toolbar): where to insert in the editor. */
+  boardRefRequest: { pos: number; kind: "board" | "task" } | null;
+  openBoardRefDialog: (pos: number, kind?: "board" | "task") => void;
+  closeBoardRefDialog: () => void;
   theme: "dark" | "light";
   themeName: string;
   customThemes: CustomTheme[];
@@ -722,6 +726,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   noteEditorModes: loadNoteEditorModes(),
   markdownSplitRatio: Number(localStorage.getItem("inkwell-markdown-split-ratio")) || 0.5,
   chartInsertRequest: null,
+  boardRefRequest: null,
   theme: "dark",
   themeName: "midnight",
   customThemes: loadCustomThemes(),
@@ -990,6 +995,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   openChartInsertDialog: (pos) => set({ chartInsertRequest: { mode: "insert", pos } }),
   openChartEditDialog: (from, to, spec) => set({ chartInsertRequest: { mode: "edit", from, to, spec } }),
   closeChartInsertDialog: () => set({ chartInsertRequest: null }),
+  openBoardRefDialog: (pos, kind = "board") => set({ boardRefRequest: { pos, kind } }),
+  closeBoardRefDialog: () => set({ boardRefRequest: null }),
 
   setTheme: (name: string) => {
     const custom = get().customThemes.find((t) => t.id === name);

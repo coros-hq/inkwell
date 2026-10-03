@@ -150,8 +150,8 @@
     "semantic_hash": "a237f975b1bcdf96bacd6eeedc3ff1a6"
   },
   "src/components/editor/EditorToolbar.tsx": {
-    "mtime": 1790986845.8192198,
-    "ast_hash": "f6c426348fd05cbdc100e75f13a32e29",
+    "mtime": 1790986596.7000954,
+    "ast_hash": "c8cd098e010d5045b193cef5a4244bf9",
     "semantic_hash": ""
   },
   "src/components/editor/EditorViewContext.tsx": {
@@ -165,8 +165,8 @@
     "semantic_hash": "3395185c59d4b925e2b7d609379130d3"
   },
   "src/components/editor/MarkdownEditor.tsx": {
-    "mtime": 1790986817.5708811,
-    "ast_hash": "5d17ca00c0aa5fb6378ffba0a07fe72b",
+    "mtime": 1790985617.6650841,
+    "ast_hash": "d2c5be63de229b12c8ec7f862f99ebbb",
     "semantic_hash": ""
   },
   "src/components/editor/MediaPanel.tsx": {
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "src/components/editor/RichPreview.tsx": {
-    "mtime": 1790986817.571297,
-    "ast_hash": "b01bd88ca24687df5abf26b24266c87a",
+    "mtime": 1790985641.943325,
+    "ast_hash": "f77328494bfdfc5d11f2cc603098bf61",
     "semantic_hash": ""
   },
   "src/components/editor/ShareDialog.tsx": {
@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/EditorPane.tsx": {
-    "mtime": 1790986845.819048,
-    "ast_hash": "28cf84f1135fea5efb84056a94961092",
+    "mtime": 1790345469.448287,
+    "ast_hash": "458d622181f3c42783edaad9c8b9344c",
     "semantic_hash": ""
   },
   "src/components/layout/NoteList.tsx": {
@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "src/lib/editorExtensions.ts": {
-    "mtime": 1790986817.5707269,
-    "ast_hash": "f52bce455e9205fa81c4ec5716b51244",
+    "mtime": 1790986596.700362,
+    "ast_hash": "b27752fdba0f62f979fd066b0a9a151c",
     "semantic_hash": ""
   },
   "src/lib/editorTypography.ts": {
@@ -370,8 +370,8 @@
     "semantic_hash": "912ed2887ab8f9be43f625930982407a"
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1790986817.5703762,
-    "ast_hash": "0add5f0fd4e56afb0eb261fca317752f",
+    "mtime": 1790986596.6995358,
+    "ast_hash": "c106b326c947a9b1b56c1cfadc810bf8",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -902,26 +902,6 @@
   "src/lib/remarkTableCodeBlocks.ts": {
     "mtime": 1790985580.2701104,
     "ast_hash": "9747b9e55a996953687f5a006d3e622a",
-    "semantic_hash": ""
-  },
-  "src/components/editor/BoardEmbeds.tsx": {
-    "mtime": 1790986845.7946513,
-    "ast_hash": "2f46a487b122e152a30afa4574fafcf7",
-    "semantic_hash": ""
-  },
-  "src/components/editor/BoardRefDialog.tsx": {
-    "mtime": 1790986845.7973502,
-    "ast_hash": "0cb05b97c1d186003a063aadf103ea2e",
-    "semantic_hash": ""
-  },
-  "src/lib/boardRefs.ts": {
-    "mtime": 1790986817.5754416,
-    "ast_hash": "9baa79ea8e2afb27a27dad2bbe0ec7f5",
-    "semantic_hash": ""
-  },
-  "src/lib/remarkBoardCodeBlocks.ts": {
-    "mtime": 1790986817.5710583,
-    "ast_hash": "504e50fbcd2979393990bdbb0d502d15",
     "semantic_hash": ""
   }
 }

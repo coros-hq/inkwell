@@ -112,13 +112,10 @@
   "110": "local",
   "111": "JoinVaultDialog.tsx",
   "112": "ShellScopeEntryAllowedArgs",
-  "113": "FontPicker.tsx",
-  "114": "HorizontalRuleWidget",
   "115": "vaultWatcher.ts",
   "116": "description",
-  "117": "description",
-  "118": "Identifier",
   "119": "useAppStore",
+  "124": "local",
   "125": "ShellScopeEntryAllowedArg",
   "126": "BulletWidget"
 }
