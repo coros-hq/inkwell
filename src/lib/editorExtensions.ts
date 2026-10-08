@@ -13,6 +13,7 @@ import { useAppStore } from '../store/useAppStore'
 import { MarkdownChart } from '../components/editor/MarkdownChart'
 import { DataTable } from '../components/editor/DataTable'
 import { BoardEmbed, TaskEmbed } from '../components/editor/BoardEmbeds'
+import { BrainstormEmbed } from '../components/editor/BrainstormEmbed'
 import { defaultTableSpec, tableBlock } from './dataTable'
 
 // ─── Syntax Highlight Style ──────────────────────────────────────────────────
@@ -217,6 +218,7 @@ const SLASH_COMMANDS = [
   { label: '/video', displayLabel: 'Video Embed', detail: 'YouTube / Vimeo / Loom', apply: '__VIDEO_URL__', type: 'ikvideo' },
   { label: '/board', displayLabel: 'Board', detail: 'Embed a kanban board from the Board view', apply: '__BOARD_REF__', type: 'ikboard' },
   { label: '/task', displayLabel: 'Task', detail: 'Link a task from a board', apply: '__TASK_REF__', type: 'iktask' },
+  { label: '/brainstorm', displayLabel: 'Brainstorm', detail: 'Embed one of your private brainstorm outlines', apply: '__BRAINSTORM_REF__', type: 'ikboard' },
   { label: '/chart', displayLabel: 'Chart', detail: 'Bar, line, pie & more — pick a type and fill in data', apply: '__CHART_DIALOG__' },
 ]
 
@@ -232,7 +234,7 @@ function slashCompletion(context: CompletionContext, allowChart: boolean): Compl
   if (!match) return null
 
   const from = line.from + match[1].length
-  const commands = allowChart ? SLASH_COMMANDS : SLASH_COMMANDS.filter(cmd => !['__CHART_DIALOG__', '__BOARD_REF__', '__TASK_REF__'].includes(cmd.apply))
+  const commands = allowChart ? SLASH_COMMANDS : SLASH_COMMANDS.filter(cmd => !['__CHART_DIALOG__', '__BOARD_REF__', '__TASK_REF__', '__BRAINSTORM_REF__'].includes(cmd.apply))
 
   return {
     from,
@@ -249,6 +251,11 @@ function slashCompletion(context: CompletionContext, allowChart: boolean): Compl
           // ```chart block at this position once the user confirms it.
           view.dispatch({ changes: { from: slashFrom, to: slashTo, insert: '' } })
           useAppStore.getState().openChartInsertDialog(slashFrom)
+          return
+        }
+        if (cmd.apply === '__BRAINSTORM_REF__') {
+          view.dispatch({ changes: { from: slashFrom, to: slashTo, insert: '' } })
+          useAppStore.getState().openBrainstormRefDialog(slashFrom)
           return
         }
         if (cmd.apply === '__BOARD_REF__' || cmd.apply === '__TASK_REF__') {
@@ -1375,7 +1382,7 @@ class RefEmbedWidget extends WidgetType {
   private root: Root | null = null
   private resizeObserver: ResizeObserver | null = null
 
-  constructor(readonly kind: 'board' | 'task', readonly id: string, readonly blockFrom: number, readonly blockTo: number) { super() }
+  constructor(readonly kind: 'board' | 'task' | 'brainstorm', readonly id: string, readonly blockFrom: number, readonly blockTo: number) { super() }
 
   eq(other: RefEmbedWidget) {
     return other.kind === this.kind && other.id === this.id && other.blockFrom === this.blockFrom && other.blockTo === this.blockTo
@@ -1390,7 +1397,9 @@ class RefEmbedWidget extends WidgetType {
     this.root.render(
       this.kind === 'board'
         ? createElement(BoardEmbed, { boardId: this.id, onRemove })
-        : createElement(TaskEmbed, { taskId: this.id, onRemove }),
+        : this.kind === 'brainstorm'
+          ? createElement(BrainstormEmbed, { brainstormId: this.id, onRemove })
+          : createElement(TaskEmbed, { taskId: this.id, onRemove }),
     )
     this.resizeObserver = new ResizeObserver(() => view.requestMeasure())
     this.resizeObserver.observe(el)
@@ -1417,7 +1426,7 @@ function buildRefEmbedDecorations(state: EditorState): DecorationSet {
       if (node.name !== 'FencedCode') return
       const firstLine = doc.lineAt(node.from)
       const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
-      if (info !== 'board' && info !== 'task') return
+      if (info !== 'board' && info !== 'task' && info !== 'brainstorm') return
       if (overlapsSelection(state, node.from, node.to)) return
 
       const lastLine = doc.lineAt(node.to)

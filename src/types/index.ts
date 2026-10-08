@@ -70,7 +70,7 @@ export interface Comment {
 
 /** Normal = single-pane WYSIWYG editor. Markdown = resizable raw-source + preview split. */
 export type EditorMode = 'normal' | 'markdown'
-export type ActiveView = 'notes' | 'board' | 'canvas'
+export type ActiveView = 'notes' | 'board' | 'canvas' | 'brainstorm'
 
 // ─── Board system ─────────────────────────────────────────────────────────────
 
@@ -109,4 +109,21 @@ export interface BoardTask {
   subtasks: Subtask[]
   comments: BoardComment[]
   createdAt: string  // ISO date string
+}
+
+// ─── Brainstorm (personal outliner) ───────────────────────────────────────────
+
+export interface BrainstormNode {
+  id: string
+  text: string
+  collapsed?: boolean
+  children: BrainstormNode[]
+}
+
+export interface Brainstorm {
+  id: string
+  title: string
+  createdAt: string
+  updatedAt: string
+  root: BrainstormNode[]
 }

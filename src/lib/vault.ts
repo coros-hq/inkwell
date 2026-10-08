@@ -30,7 +30,7 @@
  * Note.path   = absolute path to the .md file
  */
 
-import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, LinkedItem } from '../types'
+import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, LinkedItem, Brainstorm } from '../types'
 import { slugifyTitle } from './utils'
 import { genId } from './id'
 import { markSelfWrite } from './selfWriteRegistry'
@@ -41,6 +41,7 @@ const INKWELL_DIR = '.inkwell'
 const APP_DATA_FILE = 'app.json'
 const BOARDS_FILE = 'boards.json'
 const TEAM_FILE = 'team.json'
+const BRAINSTORMS_FILE = 'brainstorms.json'
 const CANVAS_FILE = 'canvas.json'
 const CANVAS_NOTES_FILE = 'canvas-notes.md'
 const RECENT_KEY = 'inkwell-recent-vaults'
@@ -540,6 +541,35 @@ export async function readBoardsFile(vaultPath: string): Promise<BoardsData | nu
     const filePath = `${vaultPath}/${INKWELL_DIR}/${BOARDS_FILE}`
     if (!await exists(filePath)) return null
     return JSON.parse(await readTextFile(filePath)) as BoardsData
+  } catch { return null }
+}
+
+// ── Brainstorm data (brainstorms.json) ────────────────────────────────────────
+// Personal and local only: never pushed to a team vault session.
+
+export interface BrainstormsData {
+  version: number
+  brainstorms: Brainstorm[]
+}
+
+export async function writeBrainstormsFile(vaultPath: string, data: BrainstormsData): Promise<void> {
+  if (!isTauri) return
+  try {
+    const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+    const dir = `${vaultPath}/${INKWELL_DIR}`
+    if (!await exists(dir)) await mkdir(dir, { recursive: true })
+    markSelfWrite(`${dir}/${BRAINSTORMS_FILE}`)
+    await writeTextFile(`${dir}/${BRAINSTORMS_FILE}`, JSON.stringify(data, null, 2))
+  } catch (e) { console.error('Failed to write brainstorms:', e) }
+}
+
+export async function readBrainstormsFile(vaultPath: string): Promise<BrainstormsData | null> {
+  if (!isTauri) return null
+  try {
+    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
+    const filePath = `${vaultPath}/${INKWELL_DIR}/${BRAINSTORMS_FILE}`
+    if (!await exists(filePath)) return null
+    return JSON.parse(await readTextFile(filePath)) as BrainstormsData
   } catch { return null }
 }
 

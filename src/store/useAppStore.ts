@@ -10,6 +10,8 @@ import type {
   BoardColumn,
   BoardTask,
   BoardComment,
+  Brainstorm,
+  BrainstormNode,
   LinkedItem,
   Attachment,
 } from "../types";
@@ -28,6 +30,8 @@ import {
   renameItem,
   writeNoteMeta,
   writeBoardsFile,
+  readBrainstormsFile,
+  writeBrainstormsFile,
   pickExternalMarkdownFile,
   readExternalNote,
   addExternalFileToVault,
@@ -350,6 +354,18 @@ interface AppState {
   removeNoteLink: (noteId: string, itemId: string) => void;
   addAttachment: (noteId: string, attachment: Attachment) => void;
   removeAttachment: (noteId: string, attachmentId: string) => void;
+
+  // ─── Brainstorm (personal outliner, local-only) ─────────────────────────────
+  brainstorms: Brainstorm[];
+  activeBrainstormId: string | null;
+  setActiveBrainstormId: (id: string | null) => void;
+  createBrainstorm: (title?: string) => string;
+  renameBrainstorm: (id: string, title: string) => void;
+  deleteBrainstorm: (id: string) => void;
+  setBrainstormRoot: (id: string, root: BrainstormNode[]) => void;
+  brainstormRefRequest: { pos: number } | null;
+  openBrainstormRefDialog: (pos: number) => void;
+  closeBrainstormRefDialog: () => void;
 
   // ─── Board system ───────────────────────────────────────────────────────────
   boards: Board[];
@@ -686,6 +702,21 @@ function isFolderInsideDeleted(
   return path?.includes(deletedId) ?? false;
 }
 
+// Brainstorms are personal: written to .inkwell/brainstorms.json only, never
+// pushed to a vault session. Debounced because every keystroke edits a node.
+let brainstormSaveTimer: ReturnType<typeof setTimeout> | null = null;
+function saveBrainstorms(immediate = false) {
+  if (brainstormSaveTimer) clearTimeout(brainstormSaveTimer);
+  const run = () => {
+    brainstormSaveTimer = null;
+    const { vaultPath, brainstorms } = useAppStore.getState();
+    if (!vaultPath) return;
+    writeBrainstormsFile(vaultPath, { version: 1, brainstorms }).catch(console.error);
+  };
+  if (immediate) run();
+  else brainstormSaveTimer = setTimeout(run, 400);
+}
+
 // Write boards immediately after any board mutation.
 // localStorage write is synchronous (survives Tauri WebView reloads and app restarts).
 // Disk write is async but also completes quickly for normal close/reopen.
@@ -757,6 +788,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   updateInfo: null,
   updateInstallState: "idle",
   boards: [],
+  brainstorms: [],
+  activeBrainstormId: null,
+  brainstormRefRequest: null,
   boardColumns: [],
   boardTasks: [],
   activeBoardId: null,
@@ -776,6 +810,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   conflictDiskContent: null,
 
   openVault: (path, data) => {
+    // Flush pending brainstorm edits to the vault we're leaving, otherwise the
+    // debounced write would land in the new vault with its (empty) list.
+    if (brainstormSaveTimer) saveBrainstorms(true);
+
     // Flush boards to boards.json before switching vaults
     const current = get();
     if (current.vaultPath && current.vaultPath !== path) {
@@ -839,6 +877,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       boardColumns,
       boardTasks,
       activeBoardId: boards[0]?.id ?? null,
+      brainstorms: [],
+      activeBrainstormId: null,
       selectedNoteIds: notes.length > 0 ? [notes[0].id] : [],
       lastSelectedNoteId: notes[0]?.id ?? null,
       openTabs: notes.length > 0 ? [notes[0].id] : [],
@@ -857,6 +897,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     // on the correct path rather than the stale env-var value.
     writeActiveVaultFile(path);
 
+    // Brainstorms live in their own file (local-only), loaded separately.
+    readBrainstormsFile(path).then((data) => {
+      if (get().vaultPath !== path) return;
+      const brainstorms = data?.brainstorms ?? [];
+      set({ brainstorms, activeBrainstormId: brainstorms[0]?.id ?? null });
+    }).catch(console.error);
+
     // Git sync settings live in this vault's own app.json, not the VaultData
     // shape passed in above — fetch them separately once the vault is open.
     readAppData(path).then((appData) => {
@@ -868,8 +915,11 @@ export const useAppStore = create<AppState>((set, get) => ({
     }).catch(console.error);
   },
 
-  closeVault: () =>
+  closeVault: () => {
+    if (brainstormSaveTimer) saveBrainstorms(true);
     set({
+      brainstorms: [],
+      activeBrainstormId: null,
       vaultPath: null,
       folders: [],
       notes: [],
@@ -878,7 +928,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       lastSelectedNoteId: null,
       selectedFolderId: null,
       openTabs: [],
-    }),
+    });
+  },
 
   openPrompt: (config) => set({ prompt: config }),
   closePrompt: () => set({ prompt: null }),
@@ -1717,6 +1768,51 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.setItem("inkwell-note-sidebar-mode", mode);
     set({ noteSidebarMode: mode });
   },
+
+  setActiveBrainstormId: (id) => set({ activeBrainstormId: id }),
+  createBrainstorm: (title = "Untitled brainstorm") => {
+    const id = genId("brainstorm");
+    const now = new Date().toISOString();
+    const first: BrainstormNode = { id: genId("bn"), text: "", children: [] };
+    set((s) => ({
+      brainstorms: [
+        ...s.brainstorms,
+        { id, title, createdAt: now, updatedAt: now, root: [first] },
+      ],
+      activeBrainstormId: id,
+    }));
+    saveBrainstorms(true);
+    return id;
+  },
+  renameBrainstorm: (id, title) => {
+    set((s) => ({
+      brainstorms: s.brainstorms.map((b) =>
+        b.id === id ? { ...b, title, updatedAt: new Date().toISOString() } : b,
+      ),
+    }));
+    saveBrainstorms();
+  },
+  deleteBrainstorm: (id) => {
+    set((s) => {
+      const remaining = s.brainstorms.filter((b) => b.id !== id);
+      return {
+        brainstorms: remaining,
+        activeBrainstormId:
+          s.activeBrainstormId === id ? (remaining[0]?.id ?? null) : s.activeBrainstormId,
+      };
+    });
+    saveBrainstorms(true);
+  },
+  setBrainstormRoot: (id, root) => {
+    set((s) => ({
+      brainstorms: s.brainstorms.map((b) =>
+        b.id === id ? { ...b, root, updatedAt: new Date().toISOString() } : b,
+      ),
+    }));
+    saveBrainstorms();
+  },
+  openBrainstormRefDialog: (pos) => set({ brainstormRefRequest: { pos } }),
+  closeBrainstormRefDialog: () => set({ brainstormRefRequest: null }),
 
   setActiveView: (view) => set({ activeView: view }),
 

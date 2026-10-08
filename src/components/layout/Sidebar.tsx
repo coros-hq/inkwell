@@ -14,6 +14,7 @@ import {
   ArrowUpCircle,
   ArrowRight,
   MoreHorizontal,
+  Lightbulb,
 } from "lucide-react";
 import { SettingsDialog } from '../settings/SettingsDialog'
 import {
@@ -1187,6 +1188,33 @@ export function Sidebar() {
                 )}
               >
                 Board
+              </span>
+            </div>
+
+            <div
+              className={cn(
+                treeRowClass,
+                "px-2 cursor-pointer hover:bg-surface",
+                activeView === "brainstorm" && "bg-active",
+              )}
+              onClick={() => setActiveView("brainstorm")}
+            >
+              <Lightbulb
+                className={cn(
+                  "w-3.5 h-3.5",
+                  activeView === "brainstorm"
+                    ? "text-accent"
+                    : "text-muted-foreground",
+                )}
+              />
+              <span
+                className={cn(
+                  activeView === "brainstorm"
+                    ? "text-accent font-medium"
+                    : "text-foreground",
+                )}
+              >
+                Brainstorm
               </span>
             </div>
 

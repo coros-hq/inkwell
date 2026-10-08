@@ -1828,7 +1828,7 @@
       "source_location": "L48",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_identifier_description",
-      "community": 21,
+      "community": 118,
       "norm_label": "description"
     },
     {
@@ -1918,7 +1918,7 @@
       "source_location": "L67",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_properties_local",
-      "community": 118,
+      "community": 21,
       "norm_label": "local"
     },
     {
@@ -1928,7 +1928,7 @@
       "source_location": "L68",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_local_description",
-      "community": 118,
+      "community": 21,
       "norm_label": "description"
     },
     {
@@ -1938,7 +1938,7 @@
       "source_location": "L69",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_local_default",
-      "community": 118,
+      "community": 21,
       "norm_label": "default"
     },
     {
@@ -1948,7 +1948,7 @@
       "source_location": "L70",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_local_type",
-      "community": 118,
+      "community": 21,
       "norm_label": "type"
     },
     {
@@ -2268,7 +2268,7 @@
       "source_location": "L2378",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_identifier",
-      "community": 17,
+      "community": 118,
       "norm_label": "identifier"
     },
     {
@@ -2278,7 +2278,7 @@
       "source_location": "L2380",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_identifier_oneof",
-      "community": 17,
+      "community": 118,
       "norm_label": "oneof"
     },
     {
@@ -2408,7 +2408,7 @@
       "source_location": "L6646",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_definitions_shellscopeentryallowedarg",
-      "community": 120,
+      "community": 17,
       "norm_label": "shellscopeentryallowedarg"
     },
     {
@@ -2418,7 +2418,7 @@
       "source_location": "L6647",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedarg_description",
-      "community": 120,
+      "community": 17,
       "norm_label": "description"
     },
     {
@@ -2428,7 +2428,7 @@
       "source_location": "L6648",
       "_origin": "ast",
       "id": "src_tauri_gen_schemas_macos_schema_shellscopeentryallowedarg_anyof",
-      "community": 120,
+      "community": 17,
       "norm_label": "anyof"
     },
     {
@@ -3855,7 +3855,7 @@
       "label": "addChild()",
       "file_type": "code",
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L389",
+      "source_location": "L320",
       "_origin": "ast",
       "id": "src_components_brainstorm_brainstormview_addchild",
       "community": 56,
@@ -3865,7 +3865,7 @@
       "label": "RowProps",
       "file_type": "code",
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L397",
+      "source_location": "L328",
       "_origin": "ast",
       "id": "src_components_brainstorm_brainstormview_rowprops",
       "community": 56,
@@ -3875,7 +3875,7 @@
       "label": "OutlineRow()",
       "file_type": "code",
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L407",
+      "source_location": "L338",
       "_origin": "ast",
       "id": "src_components_brainstorm_brainstormview_outlinerow",
       "community": 56,
@@ -21227,7 +21227,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L389",
+      "source_location": "L320",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview",
       "target": "src_components_brainstorm_brainstormview_addchild",
@@ -21277,7 +21277,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L407",
+      "source_location": "L338",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview",
       "target": "src_components_brainstorm_brainstormview_outlinerow",
@@ -21297,7 +21297,7 @@
       "relation": "contains",
       "confidence": "EXTRACTED",
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L397",
+      "source_location": "L328",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview",
       "target": "src_components_brainstorm_brainstormview_rowprops",
@@ -21639,7 +21639,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L232",
+      "source_location": "L181",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_addafter"
@@ -21661,7 +21661,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L250",
+      "source_location": "L199",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_flattenvisible"
@@ -21672,7 +21672,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L244",
+      "source_location": "L193",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_indent"
@@ -21683,7 +21683,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L260",
+      "source_location": "L209",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_move"
@@ -21694,7 +21694,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L288",
+      "source_location": "L237",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_moverelative"
@@ -21716,7 +21716,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L242",
+      "source_location": "L191",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_outdent"
@@ -21727,7 +21727,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L241",
+      "source_location": "L190",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_parentidof"
@@ -21749,7 +21749,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L254",
+      "source_location": "L203",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_removenode"
@@ -21760,7 +21760,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L231",
+      "source_location": "L180",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_settext"
@@ -21771,7 +21771,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L266",
+      "source_location": "L215",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_brainstorm_togglecollapsed"
@@ -21782,7 +21782,7 @@
       "confidence": "INFERRED",
       "confidence_score": 0.8,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L234",
+      "source_location": "L183",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_datatable_newid"
@@ -21793,7 +21793,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L323",
+      "source_location": "L254",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outline",
       "target": "src_lib_utils_cn"
@@ -21826,7 +21826,7 @@
       "confidence": "EXTRACTED",
       "confidence_score": 1.0,
       "source_file": "src/components/brainstorm/BrainstormView.tsx",
-      "source_location": "L425",
+      "source_location": "L356",
       "weight": 1.0,
       "source": "src_components_brainstorm_brainstormview_outlinerow",
       "target": "src_lib_utils_cn"

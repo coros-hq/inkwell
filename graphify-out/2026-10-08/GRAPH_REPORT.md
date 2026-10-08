@@ -1,11 +1,11 @@
 # Graph Report - inkwell  (2026-10-08)
 
 ## Corpus Check
-- 132 files · ~224,868 words
+- 132 files · ~224,548 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1479 nodes · 3275 edges · 123 communities (79 shown, 44 thin omitted)
+- 1479 nodes · 3275 edges · 122 communities (78 shown, 44 thin omitted)
 - Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 83 edges (avg confidence: 0.66)
 - Token cost: 0 input · 0 output
 
@@ -131,7 +131,6 @@
 - [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
 - [[_COMMUNITY_Identifier|Identifier]]
 - [[_COMMUNITY_useAppStore|useAppStore]]
-- [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
 - [[_COMMUNITY_BulletWidget|BulletWidget]]
 - [[_COMMUNITY_description|description]]
 
@@ -165,7 +164,7 @@
 ## Hyperedges (group relationships)
 - **Excalidraw Iframe Bridge Data Flow** — public_excalidraw_frame_html, public_excalidraw_frame_html_postmessage_protocol, public_excalidraw_frame_html_schedulechange, canvas_feature_design_data_flow, canvas_feature_design_storage_model [INFERRED 0.85]
 
-## Communities (123 total, 44 thin omitted)
+## Communities (122 total, 44 thin omitted)
 
 ### Community 0 - "App Shell & Note Editing"
 Cohesion: 0.27
@@ -236,8 +235,8 @@ Cohesion: 0.12
 Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArgs, Target (+8 more)
 
 ### Community 17 - "Tauri macOS Capability Schema"
-Cohesion: 0.13
-Nodes (15): anyOf, description, definitions, Application, Identifier, Number, PermissionEntry, Target (+7 more)
+Cohesion: 0.12
+Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArg, Target (+8 more)
 
 ### Community 18 - "Project README & Build Config"
 Cohesion: 0.33
@@ -252,8 +251,8 @@ Cohesion: 0.08
 Nodes (31): activeLineSet(), buildChartDecorations(), buildDataTableDecorations(), buildFileEmbedDecorations(), buildLiveMarkdownDecorations(), buildMathDecorations(), buildRefEmbedDecorations(), buildTableDecorations() (+23 more)
 
 ### Community 21 - "macOS Schema Property Defs"
-Cohesion: 0.18
-Nodes (11): properties, default, description, type, description, type, description, identifier (+3 more)
+Cohesion: 0.14
+Nodes (14): properties, default, description, type, type, default, description, type (+6 more)
 
 ### Community 23 - "Tauri Desktop Schema Properties"
 Cohesion: 0.15
@@ -452,16 +451,12 @@ Cohesion: 0.67
 Nodes (3): ShellScopeEntryAllowedArg, anyOf, description
 
 ### Community 118 - "Identifier"
-Cohesion: 0.50
-Nodes (4): default, description, type, local
+Cohesion: 0.67
+Nodes (3): Identifier, description, oneOf
 
 ### Community 119 - "useAppStore"
 Cohesion: 0.13
 Nodes (20): MarkdownEditor(), MarkdownEditorProps, MarkdownField(), MarkdownFieldProps, makeAttachmentMarkdown(), chartPreviewField, codeHighlighting, createFileEmbedPlugin() (+12 more)
-
-### Community 120 - "ShellScopeEntryAllowedArg"
-Cohesion: 0.67
-Nodes (3): ShellScopeEntryAllowedArg, anyOf, description
 
 ### Community 135 - "description"
 Cohesion: 0.50

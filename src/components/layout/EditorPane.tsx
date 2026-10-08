@@ -26,6 +26,7 @@ import { SplitView } from "../editor/SplitView";
 import { EditorToolbar } from "../editor/EditorToolbar";
 import { ChartInsertDialog } from "../editor/ChartInsertDialog";
 import { BoardRefDialog } from "../editor/BoardRefDialog";
+import { BrainstormRefDialog } from "../editor/BrainstormRefDialog";
 import { NoteSearchBar } from "../editor/NoteSearchBar";
 import { LinksPanel } from "../editor/LinksPanel";
 import { MediaPanel } from "../editor/MediaPanel";
@@ -472,6 +473,7 @@ export function EditorPane() {
                 route openChartInsertDialog()'s request regardless of which pane it fired from. */}
             <ChartInsertDialog />
             <BoardRefDialog />
+            <BrainstormRefDialog />
           </div>
         </EditorViewProvider>
       </div>

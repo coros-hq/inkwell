@@ -13,6 +13,7 @@ import { remarkTableCodeBlocks } from '../../lib/remarkTableCodeBlocks'
 import { MarkdownChart } from './MarkdownChart'
 import { DataTable } from './DataTable'
 import { BoardEmbed, TaskEmbed } from './BoardEmbeds'
+import { BrainstormEmbed } from './BrainstormEmbed'
 import { remarkBoardCodeBlocks } from '../../lib/remarkBoardCodeBlocks'
 import { openBoard, openTask } from '../../lib/boardRefs'
 import { cn } from '../../lib/utils'
@@ -896,6 +897,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
     'inkwell-chart': ({ spec }: any) => <MarkdownChart spec={spec} />,
     'inkwell-board': ({ rid }: any) => <BoardEmbed boardId={rid} />,
     'inkwell-task': ({ rid }: any) => <TaskEmbed taskId={rid} />,
+    'inkwell-brainstorm': ({ rid }: any) => <BrainstormEmbed brainstormId={rid} />,
     'inkwell-table': ({ spec }: any) => (
       <PreviewDataTable spec={spec} containerRef={containerRef} noteId={noteId} readOnly={forExport} />
     ),

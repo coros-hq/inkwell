@@ -6,6 +6,7 @@ import { NoteList } from './NoteList'
 import { EditorPane } from './EditorPane'
 import { BoardView } from '../board/BoardView'
 import { CanvasView } from '../canvas/CanvasView'
+import { BrainstormView } from '../brainstorm/BrainstormView'
 import { TaskDrawer } from '../board/TaskDrawer'
 import { SearchOverlay } from '../shared/SearchOverlay'
 import { NamePromptDialog } from '../shared/NamePromptDialog'
@@ -288,6 +289,8 @@ export function AppShell() {
       {activeView === 'board' && <BoardView />}
 
       {activeView === 'canvas' && <CanvasView />}
+
+      {activeView === 'brainstorm' && <BrainstormView />}
 
       <TaskDrawer />
 
