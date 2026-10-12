@@ -641,6 +641,18 @@ function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
           decorateBlockLines(view, decos, node.from, node.to, 'cm-line-blockquote')
         }
 
+        // `- [ ]` / `- [x]` task items render as a clickable checkbox, even on
+        // the active line (the widget's mousedown doesn't move the caret).
+        if (node.name === 'TaskMarker') {
+          const checked = /x/i.test(view.state.sliceDoc(node.from, node.to))
+          decos.push(Decoration.replace({ widget: new CheckboxWidget(checked, node.from, node.to) }).range(node.from, node.to))
+          const lineEnd = view.state.doc.lineAt(node.to).to
+          if (checked && lineEnd > node.to) {
+            decos.push(Decoration.mark({ class: 'cm-task-done' }).range(node.to, lineEnd))
+          }
+          return
+        }
+
         const lineNo = view.state.doc.lineAt(node.from).number
         if (activeLines.has(lineNo)) return
 
@@ -693,7 +705,11 @@ function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
               decos.push(Decoration.replace({}).range(tagFrom, node.to + tag[0].length))
             }
           }
-          if (kind === 'BulletList') {
+          const isTask = /^[ \t]+\[[ xX]\]/.test(line.text.slice(node.to - line.from))
+          if (isTask) {
+            // The checkbox stands in for the bullet.
+            decos.push(Decoration.replace({}).range(node.from, node.to))
+          } else if (kind === 'BulletList') {
             decos.push(Decoration.replace({ widget: new BulletWidget(color) }).range(node.from, node.to))
           } else {
             const text = view.state.doc.sliceString(node.from, node.to)

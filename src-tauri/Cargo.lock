@@ -1903,7 +1903,7 @@ dependencies = [
 
 [[package]]
 name = "inkwell"
-version = "1.0.3"
+version = "1.0.4"
 dependencies = [
  "fontdb",
  "serde",

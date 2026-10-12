@@ -1,6 +1,5 @@
 import {
   Pin,
-  MoreHorizontal,
   PenLine,
   Trash2,
   PanelLeftOpen,
@@ -426,10 +425,6 @@ export function EditorPane() {
               title="Sync with GitHub"
             >
               <GitBranch className="w-3.5 h-3.5" />
-            </button>
-
-            <button className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors">
-              <MoreHorizontal className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

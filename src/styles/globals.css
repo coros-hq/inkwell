@@ -761,3 +761,8 @@ li:has(> i.bc-purple)::marker { color: #8e4ec6; }
 .cm-bullet-dot.bc-purple, .cm-ordered-mark.bc-purple { color: #8e4ec6; }
 li:has(> i.bc-pink)::marker { color: #d6409f; }
 .cm-bullet-dot.bc-pink, .cm-ordered-mark.bc-pink { color: #d6409f; }
+
+.cm-task-done {
+  text-decoration: line-through;
+  color: hsl(var(--muted-foreground));
+}
