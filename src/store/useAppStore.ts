@@ -254,11 +254,14 @@ interface AppState {
   editorFontSize: string;
   editorFontFamily: string;
   editorLineHeight: string;
+  /** Max width of the note column in px, or "none" for full width. */
+  editorWidth: string;
   setEditorSettings: (
     settings: Partial<{
       editorFontSize: string;
       editorFontFamily: string;
       editorLineHeight: string;
+      editorWidth: string;
     }>,
   ) => void;
   sidebarGlass: boolean;
@@ -766,6 +769,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.getItem("inkwell-editor-fontFamily") ??
     "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   editorLineHeight: localStorage.getItem("inkwell-editor-lineHeight") ?? "1.7",
+  editorWidth: localStorage.getItem("inkwell-editor-width") ?? "740px",
   sidebarGlass: localStorage.getItem("inkwell-sidebar-glass") === "true",
   bodyGlass: localStorage.getItem("inkwell-body-glass") === "true",
   glassOpacity: Number(localStorage.getItem("inkwell-glass-opacity")) || 50,
@@ -1133,6 +1137,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         "inkwell-editor-lineHeight",
         settings.editorLineHeight,
       );
+    if (settings.editorWidth)
+      localStorage.setItem("inkwell-editor-width", settings.editorWidth);
     set(settings);
   },
 

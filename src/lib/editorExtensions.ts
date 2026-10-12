@@ -557,6 +557,37 @@ class HorizontalRuleWidget extends WidgetType {
   ignoreEvent() { return false }
 }
 
+// "Copy" button pinned to the top-right of a fenced code block. Reads the code
+// from the document at click time (fence lines excluded) so it never goes stale.
+class CodeCopyWidget extends WidgetType {
+  constructor(readonly from: number, readonly to: number) { super() }
+  eq(other: CodeCopyWidget) { return other.from === this.from && other.to === this.to }
+  toDOM(view: EditorView) {
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'cm-code-copy'
+    btn.textContent = 'Copy'
+    btn.addEventListener('mousedown', (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      const doc = view.state.doc
+      const first = doc.lineAt(this.from).number
+      const last = doc.lineAt(Math.min(this.to, doc.length)).number
+      const lines: string[] = []
+      for (let l = first + 1; l <= last; l++) {
+        const text = doc.line(l).text
+        if (l === last && /^\s*(`{3,}|~{3,})\s*$/.test(text)) break
+        lines.push(text)
+      }
+      navigator.clipboard.writeText(lines.join('\n'))
+      btn.textContent = 'Copied!'
+      setTimeout(() => { btn.textContent = 'Copy' }, 2000)
+    })
+    return btn
+  }
+  ignoreEvent() { return true }
+}
+
 function activeLineSet(view: EditorView): Set<number> {
   const lines = new Set<number>()
   for (const range of view.state.selection.ranges) {
@@ -602,6 +633,8 @@ function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
         // block or quote shouldn't lose its box just because you're typing in it.
         if (node.name === 'FencedCode') {
           decorateBlockLines(view, decos, node.from, node.to, 'cm-line-codeblock', 'cm-line-codeblock-first', 'cm-line-codeblock-last')
+          const firstLine = view.state.doc.lineAt(node.from)
+          decos.push(Decoration.widget({ widget: new CodeCopyWidget(node.from, node.to), side: 1 }).range(firstLine.to))
           return
         }
         if (node.name === 'Blockquote') {

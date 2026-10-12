@@ -47,6 +47,13 @@ const FONT_SIZE_OPTIONS = [
   { label: 'Large', value: '19px' },
 ]
 
+const EDITOR_WIDTH_OPTIONS = [
+  { label: 'Narrow', value: '600px' },
+  { label: 'Default', value: '740px' },
+  { label: 'Wide', value: '960px' },
+  { label: 'Full', value: 'none' },
+]
+
 const LINE_HEIGHT_OPTIONS = [
   { label: 'Compact', value: '1.4' },
   { label: 'Default', value: '1.7' },
@@ -85,7 +92,7 @@ export function SettingsDialog() {
   const {
     theme, toggleTheme, themeName, setTheme,
     customThemes, saveCustomTheme, deleteCustomTheme,
-    editorFontSize, editorFontFamily, editorLineHeight,
+    editorFontSize, editorFontFamily, editorLineHeight, editorWidth,
     setEditorSettings,
     vimModeEnabled, setVimModeEnabled,
     defaultEditorMode, setDefaultEditorMode,
@@ -388,6 +395,25 @@ export function SettingsDialog() {
                           className={cn(
                             'px-2.5 py-1 rounded-md text-xs border transition-colors',
                             editorLineHeight === o.value
+                              ? 'bg-accent text-accent-foreground border-accent'
+                              : 'border-border text-muted-foreground hover:text-foreground hover:bg-surface',
+                          )}
+                        >
+                          {o.label}
+                        </button>
+                      ))}
+                    </div>
+                  </SettingRow>
+
+                  <SettingRow label="Editor width" description="How wide the note column is — the space on either side of the text">
+                    <div className="flex items-center gap-1">
+                      {EDITOR_WIDTH_OPTIONS.map(o => (
+                        <button
+                          key={o.value}
+                          onClick={() => setEditorSettings({ editorWidth: o.value })}
+                          className={cn(
+                            'px-2.5 py-1 rounded-md text-xs border transition-colors',
+                            editorWidth === o.value
                               ? 'bg-accent text-accent-foreground border-accent'
                               : 'border-border text-muted-foreground hover:text-foreground hover:bg-surface',
                           )}

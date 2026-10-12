@@ -205,8 +205,20 @@ pub fn run() {
             // tray "Quit" item still fully exit via app.exit().
             if window.label() == MAIN_LABEL {
                 if let WindowEvent::CloseRequested { api, .. } = event {
-                    let _ = window.hide();
                     api.prevent_close();
+                    // Hiding a macOS fullscreen window leaves its empty
+                    // fullscreen Space behind (black screen). Leave fullscreen
+                    // first and hide once the exit animation has finished.
+                    if window.is_fullscreen().unwrap_or(false) {
+                        let _ = window.set_fullscreen(false);
+                        let win = window.clone();
+                        std::thread::spawn(move || {
+                            std::thread::sleep(std::time::Duration::from_millis(800));
+                            let _ = win.hide();
+                        });
+                    } else {
+                        let _ = window.hide();
+                    }
                 }
             }
         })

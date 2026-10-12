@@ -672,7 +672,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
   const containerRef = useRef<HTMLDivElement>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
   const pendingScrollRef = useRef<number | null>(null)
-  const { updateNote, vaultPath, notes } = useAppStore()
+  const { updateNote, vaultPath, notes, editorWidth } = useAppStore()
   const searchRoot = notes.find(n => n.id === noteId)?.searchRoot
 
   // Restore scroll position synchronously before the browser repaints,
@@ -911,7 +911,8 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
 
   return (
     <div ref={scrollRef} className="h-full overflow-y-auto px-10 pt-16 pb-24 antialiased">
-      <div ref={containerRef} className="inkwell-preview-root max-w-[740px] mx-auto font-sans text-[15.5px] leading-[1.7] text-foreground">
+      <div ref={containerRef} style={forExport ? undefined : { maxWidth: editorWidth }}
+        className={cn('inkwell-preview-root mx-auto font-sans text-[15.5px] leading-[1.7] text-foreground', forExport && 'max-w-[740px]')}>
         <ExportModeContext.Provider value={forExport}>
         {segments.map((seg, i) =>
           seg.kind === 'embed' ? (

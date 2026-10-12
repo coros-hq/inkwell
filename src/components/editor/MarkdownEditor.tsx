@@ -33,7 +33,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useEditorViewRef()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { updateNote, setSaveStatus, theme, vaultPath, editorFontSize, editorFontFamily, editorLineHeight, removeAttachment, addAttachment, bodyGlass, glassOpacity, vimModeEnabled, sharedVault } = useAppStore()
+  const { updateNote, setSaveStatus, theme, vaultPath, editorFontSize, editorFontFamily, editorLineHeight, editorWidth, removeAttachment, addAttachment, bodyGlass, glassOpacity, vimModeEnabled, sharedVault } = useAppStore()
 
   // Shared vault: bind the editor to the note's live Y.Text so concurrent
   // edits merge character-by-character and remote cursors show. Local vaults
@@ -90,7 +90,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
       },
       '.cm-content': {
         padding: '64px 40px 96px',
-        maxWidth: '740px',
+        maxWidth: editorWidth,
         margin: '0 auto',
         caretColor: 'hsl(var(--accent))',
         ...editorFontStyles,
@@ -344,10 +344,16 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
           // interfere with editing the link text or the surrounding line.
           mousedown: (event, view) => {
             if (event.button !== 0 || event.shiftKey || event.altKey) return false
-            if (!(event.metaKey || event.ctrlKey)) return false
+            // In Normal (liveConceal) mode the reference renders as a link, so a
+            // plain click opens it; the raw-source pane still needs Cmd/Ctrl.
+            if (!liveConceal && !(event.metaKey || event.ctrlKey)) return false
             const pos = view.posAtCoords({ x: event.clientX, y: event.clientY })
             if (pos == null) return false
             const line = view.state.doc.lineAt(pos)
+            // Cursor already on this line → the link is shown raw and the user
+            // is editing it, so a plain click just places the caret.
+            if (liveConceal && !(event.metaKey || event.ctrlKey) &&
+                view.state.selection.ranges.some(r => view.state.doc.lineAt(r.head).number === line.number)) return false
             const offsetInLine = pos - line.from
             const re = new RegExp(NOTE_REF_RE.source, 'g')
             let match: RegExpExecArray | null
@@ -408,7 +414,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
       viewRef.current = null
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [noteId, theme, editorFontSize, editorFontFamily, editorLineHeight, bodyGlass, glassOpacity, vimModeEnabled, liveConceal, binding])
+  }, [noteId, theme, editorFontSize, editorFontFamily, editorLineHeight, editorWidth, bodyGlass, glassOpacity, vimModeEnabled, liveConceal, binding])
 
   useEffect(() => {
     const view = viewRef.current

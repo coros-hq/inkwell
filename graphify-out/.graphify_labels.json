@@ -120,6 +120,13 @@
   "118": "Identifier",
   "119": "useAppStore",
   "120": "ShellScopeEntryAllowedArg",
+  "121": "shortcuts.ts",
+  "122": "getSession",
+  "123": "selfWriteRegistry.ts",
+  "124": "CodeCopyWidget",
+  "125": "DataTableWidget",
   "126": "BulletWidget",
-  "135": "description"
+  "127": "local",
+  "128": "description",
+  "129": "ShellScopeEntryAllowedArgs"
 }

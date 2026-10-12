@@ -145,9 +145,18 @@ export function AppShell() {
       if (cancelled) h.stop()
       else handle = h
     })
+    // Fallback for when the native watcher misses events (e.g. a file dragged
+    // in from Finder): re-scan on window focus. Empty adopt set keeps every
+    // in-memory note body, so only added/removed files change.
+    const onFocus = () => {
+      if (useAppStore.getState().vaultPath !== vaultPath) return
+      useAppStore.getState().refreshVaultFromDisk({ adoptContentFor: new Set() }).catch(console.error)
+    }
+    window.addEventListener('focus', onFocus)
     return () => {
       cancelled = true
       handle?.stop()
+      window.removeEventListener('focus', onFocus)
     }
   }, [vaultPath])
 

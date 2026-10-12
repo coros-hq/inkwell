@@ -527,6 +527,34 @@ html[data-theme="onyx"] {
   padding-right: 14px !important;
 }
 
+.cm-line.cm-line-codeblock {
+  position: relative;
+}
+
+.cm-code-copy {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  font-family: inherit;
+  font-size: 11px;
+  padding: 1px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: hsl(var(--surface));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+}
+
+.cm-line.cm-line-codeblock:hover .cm-code-copy {
+  opacity: 1;
+}
+
+.cm-code-copy:hover {
+  color: hsl(var(--foreground));
+}
+
 .cm-line.cm-line-codeblock-first {
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
