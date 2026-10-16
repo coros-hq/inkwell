@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react'
-import { Plus, ChevronDown, Trash2, LayoutGrid } from 'lucide-react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Plus, Trash2, LayoutGrid } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -91,7 +91,6 @@ export function BoardView() {
   const [activeDrag, setActiveDrag] = useState<ActiveDrag | null>(null)
   const [dropIndicator, setDropIndicator] = useState<DropIndicator | null>(null)
   const dropIndicatorRef = useRef<DropIndicator | null>(null)
-  const [boardPickerOpen, setBoardPickerOpen] = useState(false)
   const [addingColumn, setAddingColumn] = useState(false)
   const [newColName, setNewColName] = useState('')
 
@@ -106,6 +105,19 @@ export function BoardView() {
     dropIndicatorRef.current = next
     setDropIndicator(next)
   }, [])
+
+  // ⌘⌥1–9 jumps to the Nth board
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || !e.altKey) return
+      const n = Number(e.code.replace('Digit', ''))
+      if (!(n >= 1 && n <= 9)) return
+      const target = useAppStore.getState().boards[n - 1]
+      if (target) { e.preventDefault(); setActiveBoardId(target.id) }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [setActiveBoardId])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -291,50 +303,38 @@ export function BoardView() {
           </button>
         )}
 
-        {/* Board picker */}
-        <div className="relative">
+        {/* Board tabs — every board is one click away */}
+        <div className="flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar" role="tablist" aria-label="Boards">
+          {boards.map((b, i) => {
+            const active = b.id === activeBoardId
+            return (
+              <button
+                key={b.id}
+                role="tab"
+                aria-selected={active}
+                onClick={() => setActiveBoardId(b.id)}
+                title={i < 9 ? `${b.name} (⌘⌥${i + 1})` : b.name}
+                className={cn(
+                  'shrink-0 max-w-[180px] truncate px-2.5 py-1 rounded-md text-[13px] transition-colors',
+                  active
+                    ? 'bg-accent/10 text-accent font-semibold'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-surface',
+                )}
+              >
+                {b.name}
+              </button>
+            )
+          })}
           <button
-            onClick={() => setBoardPickerOpen(v => !v)}
-            className="flex items-center gap-1.5 text-sm font-semibold text-foreground hover:text-foreground/80 transition-colors"
+            onClick={handleCreateBoard}
+            className="shrink-0 w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+            title="New board"
           >
-            {board?.name ?? 'Board'}
-            <ChevronDown className="w-3.5 h-3.5 text-muted-foreground" />
+            <Plus className="w-3.5 h-3.5" />
           </button>
-
-          {boardPickerOpen && (
-            <>
-              <div className="fixed inset-0 z-10" onClick={() => setBoardPickerOpen(false)} />
-              <div className="absolute top-full left-0 mt-1 z-20 bg-panel border border-border rounded-lg shadow-xl py-1 min-w-[180px]">
-                {boards.map(b => (
-                  <button
-                    key={b.id}
-                    onClick={() => { setActiveBoardId(b.id); setBoardPickerOpen(false) }}
-                    className={cn(
-                      'w-full text-left px-3 py-1.5 text-sm transition-colors',
-                      b.id === activeBoardId
-                        ? 'text-accent font-medium bg-active'
-                        : 'text-foreground hover:bg-surface'
-                    )}
-                  >
-                    {b.name}
-                  </button>
-                ))}
-                <div className="border-t border-border mt-1 pt-1">
-                  <button
-                    onClick={() => { setBoardPickerOpen(false); handleCreateBoard() }}
-                    className="w-full text-left px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:bg-surface transition-colors flex items-center gap-1.5"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    New board
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
         </div>
 
-        <span className="text-xs bg-accent/10 text-accent font-medium px-2 py-0.5 rounded-full">Board</span>
-        <span className="text-xs text-muted-foreground">{totalTasks} {totalTasks === 1 ? 'task' : 'tasks'}</span>
+        <span className="text-xs text-muted-foreground shrink-0">{totalTasks} {totalTasks === 1 ? 'task' : 'tasks'}</span>
 
         <div className="flex-1" />
 
@@ -419,12 +419,12 @@ export function BoardView() {
         {/* Drag overlay */}
         <DragOverlay dropAnimation={{ duration: 120, easing: 'ease-out' }}>
           {draggingTask && (
-            <div className="w-[260px] opacity-95 rotate-1 shadow-2xl shadow-black/40">
+            <div className="w-[260px] opacity-95 border border-accent/40 rounded-lg">
               <TaskCard task={draggingTask} isOverlay />
             </div>
           )}
           {draggingColumn && (
-            <div className="w-[260px] opacity-90 rotate-1 shadow-2xl shadow-black/60 bg-panel border-2 border-accent/40 rounded-xl p-3 ring-1 ring-accent/20">
+            <div className="w-[260px] opacity-90 bg-panel border-2 border-accent/40 rounded-xl p-3 ring-1 ring-accent/20">
               <span className="text-sm font-semibold text-foreground">{draggingColumn.name}</span>
               <div className="mt-3 space-y-1.5">
                 <div className="h-10 rounded-lg bg-surface/60 border border-border/40" />

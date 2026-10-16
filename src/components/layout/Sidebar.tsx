@@ -64,6 +64,8 @@ const collisionDetection: CollisionDetection = (args) => {
 import { useAppStore } from "../../store/useAppStore";
 import { ThemeToggle } from "../shared/ThemeToggle";
 import { ContextMenu } from "../shared/ContextMenu";
+import { FolderIcon } from "../shared/FolderIcon";
+import { FolderIconPicker } from "../shared/FolderIconPicker";
 import type { Folder as FolderType, Note } from "../../types";
 import { cn, glassBg } from "../../lib/utils";
 import {
@@ -294,6 +296,8 @@ function FolderRow({
 }: FolderRowProps) {
   const { selectedNoteIds, toggleFolder, activeView, setActiveView, createNote } =
     useAppStore();
+  const folderMeta = useAppStore((s) => s.folderMeta[folder.id]);
+  const [collapsedTags, setCollapsedTags] = useState<Set<string>>(new Set());
   const isRenamingThis = renamingId === folder.id;
   const folderInputRef = useRef<HTMLInputElement>(null);
 
@@ -304,7 +308,24 @@ function FolderRow({
     }
   }, [isRenamingThis]);
 
-  const noteOrderedIds = folder.notes.map((n) => n.id);
+  // Optional grouping: notes sit under their first tag; untagged ones go last.
+  const noteGroups: { tag: string | null; notes: Note[] }[] | null = folderMeta?.groupByTags
+    ? (() => {
+        const byTag = new Map<string, Note[]>();
+        const untagged: Note[] = [];
+        for (const n of folder.notes) {
+          const t = n.tags[0];
+          if (!t) untagged.push(n);
+          else byTag.set(t, [...(byTag.get(t) ?? []), n]);
+        }
+        const groups = [...byTag.entries()]
+          .sort(([a], [b]) => a.localeCompare(b))
+          .map(([tag, notes]) => ({ tag: tag as string | null, notes }));
+        if (untagged.length) groups.push({ tag: null, notes: untagged });
+        return groups;
+      })()
+    : null;
+  const noteOrderedIds = (noteGroups ? noteGroups.flatMap((g) => g.notes) : folder.notes).map((n) => n.id);
   const paddingLeft = folderPadding(depth);
   const dndId = `folder:${folder.id}`;
 
@@ -343,6 +364,38 @@ function FolderRow({
 
   const childFolderIds = folder.children.map((c) => c.id);
 
+  const renderNote = (note: Note) => {
+          const isNoteSelected = selectedNoteIds.includes(note.id);
+          const noteId = `note:${note.id}`;
+          return (
+            <NoteRow
+              key={note.id}
+              note={note}
+              isSelected={isNoteSelected}
+              orderedIds={noteOrderedIds}
+              paddingLeft={notePadding(depth)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onNoteContextMenu(e, note.id, note.title);
+              }}
+              dropBefore={
+                dropIndicator?.overId === noteId &&
+                dropIndicator.position === "before"
+              }
+              dropAfter={
+                dropIndicator?.overId === noteId &&
+                dropIndicator.position === "after"
+              }
+              onDelete={() => confirmDeleteNote(note.id, note.title)}
+              renamingId={renamingId}
+              onStartRename={onStartRename}
+              onCommitRename={onCommitRename}
+              onCancelRename={onCancelRename}
+            />
+          );
+        };
+
   return (
     <div>
       {/* Folder header row — droppable wraps the visible row */}
@@ -380,9 +433,11 @@ function FolderRow({
               <ChevronRight className="w-3 h-3" />
             )}
           </span>
-          <Folder
+          <FolderIcon
+            icon={folderMeta?.icon}
             className={cn(
-              "w-3.5 h-3.5 shrink-0 text-muted-foreground",
+              "w-3.5 h-3.5 shrink-0",
+              !folderMeta?.icon && "text-muted-foreground",
             )}
           />
           {isRenamingThis ? (
@@ -456,37 +511,33 @@ function FolderRow({
             />
           ))}
 
-          {folder.notes.map((note) => {
-            const isNoteSelected = selectedNoteIds.includes(note.id);
-            const noteId = `note:${note.id}`;
-            return (
-              <NoteRow
-                key={note.id}
-                note={note}
-                isSelected={isNoteSelected}
-                orderedIds={noteOrderedIds}
-                paddingLeft={notePadding(depth)}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onNoteContextMenu(e, note.id, note.title);
-                }}
-                dropBefore={
-                  dropIndicator?.overId === noteId &&
-                  dropIndicator.position === "before"
-                }
-                dropAfter={
-                  dropIndicator?.overId === noteId &&
-                  dropIndicator.position === "after"
-                }
-                onDelete={() => confirmDeleteNote(note.id, note.title)}
-                renamingId={renamingId}
-                onStartRename={onStartRename}
-                onCommitRename={onCommitRename}
-                onCancelRename={onCancelRename}
-              />
-            );
-          })}
+          {noteGroups
+            ? noteGroups.map((g) => {
+                const key = g.tag ?? "__untagged__";
+                const collapsed = collapsedTags.has(key);
+                return (
+                  <div key={key}>
+                    <button
+                      className="w-full flex items-center gap-1 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                      style={{ paddingLeft: notePadding(depth) }}
+                      onClick={() =>
+                        setCollapsedTags((prev) => {
+                          const next = new Set(prev);
+                          if (next.has(key)) next.delete(key);
+                          else next.add(key);
+                          return next;
+                        })
+                      }
+                    >
+                      {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                      <span className="truncate">{g.tag ? `#${g.tag}` : "Untagged"}</span>
+                      <span className="ml-1 opacity-60">{g.notes.length}</span>
+                    </button>
+                    {!collapsed && g.notes.map(renderNote)}
+                  </div>
+                );
+              })
+            : folder.notes.map(renderNote)}
         </div>
       )}
     </div>
@@ -494,6 +545,10 @@ function FolderRow({
 }
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
+
+const SIDEBAR_WIDTH_KEY = 'inkwell-sidebar-width'
+const SIDEBAR_MIN = 180
+const SIDEBAR_MAX = 480
 
 export function Sidebar() {
   const {
@@ -511,6 +566,8 @@ export function Sidebar() {
     moveFolder,
     renameNote,
     renameFolder,
+    setFolderIcon,
+    toggleFolderGroupByTags,
     openPrompt,
     selectedFolderId,
     clearFolderSelection,
@@ -575,6 +632,7 @@ export function Sidebar() {
   const externalNotes = notes.filter((n) => n.external);
   const rootFolderIds = folders.map((f) => f.id);
 
+  const [iconPickerFolderId, setIconPickerFolderId] = useState<string | null>(null);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -861,6 +919,13 @@ export function Sidebar() {
       items: [
         { label: "New note", onClick: () => createNote(folder.id) },
         { label: "Rename", onClick: () => startRename(folder.id) },
+        { label: "Change icon…", onClick: () => setIconPickerFolderId(folder.id) },
+        {
+          label: useAppStore.getState().folderMeta[folder.id]?.groupByTags
+            ? "Ungroup notes"
+            : "Group notes by tag",
+          onClick: () => toggleFolderGroupByTags(folder.id),
+        },
         {
           label: "Delete folder",
           destructive: true,
@@ -933,6 +998,34 @@ export function Sidebar() {
   const rootNoteOrderedIds = rootNotes.map((n) => n.id);
   const externalOrderedIds = externalNotes.map((n) => n.id);
 
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    try {
+      const v = Number(localStorage.getItem(SIDEBAR_WIDTH_KEY))
+      return v >= SIDEBAR_MIN && v <= SIDEBAR_MAX ? v : 224
+    } catch { return 224 }
+  })
+  const startResize = (e: React.MouseEvent) => {
+    e.preventDefault()
+    const startX = e.clientX
+    const startW = sidebarWidth
+    let w = startW
+    const onMove = (ev: MouseEvent) => {
+      w = Math.min(SIDEBAR_MAX, Math.max(SIDEBAR_MIN, startW + ev.clientX - startX))
+      setSidebarWidth(w)
+    }
+    const onUp = () => {
+      window.removeEventListener('mousemove', onMove)
+      window.removeEventListener('mouseup', onUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+      try { localStorage.setItem(SIDEBAR_WIDTH_KEY, String(w)) } catch { /* ok */ }
+    }
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    window.addEventListener('mousemove', onMove)
+    window.addEventListener('mouseup', onUp)
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -951,12 +1044,17 @@ export function Sidebar() {
     >
       <div
         className={cn(
-          "w-[224px] shrink-0 flex flex-col h-full overflow-hidden relative border-r border-border-strong",
-          // backdrop-blur + semi-transparent bg = frosted glass against the macOS desktop
-          sidebarGlass ? "backdrop-blur-2xl" : "bg-sidebar",
+          "shrink-0 flex flex-col h-full overflow-hidden relative border-r border-border-strong",
+          // glass = translucent tint over the native macOS blur (see set_vibrancy); no CSS blur
+          sidebarGlass ? "" : "bg-sidebar",
         )}
-        style={sidebarGlass ? glassBg('sidebar', glassOpacity) : undefined}
+        style={{ width: sidebarWidth, ...(sidebarGlass ? glassBg('sidebar', glassOpacity) : {}) }}
       >
+        <div
+          onMouseDown={startResize}
+          onDoubleClick={() => { setSidebarWidth(224); try { localStorage.setItem(SIDEBAR_WIDTH_KEY, '224') } catch { /* ok */ } }}
+          className="absolute top-0 right-0 h-full w-1.5 z-20 cursor-col-resize hover:bg-accent/40 active:bg-accent/60 transition-colors"
+        />
         <div className="h-8 shrink-0" data-tauri-drag-region />
 
         <div className="flex items-center justify-between px-3 pb-3.5">
@@ -1251,7 +1349,7 @@ export function Sidebar() {
 
         {/* Update notice — quiet, dismissible, never a modal */}
         {updateInfo && (
-          <div className="px-2 pt-2">
+          <div className="px-2 pt-2 shrink-0">
             <button
               onClick={() => { if (updateInstallState !== 'installing') installUpdate() }}
               disabled={updateInstallState === 'installing'}
@@ -1260,7 +1358,7 @@ export function Sidebar() {
                   ? 'Downloading and installing — the app will restart automatically'
                   : `Install version ${updateInfo.version}`
               }
-              className="w-full flex items-center gap-2 rounded-md bg-accent/10 border border-accent/20 px-2 py-3 -mt-14 hover:bg-accent/15 transition-colors disabled:opacity-70 disabled:cursor-default"
+              className="w-full flex items-center gap-2 rounded-md bg-accent/10 border border-accent/20 px-2 py-2 hover:bg-accent/15 transition-colors disabled:opacity-70 disabled:cursor-default"
             >
               <ArrowUpCircle className="w-3.5 h-3.5 text-accent shrink-0" />
               <span className="flex-1 text-left text-[11px] font-medium text-accent truncate">
@@ -1283,7 +1381,7 @@ export function Sidebar() {
         )}
 
         {/* Settings button */}
-        <div className={cn("px-2 py-2 border-t border-border", !updateInfo && "mt-auto")}>
+        <div className={cn("px-2 py-2 border-t border-border shrink-0", !updateInfo && "mt-auto")}>
           <SettingsDialog />
         </div>
 
@@ -1293,6 +1391,14 @@ export function Sidebar() {
             y={contextMenu.y}
             items={contextMenu.items}
             onClose={() => setContextMenu(null)}
+          />
+        )}
+
+        {iconPickerFolderId && (
+          <FolderIconPicker
+            current={useAppStore.getState().folderMeta[iconPickerFolderId]?.icon}
+            onSelect={(icon) => setFolderIcon(iconPickerFolderId, icon)}
+            onClose={() => setIconPickerFolderId(null)}
           />
         )}
 

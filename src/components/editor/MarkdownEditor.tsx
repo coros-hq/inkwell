@@ -10,15 +10,15 @@ import { saveNote } from '../../lib/fs'
 import { writeNoteFile } from '../../lib/vault'
 import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next'
 import { getVaultSession, type NoteBinding } from '../../lib/sync/vaultSession'
-import { cn, glassBg } from '../../lib/utils'
+import { cn } from '../../lib/utils'
 
-import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField } from '../../lib/editorExtensions'
+import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField } from '../../lib/editorExtensions'
 import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
 import { useEditorViewRef } from './EditorViewContext'
 import { deleteAttachmentFile, makeAttachmentMarkdown } from '../../lib/attachments'
 import { saveClipboardImage } from '../../lib/images'
 import { applyInlineFormat } from '../../lib/editorFormatting'
-import { NOTE_REF_RE, navigateToNote } from '../../lib/noteReferences'
+import { NOTE_REF_RE, WIKILINK_RE, navigateToNote, navigateToWikiLink } from '../../lib/noteReferences'
 
 interface MarkdownEditorProps {
   noteId: string
@@ -33,7 +33,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useEditorViewRef()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const { updateNote, setSaveStatus, theme, vaultPath, editorFontSize, editorFontFamily, editorLineHeight, editorWidth, removeAttachment, addAttachment, bodyGlass, glassOpacity, vimModeEnabled, sharedVault } = useAppStore()
+  const { updateNote, setSaveStatus, theme, vaultPath, editorFontSize, editorFontFamily, editorLineHeight, editorWidth, removeAttachment, addAttachment, bodyGlass, vimModeEnabled, sharedVault } = useAppStore()
 
   // Shared vault: bind the editor to the note's live Y.Text so concurrent
   // edits merge character-by-character and remote cursors show. Local vaults
@@ -71,7 +71,9 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
   useEffect(() => {
     if (!containerRef.current) return
 
-    const editorBg = bodyGlass ? `hsl(var(--background) / ${glassOpacity / 100})` : 'hsl(var(--background))'
+    // With glass on, EditorPane supplies the single tint layer; stacking a second
+    // translucent layer here would double the opacity and mute the blur.
+    const editorBg = bodyGlass ? 'transparent' : 'hsl(var(--background))'
 
     const customTheme = EditorView.theme({
       '&': {
@@ -364,6 +366,14 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
                 return true
               }
             }
+            const wre = new RegExp(WIKILINK_RE.source, 'g')
+            while ((match = wre.exec(line.text))) {
+              if (offsetInLine >= match.index && offsetInLine <= match.index + match[0].length) {
+                if (!navigateToWikiLink(match[1])) return false
+                event.preventDefault()
+                return true
+              }
+            }
             return false
           },
         }),
@@ -374,7 +384,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         // code-only tags (keyword, string, number, …) still get coloured.
         codeHighlighting,
         markdownHighlighting,
-        ...(liveConceal ? [liveMarkdownPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField] : []),
+        ...(liveConceal ? [wikiLinkPlugin, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField] : []),
         highlightMarkPlugin,
         tablePlugin,
         createFileEmbedPlugin(vaultPath ?? '', handleRemoveEmbed, useAppStore.getState().notes.find(n => n.id === noteId)?.searchRoot),
@@ -414,7 +424,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
       viewRef.current = null
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
     }
-  }, [noteId, theme, editorFontSize, editorFontFamily, editorLineHeight, editorWidth, bodyGlass, glassOpacity, vimModeEnabled, liveConceal, binding])
+  }, [noteId, theme, editorFontSize, editorFontFamily, editorLineHeight, editorWidth, bodyGlass, vimModeEnabled, liveConceal, binding])
 
   useEffect(() => {
     const view = viewRef.current
@@ -431,8 +441,8 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
   return (
     <div
       ref={containerRef}
-      className={cn("inkwell-editor h-full w-full overflow-hidden", bodyGlass ? "backdrop-blur-2xl" : "bg-background")}
-      style={{ minHeight: 0, ...(bodyGlass ? glassBg('background', glassOpacity) : {}) }}
+      className={cn("inkwell-editor h-full w-full overflow-hidden", bodyGlass ? "" : "bg-background")}
+      style={{ minHeight: 0 }}
     />
   )
 }

@@ -4,6 +4,36 @@ import type { Note } from '../types'
 
 export const NOTE_REF_RE = /\[@([^\]]+)\]\(note:\/\/([a-zA-Z0-9-]+)\)/g
 
+/** Obsidian-style `[[Target]]`, `[[Target|alias]]`, `[[Target#Heading]]` (not `![[embed]]`). */
+export const WIKILINK_RE = /(?<!!)\[\[([^\]\n|]+)(?:\|([^\]\n]+))?\]\]/g
+
+const baseName = (path: string) => path.slice(path.lastIndexOf('/') + 1).replace(/\.md$/i, '')
+
+/** Resolves a wikilink target to a note the way Obsidian does: by file name
+ *  (or vault-relative path), ignoring case, `#heading` and `^block` suffixes;
+ *  falls back to the note title. */
+export function resolveWikiLink(target: string) {
+  const name = target.split(/[#^]/)[0].trim().replace(/\.md$/i, '').toLowerCase()
+  if (!name) return undefined
+  const { notes, vaultPath } = useAppStore.getState()
+  const rel = (n: Note) =>
+    (vaultPath && n.path.startsWith(vaultPath + '/') ? n.path.slice(vaultPath.length + 1) : n.path)
+      .replace(/\.md$/i, '').toLowerCase()
+  return (
+    notes.find(n => rel(n) === name) ??
+    notes.find(n => baseName(n.path).toLowerCase() === name) ??
+    (name.includes('/') ? notes.find(n => rel(n).endsWith('/' + name)) : undefined) ??
+    notes.find(n => n.title.toLowerCase() === name)
+  )
+}
+
+export function navigateToWikiLink(target: string): boolean {
+  const note = resolveWikiLink(target)
+  if (!note) return false
+  navigateToNote(note.id)
+  return true
+}
+
 export function navigateToNote(noteId: string) {
   const state = useAppStore.getState()
   const note = state.notes.find(n => n.id === noteId)

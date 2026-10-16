@@ -681,7 +681,6 @@ html[data-theme="onyx"] {
 .structure-rail-tick.active.swelling::before {
   width: 16px;
   height: 3px;
-  box-shadow: 0 0 6px hsl(var(--accent) / 0.7);
 }
 
 .structure-rail-label {
@@ -696,7 +695,6 @@ html[data-theme="onyx"] {
   border-radius: 6px;
   background: hsl(var(--foreground));
   color: hsl(var(--background));
-  box-shadow: 0 2px 10px hsl(var(--foreground) / 0.18);
 }
 
 /* ── KaTeX / LaTeX math ──────────────────────────────────────────────────────
@@ -766,3 +764,14 @@ li:has(> i.bc-pink)::marker { color: #d6409f; }
   text-decoration: line-through;
   color: hsl(var(--muted-foreground));
 }
+
+.cm-noteref-link,
+.cm-wikilink {
+  color: hsl(var(--accent));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

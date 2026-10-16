@@ -40,6 +40,7 @@ const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 const INKWELL_DIR = '.inkwell'
 const APP_DATA_FILE = 'app.json'
 const BOARDS_FILE = 'boards.json'
+const FOLDERS_FILE = 'folders.json'
 const TEAM_FILE = 'team.json'
 const BRAINSTORMS_FILE = 'brainstorms.json'
 const CANVAS_FILE = 'canvas.json'
@@ -106,7 +107,10 @@ function parseFrontmatter(raw: string): { meta: Partial<FrontmatterMeta>; body: 
   if (end === -1) return { meta: {}, body: raw }
 
   const block = raw.slice(4, end).trim()
-  const body = raw.slice(end + 4).replace(/^\n/, '')
+  // serializeFrontmatter writes a blank line after the closing `---`; drop all
+  // leading blank lines (not just one) so write → read is stable and doesn't
+  // grow the body by a newline on every round trip.
+  const body = raw.slice(end + 4).replace(/^(?:[ \t]*\r?\n)+/, '')
 
   const meta: Partial<FrontmatterMeta> = {}
   for (const line of block.split('\n')) {
@@ -510,6 +514,38 @@ export async function removeTeamData(vaultPath: string): Promise<void> {
       await remove(filePath)
     }
   } catch (e) { console.error('Failed to remove team data:', e) }
+}
+
+// ── Folder metadata (folders.json) ────────────────────────────────────────────
+// Folders are plain directories, so per-folder presentation (icon, tag grouping)
+// lives in a sidecar keyed by the folder's vault-relative id.
+
+export interface FolderMeta {
+  /** "lucide:Name" or "emoji:🎉"; absent → default folder icon. */
+  icon?: string
+  /** Show this folder's notes grouped under their first tag. */
+  groupByTags?: boolean
+}
+
+export async function writeFoldersFile(vaultPath: string, meta: Record<string, FolderMeta>): Promise<void> {
+  if (!isTauri) return
+  try {
+    const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+    const dir = `${vaultPath}/${INKWELL_DIR}`
+    if (!await exists(dir)) await mkdir(dir, { recursive: true })
+    markSelfWrite(`${dir}/${FOLDERS_FILE}`)
+    await writeTextFile(`${dir}/${FOLDERS_FILE}`, JSON.stringify({ version: 1, folders: meta }, null, 2))
+  } catch (e) { console.error('Failed to write folders.json:', e) }
+}
+
+export async function readFoldersFile(vaultPath: string): Promise<Record<string, FolderMeta>> {
+  if (!isTauri) return {}
+  try {
+    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
+    const filePath = `${vaultPath}/${INKWELL_DIR}/${FOLDERS_FILE}`
+    if (!await exists(filePath)) return {}
+    return (JSON.parse(await readTextFile(filePath)).folders ?? {}) as Record<string, FolderMeta>
+  } catch { return {} }
 }
 
 // ── Board data (boards.json) ──────────────────────────────────────────────────

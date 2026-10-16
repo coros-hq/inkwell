@@ -19,7 +19,7 @@ import { openBoard, openTask } from '../../lib/boardRefs'
 import { cn } from '../../lib/utils'
 import { useAppStore } from '../../store/useAppStore'
 import { formatFileSize } from '../../lib/attachments'
-import { navigateToNote } from '../../lib/noteReferences'
+import { navigateToNote, navigateToWikiLink, WIKILINK_RE } from '../../lib/noteReferences'
 // No external hljs stylesheet — token colors come from CSS variables in globals.css
 
 // ─── Embed helpers ────────────────────────────────────────────────────────────
@@ -618,6 +618,11 @@ function CopyButton({ getText }: { getText: () => string }) {
  * is never called for paths that the parser already rejected.
  */
 function preprocessMarkdown(md: string): string {
+  // Obsidian [[wikilinks]] → real links (skipping code), resolved on click.
+  md = md.split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/).map((part, i) =>
+    i % 2 ? part : part.replace(new RegExp(WIKILINK_RE.source, 'g'), (_m, target: string, alias?: string) =>
+      `[${(alias ?? target).replace(/[\[\]]/g, '')}](wikilink://${encodeURIComponent(target)})`)
+  ).join('')
   return md.replace(
     /(!?\[[^\]]*\])\(([^)]+)\)/g,
     (match, prefix, url) => {
@@ -870,6 +875,16 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
           </button>
         )
       }
+      if (typeof href === 'string' && href.startsWith('wikilink://')) {
+        return (
+          <button
+            onClick={() => navigateToWikiLink(decodeURIComponent(href.slice('wikilink://'.length)))}
+            className="text-accent underline underline-offset-2 hover:opacity-80 cursor-pointer inline"
+          >
+            {children}
+          </button>
+        )
+      }
       const refMatch = typeof href === 'string' ? href.match(/^(board|task):\/\/([a-zA-Z0-9_-]+)$/) : null
       if (refMatch) {
         return (
@@ -939,7 +954,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
               ]}
               components={mdComponents}
               urlTransform={(url) => {
-                if (/^(note|board|task):\/\//.test(url)) return url
+                if (/^(note|board|task|wikilink):\/\//.test(url)) return url
                 if (/^(https?:|mailto:|#|\/)/.test(url)) return url
                 return undefined
               }}

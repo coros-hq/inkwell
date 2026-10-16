@@ -13,6 +13,7 @@ import { NamePromptDialog } from '../shared/NamePromptDialog'
 import { ConfirmDialog } from '../shared/ConfirmDialog'
 import { VaultPicker } from '../shared/VaultPicker'
 import { useAppStore } from '../../store/useAppStore'
+import { cn } from '../../lib/utils'
 import { confirmDeleteNote, confirmDeleteSelectedNotes, confirmDeleteFolderById } from '../../lib/deleteActions'
 import { readVaultFS, writeAppData, readAppData, addRecentVault, getLastVaultPath } from '../../lib/vault'
 import type { AppData } from '../../lib/vault'
@@ -24,7 +25,7 @@ import { ConflictBanner } from '../editor/ConflictBanner'
 import { CollabGlobals } from '../collab/CollabGlobals'
 
 export function AppShell() {
-  const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, noteSidebarMode, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
+  const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, noteSidebarMode, sidebarGlass, bodyGlass, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoCommitTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -285,7 +286,7 @@ export function AppShell() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background">
+    <div className={cn("flex h-screen w-screen overflow-hidden", !(sidebarGlass || bodyGlass) && "bg-background")}>
       {sidebarOpen && <Sidebar />}
 
       {activeView === 'notes' && (

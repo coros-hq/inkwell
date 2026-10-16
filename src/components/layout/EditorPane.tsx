@@ -245,7 +245,7 @@ export function EditorPane() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {noteSidebarMode === "tabs" && <TabBar />}
         <div
-          className={cn("flex-1 flex flex-col items-center justify-center gap-5", bodyGlass ? "backdrop-blur-2xl" : "bg-background")}
+          className={cn("flex-1 flex flex-col items-center justify-center gap-5", bodyGlass ? "" : "bg-background")}
           style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
         >
           <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-surface border border-border-strong shadow-sm">
@@ -282,7 +282,7 @@ export function EditorPane() {
 
   return (
     <div
-      className={cn("flex-1 flex overflow-hidden min-w-0", bodyGlass ? "backdrop-blur-2xl" : "bg-background")}
+      className={cn("flex-1 flex overflow-hidden min-w-0", bodyGlass ? "" : "bg-background")}
       style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
     >
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">

@@ -80,6 +80,11 @@ export function setContentTitle(content: string, title: string): string {
 // they can't represent an arbitrary runtime slider value. Use an inline style instead;
 // the CSS variables (--sidebar, --background, --panel, ...) are always raw "h s l"
 // triplets (see globals.css), so wrapping in hsl(var(--x) / alpha) is always valid.
-export function glassBg(cssVar: string, opacityPercent: number): { backgroundColor: string } {
-  return { backgroundColor: `hsl(var(--${cssVar}) / ${opacityPercent / 100})` }
+//
+// `intensityPercent` is the glass strength: 0 = solid panel, 100 = most see-through
+// (tint alpha stays within 0.1–0.9 so text stays readable).
+export function glassBg(cssVar: string, intensityPercent: number): { backgroundColor: string } {
+  // Maps 0..100 → 0.9..0.1 so even the strongest setting keeps text legible.
+  const alpha = 0.9 - (Math.min(100, Math.max(0, intensityPercent)) / 100) * 0.8
+  return { backgroundColor: `hsl(var(--${cssVar}) / ${alpha})` }
 }

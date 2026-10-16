@@ -7,6 +7,17 @@ const config: Config = {
     './src/**/*.{ts,tsx}',
   ],
   theme: {
+    // Flat design: depth comes from borders and surface tones, never shadows.
+    boxShadow: {
+      sm: 'none',
+      DEFAULT: 'none',
+      md: 'none',
+      lg: 'none',
+      xl: 'none',
+      '2xl': 'none',
+      inner: 'none',
+      none: 'none',
+    },
     extend: {
       colors: {
         background: 'hsl(var(--background))',

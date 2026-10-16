@@ -15,6 +15,7 @@ import { DataTable } from '../components/editor/DataTable'
 import { BoardEmbed, TaskEmbed } from '../components/editor/BoardEmbeds'
 import { BrainstormEmbed } from '../components/editor/BrainstormEmbed'
 import { defaultTableSpec, tableBlock } from './dataTable'
+import { WIKILINK_RE, NOTE_REF_RE } from './noteReferences'
 
 // ─── Syntax Highlight Style ──────────────────────────────────────────────────
 
@@ -500,6 +501,66 @@ function buildCheckboxDecorations(view: EditorView): DecorationSet {
 
   return Decoration.set(widgets, true)
 }
+
+// ─── Obsidian [[wikilinks]] ───────────────────────────────────────────────────
+// Styles `[[Target|alias]]` as a link. Off the active line the brackets and
+// target are concealed so only the alias/target text shows; clicks are handled
+// in MarkdownEditor (navigateToWikiLink).
+
+function buildWikiLinkDecorations(view: EditorView): DecorationSet {
+  const decos: Range<Decoration>[] = []
+  const active = activeLineSet(view)
+  const tree = syntaxTree(view.state)
+  for (const { from, to } of view.visibleRanges) {
+    let pos = from
+    while (pos <= to) {
+      const line = view.state.doc.lineAt(pos)
+      // Inkwell `[@Title](note://id)` references: already styled as links by
+      // the highlighter; just add the pointer cursor (clickable off the active line).
+      if (!active.has(line.number)) {
+        const nre = new RegExp(NOTE_REF_RE.source, 'g')
+        let nm: RegExpExecArray | null
+        while ((nm = nre.exec(line.text))) {
+          decos.push(Decoration.mark({ class: 'cm-noteref-link' }).range(line.from + nm.index, line.from + nm.index + nm[0].length))
+        }
+      }
+      const re = new RegExp(WIKILINK_RE.source, 'g')
+      let m: RegExpExecArray | null
+      while ((m = re.exec(line.text))) {
+        const start = line.from + m.index
+        const end = start + m[0].length
+        const inCode = ['InlineCode', 'FencedCode', 'CodeText', 'CodeBlock'].some(n => {
+          for (let node: any = tree.resolveInner(start, 1); node; node = node.parent) if (node.name === n) return true
+          return false
+        })
+        if (inCode) continue
+        if (active.has(line.number)) {
+          decos.push(Decoration.mark({ class: 'cm-wikilink' }).range(start, end))
+        } else {
+          const textStart = m[2] != null ? end - 2 - m[2].length : start + 2
+          decos.push(Decoration.replace({}).range(start, textStart))
+          decos.push(Decoration.mark({ class: 'cm-wikilink' }).range(textStart, end - 2))
+          decos.push(Decoration.replace({}).range(end - 2, end))
+        }
+      }
+      pos = line.to + 1
+    }
+  }
+  return Decoration.set(decos, true)
+}
+
+export const wikiLinkPlugin = ViewPlugin.fromClass(
+  class {
+    decorations: DecorationSet
+    constructor(view: EditorView) { this.decorations = buildWikiLinkDecorations(view) }
+    update(update: ViewUpdate) {
+      if (update.docChanged || update.viewportChanged || update.selectionSet) {
+        this.decorations = buildWikiLinkDecorations(update.view)
+      }
+    }
+  },
+  { decorations: v => v.decorations }
+)
 
 // ─── Live markdown preview (Normal mode WYSIWYG) ─────────────────────────────
 // Conceals the raw delimiter characters (#, **, ~~, `, >, [](url), list marks)

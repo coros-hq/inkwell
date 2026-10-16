@@ -1,4 +1,4 @@
-import { Star, Trash2, FileX, List, SquareStack } from 'lucide-react'
+import { Star, Trash2, FileX, List, SquareStack, Clock, ArrowDownAZ } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { TagChip } from '../shared/TagChip'
 import { formatDate } from '../../lib/utils'
@@ -59,7 +59,7 @@ export function NoteList() {
     <div
       className={cn(
         'w-[272px] shrink-0 flex flex-col h-full overflow-hidden border-r border-border-strong',
-        bodyGlass ? 'backdrop-blur-2xl' : 'bg-sidebar',
+        bodyGlass ? '' : 'bg-sidebar',
       )}
       style={bodyGlass ? glassBg('sidebar', glassOpacity) : undefined}
     >
@@ -109,30 +109,13 @@ export function NoteList() {
               <SquareStack className="w-3.5 h-3.5" />
             </button>
           </div>
-          <div className="flex items-center gap-0 bg-muted border border-border-strong rounded-md p-0.5">
-            <button
-              className={cn(
-                'px-2 h-6 text-[11px] font-semibold rounded transition-colors',
-                sortBy === 'date'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => setSortBy('date')}
-            >
-              Date
-            </button>
-            <button
-              className={cn(
-                'px-2 h-6 text-[11px] font-semibold rounded transition-colors',
-                sortBy === 'name'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => setSortBy('name')}
-            >
-              Name
-            </button>
-          </div>
+          <button
+            className="w-[30px] h-[30px] flex items-center justify-center rounded-md border border-border-strong bg-muted text-muted-foreground hover:text-foreground transition-colors"
+            onClick={() => setSortBy(sortBy === 'date' ? 'name' : 'date')}
+            title={sortBy === 'date' ? 'Sorted by date — click to sort by name' : 'Sorted by name — click to sort by date'}
+          >
+            {sortBy === 'date' ? <Clock className="w-3.5 h-3.5" /> : <ArrowDownAZ className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
 

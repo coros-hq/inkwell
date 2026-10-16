@@ -39,6 +39,9 @@ import {
   renameExternalFileInVault,
   readVaultFS,
   readAppData,
+  readFoldersFile,
+  writeFoldersFile,
+  type FolderMeta,
   writeAppData,
 } from "../lib/vault";
 import {
@@ -377,6 +380,11 @@ interface AppState {
   activeBoardId: string | null;
   activeBoardTaskId: string | null;
 
+  /** Per-folder icon / tag-grouping, keyed by folder id (persisted in .inkwell/folders.json). */
+  folderMeta: Record<string, FolderMeta>;
+  setFolderIcon: (folderId: string, icon: string | null) => void;
+  toggleFolderGroupByTags: (folderId: string) => void;
+
   createBoard: (name: string) => void;
   deleteBoard: (id: string) => void;
   setActiveBoardId: (id: string | null) => void;
@@ -480,6 +488,28 @@ function findFolderById(folders: Folder[], id: string): Folder | null {
     if (found) return found;
   }
   return null;
+}
+
+function remapFolderMeta(meta: Record<string, FolderMeta>, oldId: string, newId: string): Record<string, FolderMeta> {
+  const out: Record<string, FolderMeta> = {}
+  for (const [k, v] of Object.entries(meta)) {
+    if (k === oldId) out[newId] = v
+    else if (k.startsWith(`${oldId}/`)) out[newId + k.slice(oldId.length)] = v
+    else out[k] = v
+  }
+  return out
+}
+
+function dropFolderMeta(meta: Record<string, FolderMeta>, id: string): Record<string, FolderMeta> {
+  const out: Record<string, FolderMeta> = {}
+  for (const [k, v] of Object.entries(meta)) {
+    if (k !== id && !k.startsWith(`${id}/`)) out[k] = v
+  }
+  return out
+}
+
+function persistFolderMeta(vaultPath: string | null, meta: Record<string, FolderMeta>) {
+  if (vaultPath) writeFoldersFile(vaultPath, meta)
 }
 
 function renameFolderInTree(folders: Folder[], id: string, newName: string, newId: string, newPath: string): Folder[] {
@@ -772,7 +802,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   editorWidth: localStorage.getItem("inkwell-editor-width") ?? "740px",
   sidebarGlass: localStorage.getItem("inkwell-sidebar-glass") === "true",
   bodyGlass: localStorage.getItem("inkwell-body-glass") === "true",
-  glassOpacity: Number(localStorage.getItem("inkwell-glass-opacity")) || 50,
+  glassOpacity: Number(localStorage.getItem("inkwell-glass-opacity") ?? 70),
   shortcuts: loadShortcuts(),
   recordingShortcut: false,
   canvasEnabled: localStorage.getItem("inkwell-canvas-enabled") === "true",
@@ -798,6 +828,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   boardColumns: [],
   boardTasks: [],
   activeBoardId: null,
+  folderMeta: {},
   activeBoardTaskId: null,
   sharedVault: null,
   syncStatus: "idle",
@@ -906,6 +937,12 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (get().vaultPath !== path) return;
       const brainstorms = data?.brainstorms ?? [];
       set({ brainstorms, activeBrainstormId: brainstorms[0]?.id ?? null });
+    }).catch(console.error);
+
+    set({ folderMeta: {} });
+    readFoldersFile(path).then((folderMeta) => {
+      if (get().vaultPath !== path) return;
+      set({ folderMeta });
     }).catch(console.error);
 
     // Git sync settings live in this vault's own app.json, not the VaultData
@@ -1545,8 +1582,10 @@ export const useAppStore = create<AppState>((set, get) => ({
           noteMoves.has(n.id) ? { ...n, ...noteMoves.get(n.id)! } : n,
         ),
         selectedFolderId,
+        folderMeta: remapFolderMeta(s.folderMeta, folderId, newId),
       };
     });
+    persistFolderMeta(vaultPath, get().folderMeta);
   },
 
   updateNote: (id, content) => {
@@ -1644,6 +1683,30 @@ export const useAppStore = create<AppState>((set, get) => ({
     }));
   },
 
+  setFolderIcon: (folderId, icon) => {
+    const { vaultPath, folderMeta } = get()
+    const next = { ...folderMeta }
+    const entry = { ...next[folderId] }
+    if (icon) entry.icon = icon
+    else delete entry.icon
+    if (entry.icon || entry.groupByTags) next[folderId] = entry
+    else delete next[folderId]
+    set({ folderMeta: next })
+    if (vaultPath) writeFoldersFile(vaultPath, next)
+  },
+
+  toggleFolderGroupByTags: (folderId) => {
+    const { vaultPath, folderMeta } = get()
+    const next = { ...folderMeta }
+    const entry = { ...next[folderId] }
+    if (entry.groupByTags) delete entry.groupByTags
+    else entry.groupByTags = true
+    if (entry.icon || entry.groupByTags) next[folderId] = entry
+    else delete next[folderId]
+    set({ folderMeta: next })
+    if (vaultPath) writeFoldersFile(vaultPath, next)
+  },
+
   renameFolder: (id, newName) => {
     const { folders, vaultPath } = get()
     const folder = findFolderById(folders, id)
@@ -1663,7 +1726,9 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set((s) => ({
       folders: renameFolderInTree(s.folders, id, trimmed, newId, newPath),
+      folderMeta: remapFolderMeta(s.folderMeta, id, newId),
     }))
+    persistFolderMeta(vaultPath, get().folderMeta)
   },
 
   deleteNotes: (ids) => {
@@ -1731,6 +1796,9 @@ export const useAppStore = create<AppState>((set, get) => ({
     deleteFolderDir(folder.path).catch(console.error);
 
     const noteIdsToDelete = new Set(collectNoteIdsFromFolder(folder));
+
+    set((s) => ({ folderMeta: dropFolderMeta(s.folderMeta, id) }));
+    persistFolderMeta(get().vaultPath, get().folderMeta);
 
     set((s) => {
       const folders = removeFolderFromTree(s.folders, id);

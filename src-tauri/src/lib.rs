@@ -1,5 +1,5 @@
 #[cfg(target_os = "macos")]
-use window_vibrancy::{apply_vibrancy, clear_vibrancy, NSVisualEffectMaterial};
+use window_vibrancy::{apply_vibrancy, clear_vibrancy, NSVisualEffectMaterial, NSVisualEffectState};
 
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
@@ -26,7 +26,16 @@ fn set_vibrancy(window: tauri::WebviewWindow, enabled: bool, dark: bool) {
             if let Err(e) = window.set_theme(Some(theme)) {
                 eprintln!("[inkwell] set_theme failed: {e}");
             }
-            if let Err(e) = apply_vibrancy(&window, NSVisualEffectMaterial::Sidebar, None, None) {
+            if let Err(e) = apply_vibrancy(
+                &window,
+                // Sidebar is the material Finder itself uses: a light, even blur that
+                // follows the window appearance, so light and dark both read as
+                // native glass. (HudWindow was far too dark/opaque.)
+                NSVisualEffectMaterial::Sidebar,
+                // Stay blurred when the window loses focus instead of flattening.
+                Some(NSVisualEffectState::Active),
+                None,
+            ) {
                 eprintln!("[inkwell] apply_vibrancy failed: {e}");
             } else {
                 eprintln!("[inkwell] apply_vibrancy OK");
