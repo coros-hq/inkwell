@@ -122,7 +122,7 @@
   "120": "searchHighlightExtension.ts",
   "121": "MarkdownChart",
   "122": "TabsWidget",
-  "123": "selfWriteRegistry.ts",
+  "123": "writeJsonAtomic",
   "124": "CodeCopyWidget",
   "125": "DataTableWidget",
   "126": "BulletWidget",
@@ -132,6 +132,5 @@
   "134": "vite.config.d.ts",
   "135": "vite.config.ts",
   "137": "description",
-  "138": "remarkChartCodeBlocks",
-  "139": "remarkMathCodeBlocks"
+  "138": "remarkChartCodeBlocks"
 }

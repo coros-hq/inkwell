@@ -70,7 +70,7 @@ export interface Comment {
 
 /** Normal = single-pane WYSIWYG editor. Markdown = resizable raw-source + preview split. */
 export type EditorMode = 'normal' | 'markdown'
-export type ActiveView = 'notes' | 'board' | 'canvas' | 'brainstorm'
+export type ActiveView = 'notes' | 'board' | 'canvas' | 'brainstorm' | 'trash'
 
 // ─── Board system ─────────────────────────────────────────────────────────────
 

@@ -1215,6 +1215,7 @@ export function Sidebar() {
             {canvasEnabled && (
               <QuickLink icon={PenSquare} label="Draw" active={activeView === "canvas"} onClick={() => setActiveView("canvas")} />
             )}
+            <QuickLink icon={Trash2} label="Trash" active={activeView === "trash"} onClick={() => setActiveView("trash")} />
           </div>
 
           <div className="max-h-[42vh] overflow-y-auto space-y-4 -mx-1 px-1">

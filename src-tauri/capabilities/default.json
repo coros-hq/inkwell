@@ -16,6 +16,7 @@
     "fs:allow-read-dir",
     "fs:allow-read-text-file",
     "fs:allow-rename",
+    "fs:allow-copy-file",
     "fs:allow-write-text-file",
     "fs:allow-read-file",
     "fs:allow-write-file",

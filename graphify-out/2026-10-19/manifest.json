@@ -10,8 +10,8 @@
     "semantic_hash": "a4038619f5414c01f04abbbdd4730820"
   },
   "package.json": {
-    "mtime": 1792146541.0930972,
-    "ast_hash": "d3694afe7873865cb5a48ff82d1fb31c",
+    "mtime": 1792411718.9661362,
+    "ast_hash": "724a64efd763e2e34219c995dddaa870",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -25,8 +25,8 @@
     "semantic_hash": "1be34a5c61c2c35365de3dab14298f0b"
   },
   "src-tauri/capabilities/default.json": {
-    "mtime": 1790345520.4635386,
-    "ast_hash": "c510c26860894bed1365be4e8f97d0ae",
+    "mtime": 1792441600.2873318,
+    "ast_hash": "a0bc5e596b017e247ab6f4249d4e2949",
     "semantic_hash": ""
   },
   "src-tauri/capabilities/quick-note.json": {
@@ -75,8 +75,8 @@
     "semantic_hash": "e8af9fdce60f99420547f58d511820e3"
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1792146541.093573,
-    "ast_hash": "931afe321ff6560b694d3d3f23f9944f",
+    "mtime": 1792411718.9664657,
+    "ast_hash": "ba1eb9931bea6d5265bd3b643cc020d9",
     "semantic_hash": ""
   },
   "src/App.tsx": {
@@ -125,18 +125,18 @@
     "semantic_hash": ""
   },
   "src/components/canvas/CanvasView.tsx": {
-    "mtime": 1792363238.9548352,
-    "ast_hash": "6150d7f1954c3e84238f46388e587aee",
+    "mtime": 1792407252.2656715,
+    "ast_hash": "cf14f285d0c5ddfed41ee10bf0c3fbfd",
     "semantic_hash": ""
   },
   "src/components/canvas/canvasCategoryElements.ts": {
-    "mtime": 1789667177.799047,
-    "ast_hash": "1783d461c6d9bd6479e1857c70ebe627",
+    "mtime": 1792407258.0821748,
+    "ast_hash": "666d546194a8f0af7a680d4ff550f72c",
     "semantic_hash": ""
   },
   "src/components/canvas/canvasTemplates.ts": {
-    "mtime": 1789667172.2227025,
-    "ast_hash": "6ee27ab6748f39e465e434a9cae3cde0",
+    "mtime": 1792407258.0804605,
+    "ast_hash": "3f223459af1723a5d91305c7ea129b89",
     "semantic_hash": ""
   },
   "src/components/canvas/canvasTypes.ts": {
@@ -165,8 +165,8 @@
     "semantic_hash": "3395185c59d4b925e2b7d609379130d3"
   },
   "src/components/editor/MarkdownEditor.tsx": {
-    "mtime": 1792148103.7316651,
-    "ast_hash": "64286ad0b5954cf9a16e2c2a0e75e787",
+    "mtime": 1792441600.2876158,
+    "ast_hash": "6b66b6e7dc30ed20b084243b1e012163",
     "semantic_hash": ""
   },
   "src/components/editor/MediaPanel.tsx": {
@@ -195,23 +195,23 @@
     "semantic_hash": ""
   },
   "src/components/layout/AppShell.tsx": {
-    "mtime": 1792145568.455326,
-    "ast_hash": "9771c7a94bee5817ed93cf69282d56f8",
+    "mtime": 1792441600.2882783,
+    "ast_hash": "c4ec02f8196b7f283bc88633ec71e41e",
     "semantic_hash": ""
   },
   "src/components/layout/EditorPane.tsx": {
-    "mtime": 1792145451.3942149,
-    "ast_hash": "cb7b97a0e2a8a04856829ac9eadf35a1",
+    "mtime": 1792441616.4502614,
+    "ast_hash": "f1da28fbd0f221a34d02ff4e7be0fef6",
     "semantic_hash": ""
   },
   "src/components/layout/NoteList.tsx": {
-    "mtime": 1792145451.394523,
-    "ast_hash": "fe58fdced4225892d1005d6e97df0075",
+    "mtime": 1792406519.1416728,
+    "ast_hash": "b776028ea126043268fcb04ad8b4e61e",
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
-    "mtime": 1792402686.7340646,
-    "ast_hash": "1222e70f9643944ffc528c970689e008",
+    "mtime": 1792407507.7367167,
+    "ast_hash": "003487c4abd50d976731d55b5f2f39f6",
     "semantic_hash": ""
   },
   "src/components/quicknote/QuickNoteCapture.tsx": {
@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/settings/SettingsDialog.tsx": {
-    "mtime": 1791843664.8300362,
-    "ast_hash": "7e64617c7d434f77cca083f83255d49d",
+    "mtime": 1792404784.0265806,
+    "ast_hash": "5fd46ce9fa9cab58a8dd67f4844767b5",
     "semantic_hash": ""
   },
   "src/components/settings/ThemeEditor.tsx": {
@@ -245,9 +245,9 @@
     "semantic_hash": "176f0fe5f5ac7e7bd31165a8de42be34"
   },
   "src/components/shared/ContextMenu.tsx": {
-    "mtime": 1782980448.812914,
-    "ast_hash": "5c67ac0ed0be626285e6c620e53e04fc",
-    "semantic_hash": "5c67ac0ed0be626285e6c620e53e04fc"
+    "mtime": 1792404617.192991,
+    "ast_hash": "f4018dde4bec51051d7195e7d80b1e10",
+    "semantic_hash": ""
   },
   "src/components/shared/GitHubSyncDialog.tsx": {
     "mtime": 1782980448.8130023,
@@ -300,8 +300,8 @@
     "semantic_hash": ""
   },
   "src/lib/editorExtensions.ts": {
-    "mtime": 1792148103.7315006,
-    "ast_hash": "8ccd7883613411d6b5f1501aefba564e",
+    "mtime": 1792406879.1130974,
+    "ast_hash": "0266392cfd114b7ccaaeb09902949c3e",
     "semantic_hash": ""
   },
   "src/lib/editorTypography.ts": {
@@ -315,9 +315,9 @@
     "semantic_hash": ""
   },
   "src/lib/fs.ts": {
-    "mtime": 1782980448.813952,
-    "ast_hash": "1f96dcbb99a6fd40cffed75df3d4164d",
-    "semantic_hash": "1f96dcbb99a6fd40cffed75df3d4164d"
+    "mtime": 1792441600.287096,
+    "ast_hash": "19ecb710430dfab43aca4e9ba2119940",
+    "semantic_hash": ""
   },
   "src/lib/github.ts": {
     "mtime": 1782980448.8140256,
@@ -350,18 +350,18 @@
     "semantic_hash": ""
   },
   "src/lib/themes.ts": {
-    "mtime": 1789040482.5913157,
-    "ast_hash": "8fc1f0195343816d77f1105b9ed0aebf",
+    "mtime": 1792410638.0326924,
+    "ast_hash": "d789453891e80f4942f0dd169935746f",
     "semantic_hash": ""
   },
   "src/lib/utils.ts": {
-    "mtime": 1792145849.2629092,
-    "ast_hash": "5ff30cd617129d65b3ec3dbec28e93c0",
+    "mtime": 1792406517.0373776,
+    "ast_hash": "2cf8ea08f9a8857bc9f5f7336ad6f3fe",
     "semantic_hash": ""
   },
   "src/lib/vault.ts": {
-    "mtime": 1792402631.645205,
-    "ast_hash": "aba0cfc318494665fe4fa16ccaa3b403",
+    "mtime": 1792441572.0271883,
+    "ast_hash": "a31ec0997102316cb1440c21456c4b0f",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -370,8 +370,8 @@
     "semantic_hash": "912ed2887ab8f9be43f625930982407a"
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1792402631.645704,
-    "ast_hash": "a784e8d6a03fb0203b7f60630c9b8086",
+    "mtime": 1792441600.2860985,
+    "ast_hash": "9458f27731a4dab5df7d17ae073a9ec0",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -800,8 +800,8 @@
     "semantic_hash": ""
   },
   "src/lib/vaultWatcher.ts": {
-    "mtime": 1790343769.826713,
-    "ast_hash": "8d8fa69b9a5071b436be3e76b22852b5",
+    "mtime": 1792441600.286833,
+    "ast_hash": "c03bf281e6d4098046a3386a41d293a7",
     "semantic_hash": ""
   },
   "git-sync-feature-design.md": {
@@ -865,8 +865,8 @@
     "semantic_hash": ""
   },
   "src/lib/sync/manifest.ts": {
-    "mtime": 1790342513.2008808,
-    "ast_hash": "b4c8083e7ccfc31e4ffeb4ef4801a895",
+    "mtime": 1792441600.2865145,
+    "ast_hash": "ee179b556c996acb28f575b63ac79d35",
     "semantic_hash": ""
   },
   "src/lib/sync/vaultSession.ts": {
@@ -985,13 +985,18 @@
     "semantic_hash": ""
   },
   "src/components/layout/TagsView.tsx": {
-    "mtime": 1792402668.9455516,
-    "ast_hash": "7f2af0fcc5771cb6629b18e6d82c9341",
+    "mtime": 1792403833.1746602,
+    "ast_hash": "c58c033ce02fdd6994538c1e98a21d1c",
     "semantic_hash": ""
   },
-  "src/components/shared/TagEditorDialog.tsx": {
-    "mtime": 1792402653.8531106,
-    "ast_hash": "9ce69b88ec455b3c26da79894abdfdb4",
+  "src/components/shared/TagDialog.tsx": {
+    "mtime": 1792403355.975793,
+    "ast_hash": "1acdd922e1f2491c11bf27ee8e6423ff",
+    "semantic_hash": ""
+  },
+  "src/lib/safeFs.ts": {
+    "mtime": 1792441552.3662493,
+    "ast_hash": "304099c5df833b2a9912131819295662",
     "semantic_hash": ""
   }
 }

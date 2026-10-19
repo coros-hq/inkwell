@@ -1,15 +1,17 @@
 // Tauri fs integration — reads/writes .md files to the local filesystem.
 // Falls back gracefully when running in browser dev mode.
 
+import { writeFileAtomic } from './safeFs'
+
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
 export async function saveNote(path: string, content: string): Promise<void> {
   if (!isTauri) return
   try {
-    const { writeTextFile } = await import('@tauri-apps/plugin-fs')
-    await writeTextFile(path, content)
+    await writeFileAtomic(path, content)
   } catch (e) {
     console.error('Failed to save note:', e)
+    throw e
   }
 }
 

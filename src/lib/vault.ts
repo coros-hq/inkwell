@@ -34,6 +34,7 @@ import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, Lin
 import { slugifyTitle } from './utils'
 import { genId } from './id'
 import { markSelfWrite } from './selfWriteRegistry'
+import { writeFileAtomic, writeJsonAtomic, readJsonResilient, moveToTrash } from './safeFs'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
@@ -83,6 +84,8 @@ export interface VaultData {
   boards: Board[]
   boardColumns: BoardColumn[]
   boardTasks: BoardTask[]
+  /** Paths of .md files that exist but could not be read/parsed on load. */
+  unreadable?: string[]
 }
 
 export interface RecentVault {
@@ -243,6 +246,7 @@ async function readDirectory(
   folderRelPath: string,
   parentId: string | null,
   appData: AppData,
+  unreadable: string[] = [],
 ): Promise<{ folder: Folder; notes: Note[] }> {
   const { readTextFile } = await import('@tauri-apps/plugin-fs')
 
@@ -258,7 +262,7 @@ async function readDirectory(
 
   for (const dir of dirs) {
     const childRelPath = `${folderRelPath}/${dir.name}`
-    const { folder: child, notes: childNotes } = await readDirectory(dir.path, childRelPath, folderRelPath, appData)
+    const { folder: child, notes: childNotes } = await readDirectory(dir.path, childRelPath, folderRelPath, appData, unreadable)
     childFolders.push(child)
     allNotes.push(...childNotes)
   }
@@ -285,7 +289,7 @@ async function readDirectory(
       }
       folderNotes.push(note)
       allNotes.push(note)
-    } catch { /* skip unreadable */ }
+    } catch (e) { console.error('[inkwell] unreadable note:', file.path, e); unreadable.push(file.path) }
   }
 
   const folderName = folderRelPath.split('/').pop()!
@@ -327,6 +331,7 @@ export async function readVaultFS(vaultPath: string): Promise<VaultData | null> 
 
   const rootFolders: Folder[] = []
   const allNotes: Note[] = []
+  const unreadable: string[] = []
 
   const dirs  = entries.filter(e => e.isDirectory && !e.name.startsWith('.') && !IGNORED_DIR_NAMES.has(e.name))
   const files = entries.filter(e => !e.isDirectory && e.name.endsWith('.md'))
@@ -351,11 +356,11 @@ export async function readVaultFS(vaultPath: string): Promise<VaultData | null> 
         attachments: noteMeta.attachments ?? [],
         linkedItems: noteMeta.linkedItems ?? [],
       })
-    } catch { /* skip */ }
+    } catch (e) { console.error('[inkwell] unreadable note:', file.path, e); unreadable.push(file.path) }
   }
 
   for (const dir of dirs) {
-    const { folder, notes: childNotes } = await readDirectory(dir.path, dir.name, null, appData)
+    const { folder, notes: childNotes } = await readDirectory(dir.path, dir.name, null, appData, unreadable)
     rootFolders.push(folder)
     allNotes.push(...childNotes)
   }
@@ -386,6 +391,7 @@ export async function readVaultFS(vaultPath: string): Promise<VaultData | null> 
     boards: boardsData?.boards ?? localBoards?.boards ?? appData.boards,
     boardColumns: boardsData?.boardColumns ?? localBoards?.boardColumns ?? appData.boardColumns,
     boardTasks: boardsData?.boardTasks ?? localBoards?.boardTasks ?? appData.boardTasks,
+    unreadable,
   }
 }
 
@@ -393,7 +399,7 @@ export async function readVaultFS(vaultPath: string): Promise<VaultData | null> 
 
 export async function writeNoteFile(note: Note): Promise<void> {
   if (!isTauri) return
-  const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+  const { mkdir, exists } = await import('@tauri-apps/plugin-fs')
   const parent = note.path.substring(0, note.path.lastIndexOf('/'))
   if (parent && !await exists(parent)) await mkdir(parent, { recursive: true })
   const meta: FrontmatterMeta = {
@@ -403,13 +409,20 @@ export async function writeNoteFile(note: Note): Promise<void> {
     pinned: note.pinned,
     tags: note.tags,
   }
-  markSelfWrite(note.path)
-  await writeTextFile(note.path, serializeFrontmatter(meta, note.content))
+  await writeFileAtomic(note.path, serializeFrontmatter(meta, note.content))
   ephemeralNoteIds.delete(note.id)
 }
 
-export async function deleteNoteFile(absolutePath: string): Promise<void> {
+/**
+ * Deletes go to `.inkwell/trash/` when the vault path is known. Without one
+ * (legacy callers) the file is removed permanently.
+ */
+export async function deleteNoteFile(absolutePath: string, vaultPath?: string | null): Promise<void> {
   if (!isTauri) return
+  if (vaultPath) {
+    await moveToTrash(vaultPath, absolutePath)
+    return
+  }
   try {
     const { remove } = await import('@tauri-apps/plugin-fs')
     markSelfWrite(absolutePath)
@@ -425,8 +438,12 @@ export async function createFolderDir(absolutePath: string): Promise<void> {
   await mkdir(absolutePath, { recursive: true })
 }
 
-export async function deleteFolderDir(absolutePath: string): Promise<void> {
+export async function deleteFolderDir(absolutePath: string, vaultPath?: string | null): Promise<void> {
   if (!isTauri) return
+  if (vaultPath) {
+    await moveToTrash(vaultPath, absolutePath)
+    return
+  }
   try {
     const { remove } = await import('@tauri-apps/plugin-fs')
     await remove(absolutePath, { recursive: true })
@@ -449,22 +466,16 @@ function emptyAppData(): AppData {
 
 export async function readAppData(vaultPath: string): Promise<AppData | null> {
   if (!isTauri) return null
-  try {
-    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
-    const filePath = `${vaultPath}/${INKWELL_DIR}/${APP_DATA_FILE}`
-    if (!await exists(filePath)) return null
-    return JSON.parse(await readTextFile(filePath)) as AppData
-  } catch { return null }
+  return readJsonResilient<AppData>(`${vaultPath}/${INKWELL_DIR}/${APP_DATA_FILE}`)
 }
 
 export async function writeAppData(vaultPath: string, data: AppData): Promise<void> {
   if (!isTauri) return
   try {
-    const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+    const { mkdir, exists } = await import('@tauri-apps/plugin-fs')
     const dir = `${vaultPath}/${INKWELL_DIR}`
     if (!await exists(dir)) await mkdir(dir, { recursive: true })
-    markSelfWrite(`${dir}/${APP_DATA_FILE}`)
-    await writeTextFile(`${dir}/${APP_DATA_FILE}`, JSON.stringify(data, null, 2))
+    await writeJsonAtomic(`${dir}/${APP_DATA_FILE}`, data)
   } catch (e) { console.error('Failed to write app data:', e) }
 }
 
@@ -485,22 +496,16 @@ export interface TeamData {
 
 export async function readTeamData(vaultPath: string): Promise<TeamData | null> {
   if (!isTauri) return null
-  try {
-    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
-    const filePath = `${vaultPath}/${INKWELL_DIR}/${TEAM_FILE}`
-    if (!await exists(filePath)) return null
-    return JSON.parse(await readTextFile(filePath)) as TeamData
-  } catch { return null }
+  try { return await readJsonResilient<TeamData>(`${vaultPath}/${INKWELL_DIR}/${TEAM_FILE}`) } catch { return null }
 }
 
 export async function writeTeamData(vaultPath: string, data: TeamData): Promise<void> {
   if (!isTauri) return
   try {
-    const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+    const { mkdir, exists } = await import('@tauri-apps/plugin-fs')
     const dir = `${vaultPath}/${INKWELL_DIR}`
     if (!await exists(dir)) await mkdir(dir, { recursive: true })
-    markSelfWrite(`${dir}/${TEAM_FILE}`)
-    await writeTextFile(`${dir}/${TEAM_FILE}`, JSON.stringify(data, null, 2))
+    await writeJsonAtomic(`${dir}/${TEAM_FILE}`, JSON.stringify(data, null, 2))
   } catch (e) { console.error('Failed to write team data:', e) }
 }
 
@@ -539,11 +544,10 @@ export interface TagDef {
 export async function writeFoldersFile(vaultPath: string, meta: Record<string, FolderMeta>, tags: TagDef[] = []): Promise<void> {
   if (!isTauri) return
   try {
-    const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+    const { mkdir, exists } = await import('@tauri-apps/plugin-fs')
     const dir = `${vaultPath}/${INKWELL_DIR}`
     if (!await exists(dir)) await mkdir(dir, { recursive: true })
-    markSelfWrite(`${dir}/${FOLDERS_FILE}`)
-    await writeTextFile(`${dir}/${FOLDERS_FILE}`, JSON.stringify({ version: 1, folders: meta, tags }, null, 2))
+    await writeJsonAtomic(`${dir}/${FOLDERS_FILE}`, JSON.stringify({ version: 1, folders: meta, tags }, null, 2))
   } catch (e) { console.error('Failed to write folders.json:', e) }
 }
 
@@ -551,10 +555,8 @@ export async function readFoldersFile(vaultPath: string): Promise<{ folders: Rec
   const empty = { folders: {}, tags: [] }
   if (!isTauri) return empty
   try {
-    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
-    const filePath = `${vaultPath}/${INKWELL_DIR}/${FOLDERS_FILE}`
-    if (!await exists(filePath)) return empty
-    const data = JSON.parse(await readTextFile(filePath))
+    const data = await readJsonResilient<any>(`${vaultPath}/${INKWELL_DIR}/${FOLDERS_FILE}`)
+    if (!data) return empty
     return { folders: (data.folders ?? {}) as Record<string, FolderMeta>, tags: (data.tags ?? []) as TagDef[] }
   } catch { return empty }
 }
@@ -571,11 +573,10 @@ export interface BoardsData {
 export async function writeBoardsFile(vaultPath: string, data: BoardsData): Promise<void> {
   if (!isTauri) return
   try {
-    const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+    const { mkdir, exists } = await import('@tauri-apps/plugin-fs')
     const dir = `${vaultPath}/${INKWELL_DIR}`
     if (!await exists(dir)) await mkdir(dir, { recursive: true })
-    markSelfWrite(`${dir}/${BOARDS_FILE}`)
-    await writeTextFile(`${dir}/${BOARDS_FILE}`, JSON.stringify(data, null, 2))
+    await writeJsonAtomic(`${dir}/${BOARDS_FILE}`, JSON.stringify(data, null, 2))
     // Once safely on disk, the localStorage backup is no longer needed
     try { localStorage.removeItem(`inkwell-boards:${vaultPath}`) } catch { /* ok */ }
   } catch (e) { console.error('Failed to write boards:', e) }
@@ -583,12 +584,7 @@ export async function writeBoardsFile(vaultPath: string, data: BoardsData): Prom
 
 export async function readBoardsFile(vaultPath: string): Promise<BoardsData | null> {
   if (!isTauri) return null
-  try {
-    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
-    const filePath = `${vaultPath}/${INKWELL_DIR}/${BOARDS_FILE}`
-    if (!await exists(filePath)) return null
-    return JSON.parse(await readTextFile(filePath)) as BoardsData
-  } catch { return null }
+  try { return await readJsonResilient<BoardsData>(`${vaultPath}/${INKWELL_DIR}/${BOARDS_FILE}`) } catch { return null }
 }
 
 // ── Brainstorm data (brainstorms.json) ────────────────────────────────────────
@@ -602,22 +598,16 @@ export interface BrainstormsData {
 export async function writeBrainstormsFile(vaultPath: string, data: BrainstormsData): Promise<void> {
   if (!isTauri) return
   try {
-    const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
+    const { mkdir, exists } = await import('@tauri-apps/plugin-fs')
     const dir = `${vaultPath}/${INKWELL_DIR}`
     if (!await exists(dir)) await mkdir(dir, { recursive: true })
-    markSelfWrite(`${dir}/${BRAINSTORMS_FILE}`)
-    await writeTextFile(`${dir}/${BRAINSTORMS_FILE}`, JSON.stringify(data, null, 2))
+    await writeJsonAtomic(`${dir}/${BRAINSTORMS_FILE}`, JSON.stringify(data, null, 2))
   } catch (e) { console.error('Failed to write brainstorms:', e) }
 }
 
 export async function readBrainstormsFile(vaultPath: string): Promise<BrainstormsData | null> {
   if (!isTauri) return null
-  try {
-    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
-    const filePath = `${vaultPath}/${INKWELL_DIR}/${BRAINSTORMS_FILE}`
-    if (!await exists(filePath)) return null
-    return JSON.parse(await readTextFile(filePath)) as BrainstormsData
-  } catch { return null }
+  try { return await readJsonResilient<BrainstormsData>(`${vaultPath}/${INKWELL_DIR}/${BRAINSTORMS_FILE}`) } catch { return null }
 }
 
 // ── Canvas data (~/.inkwell/canvas.json) ───────────────────────────────────────

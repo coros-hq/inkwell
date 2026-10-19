@@ -100,6 +100,7 @@ export function EditorPane() {
     setNoteEditorMode,
     pinNote,
     saveStatus,
+    saveError,
     createNote,
     createFolder,
     openPrompt,
@@ -269,7 +270,11 @@ export function EditorPane() {
     );
   }
 
-  const saveLabel = saveStatus === "saving" ? "Saving..." : "Saved just now";
+  const saveLabel = saveError
+    ? "Save failed"
+    : saveStatus === "saving"
+      ? "Saving..."
+      : "Saved just now";
 
   const commitTitle = () => {
     if (!note) return;
@@ -347,7 +352,12 @@ export function EditorPane() {
 
           {/* Right controls */}
           <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[11px] text-tertiary mr-1">{saveLabel}</span>
+            <span
+              className={`text-[11px] mr-1 ${saveError ? "text-red-500" : "text-tertiary"}`}
+              title={saveError ?? undefined}
+            >
+              {saveLabel}
+            </span>
 
             {/* Markdown mode toggle — small escape hatch, not a primary control */}
             <button

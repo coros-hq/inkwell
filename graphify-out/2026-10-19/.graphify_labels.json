@@ -122,21 +122,14 @@
   "120": "searchHighlightExtension.ts",
   "121": "MarkdownChart",
   "122": "TabsWidget",
-  "123": "selfWriteRegistry.ts",
   "124": "CodeCopyWidget",
   "125": "DataTableWidget",
   "126": "BulletWidget",
-  "127": "AppState",
   "128": "description",
   "129": "ShellScopeEntryAllowedArg",
-  "130": ".recordOfflineChanges",
-  "131": "writeAppData",
   "132": "RefEmbedWidget",
-  "133": "TagEditorDialog.tsx",
   "134": "vite.config.d.ts",
   "135": "vite.config.ts",
-  "136": "description",
   "137": "description",
-  "138": "remarkChartCodeBlocks",
-  "139": "remarkMathCodeBlocks"
+  "138": "remarkChartCodeBlocks"
 }

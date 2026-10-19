@@ -209,7 +209,7 @@ export async function applyManifestToDisk(ctx: ApplyContext): Promise<boolean> {
 
     if (e.deleted) {
       if (n) {
-        await deleteNoteFile(n.path)
+        await deleteNoteFile(n.path, vaultPath)
         changed = true
       }
       continue
@@ -268,7 +268,7 @@ export async function applyManifestToDisk(ctx: ApplyContext): Promise<boolean> {
       liveNotes.some(([, e]) => isUnder(e.folder, id)) ||
       [...maps.folders.entries()].some(([fid, fe]) => !fe.deleted && isUnder(fid, id))
     if (stillUsed) continue
-    await deleteFolderDir(`${vaultPath}/${id}`)
+    await deleteFolderDir(`${vaultPath}/${id}`, vaultPath)
     changed = true
   }
 

@@ -441,11 +441,17 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
             // saveNote() here used to strip the frontmatter (and with it the
             // note's stable id) from every edited note.
             const note = useAppStore.getState().notes.find(n => n.id === noteId)
-            if (note) {
-              if (note.external) await saveNote(note.path, note.content)
-              else await writeNoteFile(note)
+            try {
+              if (note) {
+                if (note.external) await saveNote(note.path, note.content)
+                else await writeNoteFile(note)
+              }
+              useAppStore.getState().setSaveError(null)
+              setSaveStatus('saved')
+            } catch {
+              // safeFs already reported the failure via onWriteError (saveError)
+              setSaveStatus('idle')
             }
-            setSaveStatus('saved')
           }, 800)
         }),
       ],

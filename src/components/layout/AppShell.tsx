@@ -15,12 +15,14 @@ import { VaultPicker } from '../shared/VaultPicker'
 import { useAppStore } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { confirmDeleteNote, confirmDeleteSelectedNotes, confirmDeleteFolderById } from '../../lib/deleteActions'
+import { onWriteError } from '../../lib/safeFs'
 import { readVaultFS, writeAppData, readAppData, addRecentVault, getLastVaultPath } from '../../lib/vault'
 import type { AppData } from '../../lib/vault'
 import { comboMatches } from '../../lib/shortcuts'
 import { startVaultSync, stopVaultSync } from '../../lib/sync/vaultSession'
 import { onAuthStateChange } from '../../lib/auth'
 import { startVaultWatcher } from '../../lib/vaultWatcher'
+import { TrashView } from '../trash/TrashView'
 import { ConflictBanner } from '../editor/ConflictBanner'
 import { CollabGlobals } from '../collab/CollabGlobals'
 
@@ -80,6 +82,15 @@ export function AppShell() {
   useEffect(() => {
     checkForUpdates()
   // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Surface failed disk writes (full disk, read-only folder, permissions…)
+  // instead of leaving them in the console.
+  useEffect(() => {
+    return onWriteError((path, error) => {
+      const reason = error instanceof Error ? error.message : String(error)
+      useAppStore.getState().setSaveError(`Couldn't save ${path.split('/').pop()}: ${reason}`)
+    })
   }, [])
 
   // Attempt to restore last opened vault on startup
@@ -301,6 +312,8 @@ export function AppShell() {
       {activeView === 'canvas' && <CanvasView />}
 
       {activeView === 'brainstorm' && <BrainstormView />}
+
+      {activeView === 'trash' && <TrashView />}
 
       <TaskDrawer />
 

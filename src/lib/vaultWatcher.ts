@@ -40,7 +40,9 @@ export async function startVaultWatcher(
           (p) =>
             !isSelfWrite(p) &&
             !p.includes('/.git/') && !p.endsWith('/.git') &&
-            !p.includes('/.inkwell/sync/'),
+            !p.includes('/.inkwell/sync/') &&
+            !p.includes('/.inkwell/trash/') &&
+            !p.endsWith('.inkwell-tmp'),
         )
         if (external.length) onExternalChange(external)
       },

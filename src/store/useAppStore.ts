@@ -300,6 +300,9 @@ interface AppState {
   searchQuery: string;
   activeTaskId: string | null;
   saveStatus: "saved" | "saving" | "idle";
+  /** Set when a disk write failed; cleared by the next successful save. */
+  saveError: string | null;
+  setSaveError: (message: string | null) => void;
   prompt: NamePromptConfig | null;
   confirm: ConfirmConfig | null;
   updateInfo: Update | null;
@@ -756,6 +759,11 @@ function isFolderInsideDeleted(
 // Brainstorms are personal: written to .inkwell/brainstorms.json only, never
 // pushed to a vault session. Debounced because every keystroke edits a node.
 let brainstormSaveTimer: ReturnType<typeof setTimeout> | null = null;
+function reportDeleteFailure(e: unknown) {
+  console.error("[inkwell] delete failed:", e);
+  useAppStore.getState().setSaveError("Couldn't move the item to trash — it was not deleted from disk.");
+}
+
 function saveBrainstorms(immediate = false) {
   if (brainstormSaveTimer) clearTimeout(brainstormSaveTimer);
   const run = () => {
@@ -833,6 +841,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   searchQuery: "",
   activeTaskId: null,
   saveStatus: "saved",
+  saveError: null,
   sidebarOpen: true,
   noteSidebarMode:
     (localStorage.getItem("inkwell-note-sidebar-mode") as "list" | "tabs" | null) ?? "list",
@@ -947,7 +956,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       gitSyncError: null,
       conflictNoteId: null,
       conflictDiskContent: null,
+      saveError: null,
     });
+
+    const unreadable = data?.unreadable ?? [];
+    if (unreadable.length > 0) {
+      const shown = unreadable.slice(0, 5).map((p) => p.replace(`${path}/`, "")).join("\n");
+      const more = unreadable.length > 5 ? `\n…and ${unreadable.length - 5} more` : "";
+      get().openConfirm({
+        title: `${unreadable.length} note${unreadable.length === 1 ? "" : "s"} couldn't be loaded`,
+        description: `These files exist on disk but could not be read, so they are not shown. They have not been modified or deleted:\n${shown}${more}`,
+        confirmLabel: "OK",
+        destructive: false,
+        onConfirm: () => {},
+      });
+    }
 
     // Tell the MCP server which vault is active so it always operates
     // on the correct path rather than the stale env-var value.
@@ -1831,7 +1854,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       if (note.external) {
         if (vaultPath) removeExternalFileFromVault(vaultPath, note.path).catch(console.error);
       } else {
-        deleteNoteFile(note.path).catch(console.error);
+        deleteNoteFile(note.path, vaultPath).catch(reportDeleteFailure);
       }
     }
 
@@ -1880,7 +1903,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (!folder) return;
 
     // Delete directory from disk (recursive)
-    deleteFolderDir(folder.path).catch(console.error);
+    deleteFolderDir(folder.path, get().vaultPath).catch(reportDeleteFailure);
 
     const noteIdsToDelete = new Set(collectNoteIdsFromFolder(folder));
 
@@ -1978,6 +2001,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setActiveView: (view) => set({ activeView: view }),
 
   setSaveStatus: (status) => set({ saveStatus: status }),
+  setSaveError: (message) => set({ saveError: message }),
 
   toggleSubtask: (taskId, subtaskId) => {
     set((s) => ({
