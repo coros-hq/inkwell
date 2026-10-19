@@ -117,10 +117,21 @@
   "115": "vaultWatcher.ts",
   "116": "description",
   "117": "ShellScopeEntryAllowedArg",
+  "118": "TabsBlock.tsx",
   "119": "useAppStore",
+  "120": "searchHighlightExtension.ts",
+  "121": "MarkdownChart",
+  "122": "TabsWidget",
   "123": "selfWriteRegistry.ts",
   "124": "CodeCopyWidget",
   "125": "DataTableWidget",
   "126": "BulletWidget",
-  "128": "description"
+  "128": "description",
+  "129": "ShellScopeEntryAllowedArg",
+  "132": "RefEmbedWidget",
+  "134": "vite.config.d.ts",
+  "135": "vite.config.ts",
+  "137": "description",
+  "138": "remarkChartCodeBlocks",
+  "139": "remarkMathCodeBlocks"
 }

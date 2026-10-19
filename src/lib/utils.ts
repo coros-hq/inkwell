@@ -83,8 +83,19 @@ export function setContentTitle(content: string, title: string): string {
 //
 // `intensityPercent` is the glass strength: 0 = solid panel, 100 = most see-through
 // (tint alpha stays within 0.1–0.9 so text stays readable).
-export function glassBg(cssVar: string, intensityPercent: number): { backgroundColor: string } {
+//
+// A light wallpaper's colours bleed straight through a light tint and wreck text
+// contrast, so on the light theme the tint never drops below a floor: panes keep
+// a milky 0.45, the editor card (where long text lives) a near-opaque 0.88.
+export function glassBg(
+  cssVar: string,
+  intensityPercent: number,
+  theme: 'light' | 'dark' = 'dark',
+  role: 'pane' | 'card' = 'pane',
+): { backgroundColor: string } {
   // Maps 0..100 → 0.9..0.1 so even the strongest setting keeps text legible.
-  const alpha = 0.9 - (Math.min(100, Math.max(0, intensityPercent)) / 100) * 0.8
+  const raw = 0.9 - (Math.min(100, Math.max(0, intensityPercent)) / 100) * 0.8
+  const floor = theme === 'light' ? (role === 'card' ? 0.88 : 0.45) : role === 'card' ? 0.6 : 0
+  const alpha = Math.max(raw, floor)
   return { backgroundColor: `hsl(var(--${cssVar}) / ${alpha})` }
 }

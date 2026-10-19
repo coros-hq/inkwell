@@ -11,6 +11,8 @@ import { createElement } from 'react'
 import { createRoot, type Root } from 'react-dom/client'
 import { useAppStore } from '../store/useAppStore'
 import { MarkdownChart } from '../components/editor/MarkdownChart'
+import { TabsBlock } from '../components/editor/TabsBlock'
+import { tabsBlock, defaultTabsSpec } from './tabsBlock'
 import { DataTable } from '../components/editor/DataTable'
 import { BoardEmbed, TaskEmbed } from '../components/editor/BoardEmbeds'
 import { BrainstormEmbed } from '../components/editor/BrainstormEmbed'
@@ -84,10 +86,11 @@ const codeTokenHighlightStyle = HighlightStyle.define([
   {
     tag: [
       tags.function(tags.variableName), tags.function(tags.propertyName),
-      tags.macroName, tags.typeName, tags.className, tags.namespace,
+      tags.macroName,
     ],
     color: 'hsl(var(--code-fn))',
   },
+  { tag: [tags.typeName, tags.className, tags.namespace], color: 'hsl(var(--code-type))' },
   { tag: [tags.meta, tags.annotation], color: 'hsl(var(--code-meta))' },
   { tag: [tags.propertyName, tags.attributeName], color: 'hsl(var(--foreground))' },
   { tag: tags.variableName, color: 'hsl(var(--foreground) / 0.9)' },
@@ -96,7 +99,7 @@ const codeTokenHighlightStyle = HighlightStyle.define([
       tags.operator, tags.punctuation, tags.bracket,
       tags.separator, tags.derefOperator,
     ],
-    color: 'hsl(var(--muted-foreground))',
+    color: 'hsl(var(--code-op))',
   },
   { tag: tags.escape, color: 'hsl(var(--code-meta))' },
   { tag: tags.invalid, color: 'hsl(var(--destructive))' },
@@ -211,6 +214,7 @@ const SLASH_COMMANDS = [
   { label: '/quote', displayLabel: 'Quote', detail: '> Blockquote', apply: '> ', type: 'ikquote' },
   { label: '/code', displayLabel: 'Code Block', detail: 'Fenced code block', apply: '```\n\n```', type: 'ikcode' },
   { label: '/table', displayLabel: 'Table', detail: 'Custom columns & data, like Notion', apply: '__DATA_TABLE__', type: 'iktable' },
+  { label: '/tabs', displayLabel: 'Tabs', detail: 'Tab group — each tab holds its own content', apply: '__TABS__', type: 'iktable' },
   { label: '/mdtable', displayLabel: 'Markdown Table', detail: 'Plain 3-column pipe table', apply: '| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Cell     | Cell     | Cell     |\n', type: 'iktable' },
   { label: '/highlight', displayLabel: 'Highlight', detail: '==highlighted text==', apply: '====', boost: -1, type: 'ikhighlight' },
   { label: '/divider', displayLabel: 'Divider', detail: '--- Horizontal rule', apply: '---\n', type: 'ikdivider' },
@@ -235,7 +239,9 @@ function slashCompletion(context: CompletionContext, allowChart: boolean): Compl
   if (!match) return null
 
   const from = line.from + match[1].length
-  const commands = allowChart ? SLASH_COMMANDS : SLASH_COMMANDS.filter(cmd => !['__CHART_DIALOG__', '__BOARD_REF__', '__TASK_REF__', '__BRAINSTORM_REF__'].includes(cmd.apply))
+  const brainstormOn = useAppStore.getState().brainstormEnabled
+  const base = brainstormOn ? SLASH_COMMANDS : SLASH_COMMANDS.filter(cmd => cmd.apply !== '__BRAINSTORM_REF__')
+  const commands = allowChart ? base : base.filter(cmd => !['__CHART_DIALOG__', '__TABS__', '__BOARD_REF__', '__TASK_REF__', '__BRAINSTORM_REF__'].includes(cmd.apply))
 
   return {
     from,
@@ -268,6 +274,16 @@ function slashCompletion(context: CompletionContext, allowChart: boolean): Compl
           const line = view.state.doc.lineAt(slashFrom)
           const needsLeading = slashFrom !== line.from || line.text.trim().length > 0
           const block = (needsLeading ? '\n' : '') + tableBlock(defaultTableSpec()) + '\n'
+          view.dispatch({
+            changes: { from: slashFrom, to: slashTo, insert: block },
+            selection: { anchor: slashFrom + block.length },
+          })
+          return
+        }
+        if (cmd.apply === '__TABS__') {
+          const line = view.state.doc.lineAt(slashFrom)
+          const needsLeading = slashFrom !== line.from || line.text.trim().length > 0
+          const block = (needsLeading ? '\n' : '') + tabsBlock(defaultTabsSpec()) + '\n'
           view.dispatch({
             changes: { from: slashFrom, to: slashTo, insert: block },
             selection: { anchor: slashFrom + block.length },
@@ -1479,6 +1495,94 @@ export const dataTablePreviewField = StateField.define<DecorationSet>({
   create: (state) => buildDataTableDecorations(state),
   update: (value, tr) => {
     if (tr.docChanged || tr.selection) return buildDataTableDecorations(tr.state)
+    return value
+  },
+  provide: (f) => EditorView.decorations.from(f),
+})
+
+// ─── Tabs (```tabs fenced blocks) ─────────────────────────────────────────────
+// Same reveal model as tables: an interactive tab group in "Normal" mode,
+// raw JSON when the selection touches it. Edits are written back into the range.
+
+class TabsWidget extends WidgetType {
+  private root: Root | null = null
+  private resizeObserver: ResizeObserver | null = null
+
+  constructor(readonly spec: string, readonly blockFrom: number, readonly blockTo: number) { super() }
+
+  eq(other: TabsWidget) {
+    return other.spec === this.spec && other.blockFrom === this.blockFrom && other.blockTo === this.blockTo
+  }
+
+  toDOM(view: EditorView) {
+    const el = document.createElement('div')
+    el.className = 'cm-tabs-block'
+    // Padding (not margin) so the gap counts toward the height CM measures.
+    el.style.padding = '0.5rem 0'
+    this.root = createRoot(el)
+
+    const onEditAsText = () => {
+      view.dispatch({ selection: { anchor: this.blockFrom } })
+      view.focus()
+    }
+    const onChange = (next: string) => {
+      const current = view.state.sliceDoc(this.blockFrom, this.blockTo)
+      const m = current.match(/^(\s*(?:`{3,}|~{3,}))tabs[^\n]*\n/)
+      const fence = m ? m[1].trim() : '```'
+      view.dispatch({ changes: { from: this.blockFrom, to: this.blockTo, insert: fence + 'tabs\n' + next + '\n' + fence } })
+    }
+    this.root.render(createElement(TabsBlock, { spec: this.spec, onChange, onEditAsText }))
+
+    this.resizeObserver = new ResizeObserver(() => view.requestMeasure())
+    this.resizeObserver.observe(el)
+    return el
+  }
+
+  destroy() {
+    this.resizeObserver?.disconnect()
+    this.resizeObserver = null
+    const root = this.root
+    this.root = null
+    if (root) queueMicrotask(() => root.unmount())
+  }
+
+  // The block owns its inputs; CodeMirror must not also react.
+  ignoreEvent() { return true }
+}
+
+function buildTabsDecorations(state: EditorState): DecorationSet {
+  const doc = state.doc
+  const decos: Range<Decoration>[] = []
+
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name !== 'FencedCode') return
+
+      const firstLine = doc.lineAt(node.from)
+      const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
+      if (info !== 'tabs') return
+      if (overlapsSelection(state, node.from, node.to)) return
+
+      const lastLine = doc.lineAt(node.to)
+      const innerFrom = firstLine.to + 1
+      const innerTo = lastLine.number > firstLine.number ? lastLine.from - 1 : node.to
+      const spec = innerFrom < innerTo ? doc.sliceString(innerFrom, innerTo).trim() : ''
+      if (!spec) return
+
+      decos.push(
+        Decoration.replace({ widget: new TabsWidget(spec, node.from, node.to), block: true })
+          .range(node.from, node.to),
+      )
+    },
+  })
+
+  return Decoration.set(decos, true)
+}
+
+export const tabsPreviewField = StateField.define<DecorationSet>({
+  create: (state) => buildTabsDecorations(state),
+  update: (value, tr) => {
+    if (tr.docChanged || tr.selection) return buildTabsDecorations(tr.state)
     return value
   },
   provide: (f) => EditorView.decorations.from(f),

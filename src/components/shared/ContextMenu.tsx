@@ -4,6 +4,12 @@ import { cn } from '../../lib/utils'
 export interface ContextMenuItem {
   label: string
   destructive?: boolean
+  /** Tag-style row: coloured dot before the label. */
+  dotColor?: string
+  /** Shows a check mark on the right. */
+  checked?: boolean
+  /** Draws a divider above this row. */
+  separator?: boolean
   onClick: () => void
 }
 
@@ -46,7 +52,8 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
           key={item.label}
           type="button"
           className={cn(
-            'w-full text-left px-3 py-1.5 text-xs transition-colors',
+            'w-full flex items-center gap-2 text-left px-3 py-1.5 text-xs transition-colors',
+            item.separator && 'border-t border-border mt-1 pt-2',
             item.destructive
               ? 'text-red-500 hover:bg-red-500/10'
               : 'text-foreground hover:bg-surface',
@@ -56,7 +63,9 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
             onClose()
           }}
         >
-          {item.label}
+          {item.dotColor && <span className="w-2 h-2 rounded-full shrink-0" style={{ background: item.dotColor }} />}
+          <span className="flex-1">{item.label}</span>
+          {item.checked && <span className="text-accent">✓</span>}
         </button>
       ))}
     </div>

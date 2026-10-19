@@ -4,6 +4,7 @@ import type { Tool } from './canvasTypes'
 
 // ── Config ─────────────────────────────────────────────────────────────────────
 
+export const FONT_HAND  = 'Kalam, "Comic Sans MS", cursive'
 export const FONT_SANS  = 'Inter, system-ui, sans-serif'
 export const FONT_SERIF = 'Georgia, Times New Roman, serif'
 export const FONT_MONO  = 'JetBrains Mono, Menlo, monospace'
@@ -34,6 +35,7 @@ const WIDTHS: { v: number; thick: number }[] = [
 const FONT_SIZES = [12, 16, 24, 36] as const
 
 const FONT_FAMILIES = [
+  { value: FONT_HAND,  label: 'Hand'  },
   { value: FONT_SANS,  label: 'Sans'  },
   { value: FONT_SERIF, label: 'Serif' },
   { value: FONT_MONO,  label: 'Mono'  },

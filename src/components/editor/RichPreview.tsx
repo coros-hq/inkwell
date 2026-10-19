@@ -10,6 +10,8 @@ import { remarkHighlight } from '../../lib/remarkHighlight'
 import { remarkMathCodeBlocks } from '../../lib/remarkMathCodeBlocks'
 import { remarkChartCodeBlocks } from '../../lib/remarkChartCodeBlocks'
 import { remarkTableCodeBlocks } from '../../lib/remarkTableCodeBlocks'
+import { remarkTabsCodeBlocks } from '../../lib/remarkTabsCodeBlocks'
+import { TabsBlock } from './TabsBlock'
 import { MarkdownChart } from './MarkdownChart'
 import { DataTable } from './DataTable'
 import { BoardEmbed, TaskEmbed } from './BoardEmbeds'
@@ -910,6 +912,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
     },
 
     'inkwell-chart': ({ spec }: any) => <MarkdownChart spec={spec} />,
+    'inkwell-tabs': ({ spec }: any) => <TabsBlock spec={spec} />,
     'inkwell-board': ({ rid }: any) => <BoardEmbed boardId={rid} />,
     'inkwell-task': ({ rid }: any) => <TaskEmbed taskId={rid} />,
     'inkwell-brainstorm': ({ rid }: any) => <BrainstormEmbed brainstormId={rid} />,
@@ -946,7 +949,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
           ) : (
             <ReactMarkdown
               key={i}
-              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkChartCodeBlocks, remarkTableCodeBlocks, remarkBoardCodeBlocks, remarkHighlight]}
+              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkChartCodeBlocks, remarkTableCodeBlocks, remarkTabsCodeBlocks, remarkBoardCodeBlocks, remarkHighlight]}
               rehypePlugins={[
                 [rehypeHighlight, { ignoreMissing: true }],
                 rehypeRaw,

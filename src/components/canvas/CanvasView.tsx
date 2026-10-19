@@ -4,12 +4,12 @@ import rough from 'roughjs'
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import type { Drawable } from 'roughjs/bin/core'
 import { useAppStore } from '../../store/useAppStore'
-import { CanvasToolbar, FONT_SANS } from './CanvasToolbar'
+import { CanvasToolbar, FONT_HAND } from './CanvasToolbar'
 import { CanvasNotesSheet } from './CanvasNotesSheet'
 import { CanvasTemplatesPicker } from './CanvasTemplatesPicker'
 import { CanvasCategoryPanel } from './CanvasCategoryPanel'
 import type { DiagramTemplate, TemplateCategory } from './canvasTemplates'
-import { uid, hitTest, shapeBounds, recolorTemplateShapes } from './canvasTypes'
+import { uid, hitTest, hitTopmost, shapeBounds, recolorTemplateShapes, unrotatePoint } from './canvasTypes'
 import type { Shape, Tool, Point, PathShape, RectShape, EllipseShape, LineShape, ArrowShape, TextShape, BoundText, StickyShape } from './canvasTypes'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -22,6 +22,42 @@ type NotesTarget = 'global' | { kind: 'shape'; id: string } | { kind: 'group'; g
 function getCSSColor(varName: string, fallback: string): string {
   const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
   return raw ? `hsl(${raw})` : fallback
+}
+
+// ── Theme-adaptive ink ─────────────────────────────────────────────────────────
+// Shapes keep whatever colour they were saved with, but a near-neutral colour
+// that would vanish against the current canvas (near-white on the light theme,
+// near-black on the dark one) is swapped for the theme's ink at draw time only.
+// Saved data is never rewritten, so the same drawing reads well in both themes.
+
+function parseHex(c: string): [number, number, number] | null {
+  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(c.trim())
+  if (!m) return null
+  const h = m[1].length === 3 ? m[1].split('').map(x => x + x).join('') : m[1]
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
+}
+
+function adaptInk(c: string, darkBg: boolean, ink: string): string {
+  const rgb = parseHex(c)
+  if (!rgb) return c
+  const [r, g, b] = rgb
+  if (Math.max(r, g, b) - Math.min(r, g, b) > 48) return c // clearly coloured: legible on both
+  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
+  if (darkBg ? lum < 0.28 : lum > 0.72) return ink
+  return c
+}
+
+function adaptShape(sh: Shape, darkBg: boolean, ink: string): Shape {
+  if (sh.type === 'sticky') return sh // pastel notes carry their own fixed dark text
+  const color = adaptInk(sh.color, darkBg, ink)
+  const fill = sh.fill === 'none' ? sh.fill : adaptInk(sh.fill, darkBg, ink)
+  let boundText: BoundText | undefined
+  if ((sh.type === 'rect' || sh.type === 'ellipse') && sh.boundText) {
+    const bc = adaptInk(sh.boundText.color, darkBg, ink)
+    if (bc !== sh.boundText.color) boundText = { ...sh.boundText, color: bc }
+  }
+  if (color === sh.color && fill === sh.fill && !boundText) return sh
+  return { ...sh, color, fill, ...(boundText ? { boundText } : {}) } as Shape
 }
 
 function normalizeRect(x1: number, y1: number, x2: number, y2: number) {
@@ -133,7 +169,7 @@ function drawDotGrid(ctx: CanvasRenderingContext2D, cssW: number, cssH: number, 
 }
 
 function ctxFont(t: TextShape): string {
-  return `${t.italic ? 'italic ' : ''}${t.bold ? 'bold ' : ''}${t.size}px ${t.fontFamily ?? FONT_SANS}`
+  return `${t.italic ? 'italic ' : ''}${t.bold ? 'bold ' : ''}${t.size}px ${t.fontFamily ?? FONT_HAND}`
 }
 
 /** Stable small int from a shape id, used as roughjs's seed so jitter doesn't reshuffle every re-render */
@@ -229,30 +265,20 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | n
       // Tangent at endpoint = direction from CP → endpoint
       const angle = Math.atan2(a.y2 - cpy, a.x2 - cpx)
       const H = Math.max(14, a.width * 5)
-      const shaftEndX = a.x2 - H * 0.8 * Math.cos(angle)
-      const shaftEndY = a.y2 - H * 0.8 * Math.sin(angle)
-      const headP1: [number, number] = [a.x2 - H * Math.cos(angle - Math.PI / 6), a.y2 - H * Math.sin(angle - Math.PI / 6)]
-      const headP2: [number, number] = [a.x2 - H * Math.cos(angle + Math.PI / 6), a.y2 - H * Math.sin(angle + Math.PI / 6)]
+      const headP1: [number, number] = [a.x2 - H * Math.cos(angle - Math.PI / 7), a.y2 - H * Math.sin(angle - Math.PI / 7)]
+      const headP2: [number, number] = [a.x2 - H * Math.cos(angle + Math.PI / 7), a.y2 - H * Math.sin(angle + Math.PI / 7)]
+      // Open "V" head like Excalidraw: shaft runs to the tip, two strokes form the head
       if (useRough) {
         cachedRoughDraw(rc, roughCache, s, () => [
-          rc.generator.path(`M ${a.x1} ${a.y1} Q ${cpx} ${cpy}, ${shaftEndX} ${shaftEndY}`, { ...roughOptions(s), fill: undefined }),
-          rc.generator.polygon([[a.x2, a.y2], headP1, headP2], {
-            stroke: a.color, strokeWidth: 0.5, fill: a.color, fillStyle: 'solid',
-            roughness: 1.4, seed: seedFromId(s.id), disableMultiStroke: true, disableMultiStrokeFill: true,
-          }),
+          rc.generator.path(`M ${a.x1} ${a.y1} Q ${cpx} ${cpy}, ${a.x2} ${a.y2}`, { ...roughOptions(s), fill: undefined }),
+          rc.generator.linearPath([headP1, [a.x2, a.y2], headP2], { ...roughOptions(s), fill: undefined }),
         ])
         break
       }
-      // Shaft: quadratic bezier, ending slightly before tip so head fits
       ctx.beginPath(); ctx.moveTo(a.x1, a.y1)
-      ctx.quadraticCurveTo(cpx, cpy, shaftEndX, shaftEndY)
-      ctx.stroke()
-      // Arrowhead
-      ctx.fillStyle = a.color; ctx.strokeStyle = a.color; ctx.lineWidth = 0.5
-      ctx.beginPath(); ctx.moveTo(a.x2, a.y2)
-      ctx.lineTo(headP1[0], headP1[1])
-      ctx.lineTo(headP2[0], headP2[1])
-      ctx.closePath(); ctx.fill(); ctx.stroke(); break
+      ctx.quadraticCurveTo(cpx, cpy, a.x2, a.y2)
+      ctx.moveTo(headP1[0], headP1[1]); ctx.lineTo(a.x2, a.y2); ctx.lineTo(headP2[0], headP2[1])
+      ctx.stroke(); break
     }
     case 'text': {
       const t = s as TextShape; ctx.font = ctxFont(t); ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y); break
@@ -269,7 +295,7 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | n
       ctx.beginPath(); ctx.roundRect(st.x, st.y, st.w, st.h, 3); ctx.fill()
       ctx.restore()
       // Text is always a fixed dark ink for reliable contrast against the palette's light/mid-tone swatches
-      ctx.font = `13px ${FONT_SANS}`; ctx.fillStyle = STICKY_TEXT_COLOR
+      ctx.font = `13px ${FONT_HAND}`; ctx.fillStyle = STICKY_TEXT_COLOR
       ctx.textAlign = 'left'; ctx.textBaseline = 'top'
       const pad  = 8
       const lines = wrapCanvasText(ctx, st.text, Math.max(st.w - pad * 2, 10))
@@ -282,38 +308,88 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | n
   ctx.restore()
 }
 
-/** Word-wrap (paragraph-aware) text to fit within maxWidth, using ctx's current font */
+/** Word-wrap (paragraph-aware) text to fit within maxWidth, using ctx's current font. Words wider than maxWidth are broken by character. */
 function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
   const lines: string[] = []
+  const breakWord = (word: string): string => {
+    let chunk = ''
+    for (const ch of word) {
+      if (chunk && ctx.measureText(chunk + ch).width > maxWidth) { lines.push(chunk); chunk = ch }
+      else chunk += ch
+    }
+    return chunk
+  }
   for (const paragraph of text.split('\n')) {
     if (paragraph === '') { lines.push(''); continue }
-    const words = paragraph.split(' ')
     let cur = ''
-    for (const w of words) {
+    for (const w of paragraph.split(' ')) {
       const test = cur ? cur + ' ' + w : w
-      if (ctx.measureText(test).width > maxWidth && cur) { lines.push(cur); cur = w }
-      else cur = test
+      if (ctx.measureText(test).width <= maxWidth) { cur = test; continue }
+      if (cur) lines.push(cur)
+      cur = ctx.measureText(w).width > maxWidth ? breakWord(w) : w
     }
     if (cur) lines.push(cur)
   }
   return lines
 }
 
-/** Text bound to a rect/ellipse container: centered, wrapped to the shape's current bounds */
+let measureCtx: CanvasRenderingContext2D | null = null
+function getMeasureCtx(): CanvasRenderingContext2D {
+  if (!measureCtx) measureCtx = document.createElement('canvas').getContext('2d')!
+  return measureCtx
+}
+
+const TEXT_PAD = 8
+// An ellipse's text lives in the rectangle inscribed in it (~1/√2 of each axis), not its full bounding box
+const ELLIPSE_TEXT_RATIO = 0.72
+const BOUND_LINE_HEIGHT = 1.25
+
+function boundFont(bt: BoundText): string {
+  return `${bt.italic ? 'italic ' : ''}${bt.bold ? 'bold ' : ''}${bt.size}px ${bt.fontFamily}`
+}
+
+/** World-space rect that a rect/ellipse's label must stay inside */
+function containerTextBox(s: RectShape | EllipseShape) {
+  const b = shapeBounds(s)
+  if (s.type === 'ellipse') {
+    const w = b.w * ELLIPSE_TEXT_RATIO, h = b.h * ELLIPSE_TEXT_RATIO
+    return { x: b.x + (b.w - w) / 2, y: b.y + (b.h - h) / 2, w, h }
+  }
+  return { x: b.x + TEXT_PAD, y: b.y + TEXT_PAD, w: Math.max(b.w - TEXT_PAD * 2, 10), h: Math.max(b.h - TEXT_PAD * 2, 10) }
+}
+
+/** Shape height needed so `bt.text`, wrapped to width `w`, fits inside the container */
+function containerNeededH(s: RectShape | EllipseShape, bt: BoundText, w: number): number {
+  const ctx = getMeasureCtx()
+  ctx.save(); ctx.font = boundFont(bt)
+  const innerW = s.type === 'ellipse' ? w * ELLIPSE_TEXT_RATIO : w - TEXT_PAD * 2
+  const lines = wrapCanvasText(ctx, bt.text, Math.max(innerW, 10))
+  ctx.restore()
+  const textH = lines.length * bt.size * BOUND_LINE_HEIGHT
+  return s.type === 'ellipse' ? textH / ELLIPSE_TEXT_RATIO + 4 : textH + TEXT_PAD * 2
+}
+
+/** Grow a labeled rect/ellipse just enough that its text never spills out of it */
+function fitContainer(s: Shape): Shape {
+  if ((s.type !== 'rect' && s.type !== 'ellipse') || !s.boundText) return s
+  const b = shapeBounds(s)
+  const needed = containerNeededH(s, s.boundText, b.w)
+  return needed > b.h ? applyBoundsToShape(s, { ...b, h: needed }) : s
+}
+
+/** Text bound to a rect/ellipse container: centered, wrapped inside the container's text box */
 function drawBoundText(ctx: CanvasRenderingContext2D, s: RectShape | EllipseShape) {
   const bt = s.boundText
   if (!bt) return
-  const b = shapeBounds(s), pad = 8
-  const maxW = Math.max(b.w - pad * 2, 10)
+  const box = containerTextBox(s)
   ctx.save()
-  ctx.font = `${bt.italic ? 'italic ' : ''}${bt.bold ? 'bold ' : ''}${bt.size}px ${bt.fontFamily}`
+  ctx.font = boundFont(bt)
   ctx.fillStyle = bt.color
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
-  const lines  = wrapCanvasText(ctx, bt.text, maxW)
-  const lineH  = bt.size * 1.25
-  const totalH = lines.length * lineH
-  let y = b.y + b.h / 2 - totalH / 2 + lineH / 2
-  for (const line of lines) { ctx.fillText(line, b.x + b.w / 2, y); y += lineH }
+  const lines  = wrapCanvasText(ctx, bt.text, box.w)
+  const lineH  = bt.size * BOUND_LINE_HEIGHT
+  let y = box.y + box.h / 2 - (lines.length * lineH) / 2 + lineH / 2
+  for (const line of lines) { ctx.fillText(line, box.x + box.w / 2, y); y += lineH }
   ctx.restore()
 }
 
@@ -353,6 +429,21 @@ function drawNoteBadge(ctx: CanvasRenderingContext2D, s: Shape) {
 }
 
 /** Dashed box + corner resize handles around an arbitrary bounds rect */
+const ROTATE_HANDLE_OFFSET = 26
+
+/** Rotates the context around the shape's bounds center */
+function applyRotation(ctx: CanvasRenderingContext2D, s: Shape) {
+  if (!s.rotation) return
+  const b = shapeBounds(s)
+  ctx.translate(b.x + b.w / 2, b.y + b.h / 2); ctx.rotate(s.rotation); ctx.translate(-(b.x + b.w / 2), -(b.y + b.h / 2))
+}
+
+function rotateHandlePos(b: { x: number; y: number; w: number; h: number }, rotation: number, zoom: number): Point {
+  const cx = b.x + b.w / 2, cy = b.y + b.h / 2
+  const d = b.h / 2 + 6 + ROTATE_HANDLE_OFFSET / zoom
+  return { x: cx + d * Math.sin(rotation), y: cy - d * Math.cos(rotation) }
+}
+
 function drawHandles(ctx: CanvasRenderingContext2D, b: { x: number; y: number; w: number; h: number }, hideBox = false) {
   const pad = 6
   ctx.save()
@@ -374,8 +465,22 @@ function drawHandles(ctx: CanvasRenderingContext2D, b: { x: number; y: number; w
 }
 
 /** Single-shape selection: dashed box + corner resize handles (text shapes get no box, just handles-less) */
-function drawSingleSelection(ctx: CanvasRenderingContext2D, s: Shape) {
-  drawHandles(ctx, shapeBounds(s), s.type === 'text')
+function drawSingleSelection(ctx: CanvasRenderingContext2D, s: Shape, zoom: number) {
+  const b = shapeBounds(s)
+  ctx.save()
+  applyRotation(ctx, s)
+  drawHandles(ctx, b, s.type === 'text')
+  ctx.restore()
+  // Rotation handle: a knob on a short stem above the box, following the rotation
+  const r = s.rotation ?? 0
+  const h = rotateHandlePos(b, r, zoom), cx = b.x + b.w / 2, cy = b.y + b.h / 2
+  const top = { x: cx + (b.h / 2 + 6) * Math.sin(r), y: cy - (b.h / 2 + 6) * Math.cos(r) }
+  ctx.save()
+  ctx.strokeStyle = '#60a5fa'; ctx.lineWidth = 1.5 / zoom
+  ctx.beginPath(); ctx.moveTo(top.x, top.y); ctx.lineTo(h.x, h.y); ctx.stroke()
+  ctx.fillStyle = '#1e293b'
+  ctx.beginPath(); ctx.arc(h.x, h.y, 5 / zoom, 0, Math.PI * 2); ctx.fill(); ctx.stroke()
+  ctx.restore()
 }
 
 /** Multi-shape selection: dashed box + corner resize handles around union bounds */
@@ -394,6 +499,34 @@ function drawRubberBand(ctx: CanvasRenderingContext2D, p1: Point, p2: Point) {
   ctx.strokeRect(rx, ry, rw, rh)
   ctx.setLineDash([])
   ctx.restore()
+}
+
+/**
+ * Snap a drag delta so the moving bounds' edges/center line up with other shapes'
+ * edges/centers, and return the guide segments to draw for the snapped position.
+ */
+function snapDrag(mb: { x: number; y: number; w: number; h: number }, others: Shape[], dx: number, dy: number, thr: number) {
+  const ob = others.map(shapeBounds)
+  const pts = (a: number, len: number) => [a, a + len / 2, a + len]
+  const best = (mine: number[], theirs: number[][]) => {
+    let d = 0, found = Infinity
+    for (const t of theirs) for (const m of mine) {
+      const diff = t[0] - m
+      if (Math.abs(diff) < thr && Math.abs(diff) < found) { found = Math.abs(diff); d = diff }
+    }
+    return found === Infinity ? 0 : d
+  }
+  dx += best(pts(mb.x + dx, mb.w), ob.flatMap(b => pts(b.x, b.w).map(v => [v])))
+  dy += best(pts(mb.y + dy, mb.h), ob.flatMap(b => pts(b.y, b.h).map(v => [v])))
+  const guides: { x1: number; y1: number; x2: number; y2: number }[] = []
+  const mx = mb.x + dx, my = mb.y + dy
+  for (const b of ob) {
+    for (const t of pts(b.x, b.w)) for (const m of pts(mx, mb.w))
+      if (Math.abs(t - m) < 0.5) guides.push({ x1: t, y1: Math.min(my, b.y), x2: t, y2: Math.max(my + mb.h, b.y + b.h) })
+    for (const t of pts(b.y, b.h)) for (const m of pts(my, mb.h))
+      if (Math.abs(t - m) < 0.5) guides.push({ x1: Math.min(mx, b.x), y1: t, x2: Math.max(mx + mb.w, b.x + b.w), y2: t })
+  }
+  return { dx, dy, guides }
 }
 
 // ── Disk I/O ───────────────────────────────────────────────────────────────────
@@ -428,8 +561,8 @@ async function saveCanvas(linkedVaultPath: string | null, shapes: Shape[]) {
 
 // Default ink color must contrast with the canvas background, which follows the
 // app theme — near-white ink is invisible on the light theme's white canvas.
-const DEFAULT_COLOR_DARK  = '#ffffff'
-const DEFAULT_COLOR_LIGHT = '#000000'
+const DEFAULT_COLOR_DARK  = '#f3ede2'
+const DEFAULT_COLOR_LIGHT = '#1e1b18'
 const DEFAULT_WIDTH  = 2
 const DEFAULT_RADIUS = 8
 
@@ -477,13 +610,13 @@ export function CanvasView() {
   const rafIdRef      = useRef<number | null>(null)
 
   // ── React state ──────────────────────────────────────────────────────────────
-  const [tool,              setTool]              = useState<Tool>('pen')
+  const [tool,              setTool]              = useState<Tool>('select')
   const [color,             setColor]             = useState(defaultColor)
   const [fill,              setFill]              = useState('none')
   const [strokeWidth,       setStrokeWidth]       = useState(DEFAULT_WIDTH)
   const [radius,            setRadius]            = useState(DEFAULT_RADIUS)
   const [fontSize,          setFontSize]          = useState(16)
-  const [fontFamily,        setFontFamily]        = useState(FONT_SANS)
+  const [fontFamily,        setFontFamily]        = useState(FONT_HAND)
   const [bold,              setBold]              = useState(false)
   const [italic,            setItalic]            = useState(false)
   const [zoom,              setZoomState]         = useState(1)
@@ -522,13 +655,13 @@ export function CanvasView() {
   const zoomRef = useRef(1)
 
   // ── Tool pref refs ───────────────────────────────────────────────────────────
-  const toolRef        = useRef<Tool>('pen')
+  const toolRef        = useRef<Tool>('select')
   const colorRef       = useRef(defaultColor)
   const fillRef        = useRef('none')
   const widthRef       = useRef(DEFAULT_WIDTH)
   const radiusRef      = useRef(DEFAULT_RADIUS)
   const fontSizeRef    = useRef(16)
-  const fontFamilyRef  = useRef(FONT_SANS)
+  const fontFamilyRef  = useRef(FONT_HAND)
   const boldRef        = useRef(false)
   const italicRef      = useRef(false)
 
@@ -548,6 +681,11 @@ export function CanvasView() {
   const isDraggingRef   = useRef(false)
   const dragOriginRef   = useRef<Point>({ x: 0, y: 0 })
   const preDragRef      = useRef<Shape[] | null>(null)
+  const dragMovedRef    = useRef(false)
+  // Alignment guides shown while dragging (world-space segments)
+  const guidesRef       = useRef<{ x1: number; y1: number; x2: number; y2: number }[]>([])
+  // Shapes as they were before a text edit began, so live auto-grow doesn't pollute undo history
+  const editPreRef      = useRef<Shape[] | null>(null)
 
   // Rubber-band selection
   const isRubberBandRef    = useRef(false)
@@ -569,6 +707,10 @@ export function CanvasView() {
   const resizeStartPtRef     = useRef<Point>({ x: 0, y: 0 })
   const resizePreRef         = useRef<Shape[] | null>(null)
   const cursorRef            = useRef<string>('crosshair')
+
+  // Rotation (single selection)
+  const rotatingRef   = useRef<string | null>(null)
+  const rotatePreRef  = useRef<Shape[] | null>(null)
 
   // Arrow bend (control point drag)
   const isBendingRef  = useRef(false)
@@ -644,7 +786,7 @@ export function CanvasView() {
     if (shape.type === 'text') {
       const t = shape as TextShape
       const sz = t.size ?? 16;             setFontSize(sz);   fontSizeRef.current   = sz
-      const ff = t.fontFamily ?? FONT_SANS; setFontFamily(ff); fontFamilyRef.current = ff
+      const ff = t.fontFamily ?? FONT_HAND; setFontFamily(ff); fontFamilyRef.current = ff
       const b  = t.bold ?? false;           setBold(b);        boldRef.current       = b
       const it = t.italic ?? false;         setItalic(it);     italicRef.current     = it
     }
@@ -703,15 +845,21 @@ export function CanvasView() {
     ctx.translate(panRef.current.x, panRef.current.y)
     ctx.scale(zoomRef.current, zoomRef.current)
 
-    for (const s of shapesRef.current) {
-      if (editingIdRef.current && s.id === editingIdRef.current) continue
+    const darkBg = useAppStore.getState().theme === 'dark'
+    const ink = darkBg ? DEFAULT_COLOR_DARK : DEFAULT_COLOR_LIGHT
+    for (const raw of shapesRef.current) {
+      if (editingIdRef.current && raw.id === editingIdRef.current) continue
+      const s = adaptShape(raw, darkBg, ink)
+      ctx.save()
+      applyRotation(ctx, s)
       drawShape(ctx, s, rc, sketchyRef.current, roughCacheRef.current)
       if ((s.type === 'rect' || s.type === 'ellipse') && s.boundText && editingContainerIdRef.current !== s.id) {
         drawBoundText(ctx, s)
       }
+      ctx.restore()
       if (s.note) drawNoteBadge(ctx, s)
     }
-    if (drawingRef.current) drawShape(ctx, drawingRef.current, rc, sketchyRef.current, roughCacheRef.current)
+    if (drawingRef.current) drawShape(ctx, adaptShape(drawingRef.current, darkBg, ink), rc, sketchyRef.current, roughCacheRef.current)
 
     // Drop cached rough drawables for shapes that no longer exist
     if (roughCacheRef.current.size) {
@@ -747,7 +895,7 @@ export function CanvasView() {
     // Selection overlay
     const selShapes = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
     if (selShapes.length === 1) {
-      drawSingleSelection(ctx, selShapes[0])
+      drawSingleSelection(ctx, selShapes[0], zoomRef.current)
       // Bend handle for selected arrows
       if (selShapes[0].type === 'arrow') {
         const a = selShapes[0] as ArrowShape
@@ -776,10 +924,21 @@ export function CanvasView() {
       drawRubberBand(ctx, rubberBandStartRef.current, rubberBandEndRef.current)
     }
 
+    // Snap / alignment guides
+    if (guidesRef.current.length) {
+      ctx.save()
+      ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 1 / zoomRef.current
+      ctx.beginPath()
+      for (const g of guidesRef.current) { ctx.moveTo(g.x1, g.y1); ctx.lineTo(g.x2, g.y2) }
+      ctx.stroke()
+      ctx.restore()
+    }
+
     ctx.restore()
   }, [])
 
   useEffect(() => { render() }, [theme, render])
+  useEffect(() => { document.fonts?.load(`16px ${FONT_HAND}`).then(() => render()).catch(() => {}) }, [render])
   useEffect(() => { sketchyRef.current = sketchy; render() }, [sketchy, render])
   useEffect(() => { showGridRef.current = showGrid; render() }, [showGrid, render])
   useEffect(() => { notesTargetRef.current = notesTarget }, [notesTarget])
@@ -1085,12 +1244,25 @@ export function CanvasView() {
       const badgeHit = shapesRef.current.find(s => s.note && Math.hypot(wp.x - noteBadgePos(s).x, wp.y - noteBadgePos(s).y) < NOTE_BADGE_RADIUS + 4 / zoomRef.current)
       if (badgeHit) { openShapeNote(badgeHit.id); return }
 
+      // 0b. Rotation handle (single selection)
+      if (selectedIdsRef.current.size === 1) {
+        const rs = shapesRef.current.find(sh => selectedIdsRef.current.has(sh.id))
+        if (rs) {
+          const hp = rotateHandlePos(shapeBounds(rs), rs.rotation ?? 0, zoomRef.current)
+          if (Math.hypot(wp.x - hp.x, wp.y - hp.y) <= 10 / zoomRef.current) {
+            rotatingRef.current = rs.id; rotatePreRef.current = [...shapesRef.current]
+            updateCursor('grabbing'); return
+          }
+        }
+      }
+
       // 1. Resize handle (single shape's bounds, or union bounds for a multi-selection)
       if (selectedIdsRef.current.size >= 1) {
         const selShapes = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
         if (selShapes.length) {
           const bounds = selShapes.length === 1 ? shapeBounds(selShapes[0]) : unionBounds(selShapes)
-          const handle = getHandleAt(bounds, wp, 10 / zoomRef.current)
+          const hwp = selShapes.length === 1 ? unrotatePoint(selShapes[0], wp.x, wp.y) : wp
+          const handle = getHandleAt(bounds, hwp, 10 / zoomRef.current)
           if (handle) {
             resizingRef.current          = handle
             resizeStartBoundsRef.current = bounds
@@ -1118,7 +1290,7 @@ export function CanvasView() {
       }
 
       // 3. Shape hit
-      const hit = [...shapesRef.current].reverse().find(s => hitTest(s, wp.x, wp.y)) ?? null
+      const hit = hitTopmost(shapesRef.current, wp.x, wp.y)
       if (hit) {
         // Expand selection to entire group if the hit shape belongs to one
         const groupIds = hit.groupId
@@ -1135,13 +1307,13 @@ export function CanvasView() {
         } else if (selectedIdsRef.current.has(hit.id)) {
           // Click already-selected shape: drag all selected
           preDragRef.current    = [...shapesRef.current]
-          isDraggingRef.current = true
+          isDraggingRef.current = true; dragMovedRef.current = false
           dragOriginRef.current = wp
         } else {
           // Click unselected shape: select it (+ group mates), start drag
           setSelection(groupIds)
           preDragRef.current    = [...shapesRef.current]
-          isDraggingRef.current = true
+          isDraggingRef.current = true; dragMovedRef.current = false
           dragOriginRef.current = wp
         }
         render(); return
@@ -1182,6 +1354,8 @@ export function CanvasView() {
     }
   }, [toWorld, render, setSelection, clearSelection, updateCursor, openShapeNote])
 
+  const hoverCursor = (wp: Point) => hitTopmost(shapesRef.current, wp.x, wp.y) ? 'move' : 'default'
+
   const onMouseMove = useCallback((e: React.MouseEvent) => {
     if (isPanningRef.current) {
       panRef.current = { x: panOriginRef.current.x + e.clientX - panStartRef.current.x, y: panOriginRef.current.y + e.clientY - panStartRef.current.y }
@@ -1190,6 +1364,20 @@ export function CanvasView() {
 
     const wp = toWorld(e)
     lastMouseWorldRef.current = wp
+
+    // Rotate (shift snaps to 15°)
+    if (rotatingRef.current) {
+      const id = rotatingRef.current
+      const target = shapesRef.current.find(sh => sh.id === id)
+      if (target) {
+        const b = shapeBounds(target)
+        let ang = Math.atan2(wp.y - (b.y + b.h / 2), wp.x - (b.x + b.w / 2)) + Math.PI / 2
+        if (shiftRef.current) ang = Math.round(ang / (Math.PI / 12)) * (Math.PI / 12)
+        shapesRef.current = shapesRef.current.map(sh => sh.id === id ? { ...sh, rotation: ang } as Shape : sh)
+        render()
+      }
+      return
+    }
 
     // Resize (single shape, or proportional group-resize for a multi-selection)
     if (resizingRef.current && resizeStartBoundsRef.current && selectedIdsRef.current.size >= 1) {
@@ -1206,7 +1394,7 @@ export function CanvasView() {
       nb.w = Math.max(nb.w, MIN); nb.h = Math.max(nb.h, MIN)
       if (selectedIdsRef.current.size === 1) {
         const [id] = [...selectedIdsRef.current]
-        shapesRef.current = shapesRef.current.map(s => s.id === id ? applyBoundsToShape(s, nb) as Shape : s)
+        shapesRef.current = shapesRef.current.map(s => s.id === id ? fitContainer(applyBoundsToShape(s, nb)) : s)
       } else {
         // Proportional group resize: scale each selected shape's own bounds against the group's start bounds
         const sx = nb.w / Math.max(sb.w, 1), sy = nb.h / Math.max(sb.h, 1)
@@ -1219,7 +1407,7 @@ export function CanvasView() {
             w: Math.max(b.w * sx, 1),
             h: Math.max(b.h * sy, 1),
           }
-          return applyBoundsToShape(s, shapeNb) as Shape
+          return fitContainer(applyBoundsToShape(s, shapeNb))
         })
       }
       render(); return
@@ -1235,12 +1423,19 @@ export function CanvasView() {
     }
 
     // Move selected shapes
-    if (isDraggingRef.current && selectedIdsRef.current.size > 0) {
-      const dx = wp.x - dragOriginRef.current.x, dy = wp.y - dragOriginRef.current.y
-      dragOriginRef.current = wp
-      shapesRef.current = shapesRef.current.map(s =>
-        selectedIdsRef.current.has(s.id) ? offsetShape(s, dx, dy) as Shape : s
-      )
+    if (isDraggingRef.current && selectedIdsRef.current.size > 0 && preDragRef.current) {
+      let dx = wp.x - dragOriginRef.current.x, dy = wp.y - dragOriginRef.current.y
+      // Dead zone so a plain click (or the first click of a double-click) never nudges or adds an undo step
+      if (!dragMovedRef.current && Math.hypot(dx, dy) * zoomRef.current < 3) return
+      dragMovedRef.current = true
+      const pre = preDragRef.current
+      const ids = selectedIdsRef.current
+      guidesRef.current = []
+      if (!e.altKey) {
+        const snapped = snapDrag(unionBounds(pre.filter(s => ids.has(s.id))), pre.filter(s => !ids.has(s.id)), dx, dy, 6 / zoomRef.current)
+        dx = snapped.dx; dy = snapped.dy; guidesRef.current = snapped.guides
+      }
+      shapesRef.current = pre.map(s => ids.has(s.id) ? offsetShape(s, dx, dy) as Shape : s)
       render(); return
     }
 
@@ -1299,18 +1494,21 @@ export function CanvasView() {
             updateCursor('grab'); return
           }
         }
-        const handle = getHandleAt(shapeBounds(shape), wp, 10 / zoomRef.current)
-        updateCursor(handle ? (handle === 'tl' || handle === 'br' ? 'nwse-resize' : 'nesw-resize') : 'default')
+        const rhp = rotateHandlePos(shapeBounds(shape), shape.rotation ?? 0, zoomRef.current)
+        if (Math.hypot(wp.x - rhp.x, wp.y - rhp.y) <= 10 / zoomRef.current) { updateCursor('grab'); return }
+        const uw = unrotatePoint(shape, wp.x, wp.y)
+        const handle = getHandleAt(shapeBounds(shape), uw, 10 / zoomRef.current)
+        updateCursor(handle ? (handle === 'tl' || handle === 'br' ? 'nwse-resize' : 'nesw-resize') : hoverCursor(wp))
         return
       }
       if (selShapes.length > 1) {
         const handle = getHandleAt(unionBounds(selShapes), wp, 10 / zoomRef.current)
-        updateCursor(handle ? (handle === 'tl' || handle === 'br' ? 'nwse-resize' : 'nesw-resize') : 'default')
+        updateCursor(handle ? (handle === 'tl' || handle === 'br' ? 'nwse-resize' : 'nesw-resize') : hoverCursor(wp))
         return
       }
     }
     if (!isSpaceRef.current)
-      updateCursor(toolRef.current === 'text' ? 'text' : toolRef.current === 'select' ? 'default' : 'crosshair')
+      updateCursor(toolRef.current === 'text' ? 'text' : toolRef.current === 'select' ? hoverCursor(wp) : 'crosshair')
   }, [toWorld, render, updateCursor])
 
   const onMouseUp = useCallback(() => {
@@ -1322,6 +1520,18 @@ export function CanvasView() {
       if (bendPreRef.current) {
         historyRef.current = [...historyRef.current, bendPreRef.current]
         futureRef.current = []; bendPreRef.current = null
+        setCanUndo(true); setCanRedo(false); scheduleSave()
+      }
+      return
+    }
+
+    // Finish rotate
+    if (rotatingRef.current) {
+      rotatingRef.current = null
+      updateCursor('default')
+      if (rotatePreRef.current) {
+        historyRef.current = [...historyRef.current, rotatePreRef.current]
+        futureRef.current = []; rotatePreRef.current = null
         setCanUndo(true); setCanRedo(false); scheduleSave()
       }
       return
@@ -1342,12 +1552,14 @@ export function CanvasView() {
     // Finish drag
     if (isDraggingRef.current) {
       isDraggingRef.current = false
-      if (preDragRef.current) {
+      guidesRef.current = []
+      if (preDragRef.current && dragMovedRef.current) {
         historyRef.current = [...historyRef.current, preDragRef.current]
-        futureRef.current = []; preDragRef.current = null
+        futureRef.current = []
         setCanUndo(true); setCanRedo(false); scheduleSave()
       }
-      return
+      preDragRef.current = null; dragMovedRef.current = false
+      render(); return
     }
 
     // Finish rubber-band
@@ -1382,12 +1594,100 @@ export function CanvasView() {
     if (!isDrawingRef.current || !drawingRef.current) return
     isDrawingRef.current = false
     const shape = drawingRef.current; drawingRef.current = null
+    if (shape.type === 'path') {
+      if (shape.pts.length < 2) { render(); return }
+      commit([...shapesRef.current, shape]); return
+    }
     const b = shapeBounds(shape)
-    if (shape.type !== 'path' && shape.type !== 'text' && b.w < 3 / zoomRef.current && b.h < 3 / zoomRef.current) { render(); return }
-    commit([...shapesRef.current, shape])
+    let final: Shape = shape
+    if (b.w < 8 / zoomRef.current && b.h < 8 / zoomRef.current) {
+      // A plain click drops a ready-made default-size shape centered on the cursor
+      const c = startPtRef.current
+      if (shape.type === 'rect')         final = { ...shape, x: c.x - 70, y: c.y - 45, w: 140, h: 90 }
+      else if (shape.type === 'ellipse') final = { ...shape, cx: c.x, cy: c.y, rx: 70, ry: 45 }
+      else { render(); return }
+    }
+    commit([...shapesRef.current, final])
+    // Like Excalidraw: after placing a shape, hand control back to the select tool with the shape selected
+    setSelection(new Set([final.id]))
+    setTool('select'); toolRef.current = 'select'
   }, [commit, scheduleSave, render, setSelection, updateCursor])
 
-  // ── Double-click: edit existing text shape ───────────────────────────────────
+  // ── Text editing ─────────────────────────────────────────────────────────────
+
+  /** Open the in-place editor for a text, sticky, or rect/ellipse label (double-click or Enter) */
+  const startEdit = useCallback((shape: Shape) => {
+    const zoom = zoomRef.current, pan = panRef.current
+    if (shape.type === 'text') {
+      setFontSize(shape.size);                      fontSizeRef.current   = shape.size
+      setFontFamily(shape.fontFamily ?? FONT_HAND); fontFamilyRef.current = shape.fontFamily ?? FONT_HAND
+      setBold(shape.bold ?? false);                 boldRef.current       = shape.bold ?? false
+      setItalic(shape.italic ?? false);             italicRef.current     = shape.italic ?? false
+      setColor(shape.color);                        colorRef.current      = shape.color
+      // shape.y is the baseline; position the input so its visual baseline lines up
+      const sx = shape.x * zoom + pan.x
+      const sy = shape.y * zoom + pan.y - shape.size * zoom + Math.min(shape.size, 32)
+      setTextInput({ sx, sy, wx: shape.x, wy: shape.y - shape.size, editingId: shape.id, initialValue: shape.text })
+      setTool('text'); toolRef.current = 'text'
+      return
+    }
+    if (shape.type === 'sticky') {
+      const b = shapeBounds(shape)
+      editPreRef.current = shapesRef.current
+      setTextInput({
+        sx: b.x * zoom + pan.x, sy: b.y * zoom + pan.y, wx: b.x, wy: b.y,
+        stickyId: shape.id, boxW: b.w * zoom, boxH: b.h * zoom, initialValue: shape.text,
+      })
+      return
+    }
+    if (shape.type === 'rect' || shape.type === 'ellipse') {
+      const bt = shape.boundText
+      setFontSize(bt?.size ?? 16);                fontSizeRef.current   = bt?.size ?? 16
+      setFontFamily(bt?.fontFamily ?? FONT_HAND); fontFamilyRef.current = bt?.fontFamily ?? FONT_HAND
+      setBold(bt?.bold ?? false);                 boldRef.current       = bt?.bold ?? false
+      setItalic(bt?.italic ?? false);             italicRef.current     = bt?.italic ?? false
+      const box = containerTextBox(shape)
+      editPreRef.current = shapesRef.current
+      setTextInput({
+        sx: box.x * zoom + pan.x, sy: box.y * zoom + pan.y, wx: box.x, wy: box.y,
+        containerId: shape.id, boxW: box.w * zoom, boxH: box.h * zoom, initialValue: bt?.text ?? '',
+      })
+    }
+  }, [])
+
+  // Keep what's being typed inside its box: labeled shapes and stickies grow as the text wraps
+  // (editor geometry is patched on the DOM node directly — re-setting textInput state would
+  // re-run the focus effect and throw the caret to the end mid-typing).
+  const onEditorInput = useCallback(() => {
+    const el = textRef.current as HTMLDivElement | null
+    if (!el || !textInput) return
+    const val = el.innerText.replace(/\u200b/g, '')
+    const zoom = zoomRef.current, pan = panRef.current
+    if (textInput.containerId) {
+      const cur = shapesRef.current.find(sh => sh.id === textInput.containerId)
+      if (!cur || (cur.type !== 'rect' && cur.type !== 'ellipse')) return
+      const bt: BoundText = { text: val, size: fontSizeRef.current, fontFamily: fontFamilyRef.current, bold: boldRef.current, italic: italicRef.current, color: colorRef.current }
+      const b = shapeBounds(cur)
+      const needed = containerNeededH(cur, bt, b.w)
+      if (needed > b.h) {
+        const grown = applyBoundsToShape(cur, { ...b, h: needed }) as RectShape | EllipseShape
+        shapesRef.current = shapesRef.current.map(sh => sh.id === cur.id ? grown : sh)
+        const box = containerTextBox(grown)
+        el.style.top = `${box.y * zoom + pan.y}px`
+        el.style.height = `${box.h * zoom}px`
+        render()
+      }
+    } else if (textInput.stickyId || textInput.isNewSticky) {
+      const ctx = getMeasureCtx()
+      ctx.save(); ctx.font = `13px ${FONT_HAND}`
+      const lines = wrapCanvasText(ctx, val, Math.max(textInput.boxW! / zoom - 16, 10))
+      ctx.restore()
+      const needed = (lines.length * 13 * 1.3 + 16) * zoom
+      if (needed > el.offsetHeight) el.style.height = `${needed}px`
+    }
+  }, [textInput, render])
+
+  // ── Double-click: edit text / labels, straighten arrows, or drop new text ────
 
   const onDoubleClick = useCallback((e: React.MouseEvent) => {
     const wp = toWorld(e)
@@ -1404,72 +1704,21 @@ export function CanvasView() {
       return
     }
 
-    const hit = [...shapesRef.current].reverse().find(
-      s => s.type === 'text' && hitTest(s, wp.x, wp.y)
-    ) as TextShape | undefined
-    if (hit) {
+    const hit = hitTopmost(shapesRef.current, wp.x, wp.y)
+    if (hit && (hit.type === 'text' || hit.type === 'sticky' || hit.type === 'rect' || hit.type === 'ellipse')) {
       e.preventDefault()
-
-      // Sync toolbar settings to the shape
-      setFontSize(hit.size);                          fontSizeRef.current   = hit.size
-      setFontFamily(hit.fontFamily ?? FONT_SANS);     fontFamilyRef.current = hit.fontFamily ?? FONT_SANS
-      setBold(hit.bold ?? false);                     boldRef.current       = hit.bold ?? false
-      setItalic(hit.italic ?? false);                 italicRef.current     = hit.italic ?? false
-      setColor(hit.color);                            colorRef.current      = hit.color
-
-      // Convert world position to container-relative screen coords
-      // hit.y is baseline; position input so its visual baseline lines up
-      const sx          = hit.x * zoomRef.current + panRef.current.x
-      const syBaseline  = hit.y * zoomRef.current + panRef.current.y
-      const screenSize  = hit.size * zoomRef.current
-      const sy          = syBaseline - screenSize + Math.min(hit.size, 32)
-
-      setTextInput({ sx, sy, wx: hit.x, wy: hit.y - hit.size, editingId: hit.id, initialValue: hit.text })
-      setTool('text'); toolRef.current = 'text'
+      setSelection(new Set([hit.id]))
+      startEdit(hit)
       return
     }
 
-    // Double-click a sticky note → re-edit its text
-    const hitSticky = [...shapesRef.current].reverse().find(
-      s => s.type === 'sticky' && hitTest(s, wp.x, wp.y)
-    ) as StickyShape | undefined
-    if (hitSticky) {
+    // Double-click on empty canvas → new text right there
+    if (!hit && toolRef.current === 'select') {
       e.preventDefault()
-      const b  = shapeBounds(hitSticky)
-      const sx = b.x * zoomRef.current + panRef.current.x
-      const sy = b.y * zoomRef.current + panRef.current.y
-      setTextInput({
-        sx, sy, wx: b.x, wy: b.y,
-        stickyId: hitSticky.id,
-        boxW: b.w * zoomRef.current, boxH: b.h * zoomRef.current,
-        initialValue: hitSticky.text,
-      })
-      return
+      const rect = containerRef.current!.getBoundingClientRect()
+      setTextInput({ sx: e.clientX - rect.left, sy: e.clientY - rect.top, wx: wp.x, wy: wp.y })
     }
-
-    // Double-click inside a rect/ellipse → edit its bound (container) text
-    const hitContainer = [...shapesRef.current].reverse().find(
-      s => (s.type === 'rect' || s.type === 'ellipse') && hitTest(s, wp.x, wp.y)
-    ) as RectShape | EllipseShape | undefined
-    if (!hitContainer) return
-    e.preventDefault()
-
-    const bt = hitContainer.boundText
-    setFontSize(bt?.size ?? 16);              fontSizeRef.current   = bt?.size ?? 16
-    setFontFamily(bt?.fontFamily ?? FONT_SANS); fontFamilyRef.current = bt?.fontFamily ?? FONT_SANS
-    setBold(bt?.bold ?? false);               boldRef.current       = bt?.bold ?? false
-    setItalic(bt?.italic ?? false);           italicRef.current     = bt?.italic ?? false
-
-    const b  = shapeBounds(hitContainer)
-    const sx = b.x * zoomRef.current + panRef.current.x
-    const sy = b.y * zoomRef.current + panRef.current.y
-    setTextInput({
-      sx, sy, wx: b.x, wy: b.y,
-      containerId: hitContainer.id,
-      boxW: b.w * zoomRef.current, boxH: b.h * zoomRef.current,
-      initialValue: bt?.text ?? '',
-    })
-  }, [toWorld])
+  }, [toWorld, setSelection, startEdit, commit])
 
   // ── Wheel ────────────────────────────────────────────────────────────────────
 
@@ -1636,6 +1885,13 @@ export function CanvasView() {
           ev.preventDefault()
           setShowNotes(v => !v)
         }
+        // Enter → edit the selected shape's text (or label)
+        if (ev.key === 'Enter' && !ev.metaKey && !ev.ctrlKey && selectedIdsRef.current.size === 1) {
+          const sh = shapesRef.current.find(x => selectedIdsRef.current.has(x.id))
+          if (sh && (sh.type === 'text' || sh.type === 'sticky' || sh.type === 'rect' || sh.type === 'ellipse')) {
+            ev.preventDefault(); startEdit(sh); return
+          }
+        }
         // Tool shortcuts
         const t = TOOL_KEYS[ev.key.toLowerCase()]
         if (t && !ev.metaKey && !ev.ctrlKey) setTool(t)
@@ -1656,7 +1912,7 @@ export function CanvasView() {
     }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
-  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor, groupSelected, ungroupSelected, bringToFront, sendToBack, copySelected, pasteClipboard, zoomToFit, resetZoom, scheduleSave])
+  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor, groupSelected, ungroupSelected, bringToFront, sendToBack, copySelected, pasteClipboard, zoomToFit, resetZoom, scheduleSave, startEdit])
 
   // Sync editingIdRef/editingContainerIdRef so render can skip the shape/text being edited
   useEffect(() => {
@@ -1724,6 +1980,10 @@ export function CanvasView() {
     // divs so the browser has a caret to draw — never part of the real content.
     const val = rawVal?.replace(/​/g, '').trim()
     setTextInput(null)
+    // Drop any live auto-grow applied while typing; the final size is recomputed below as one clean undo step
+    if (editPreRef.current) { shapesRef.current = editPreRef.current; editPreRef.current = null }
+    // Placing/editing text is a one-shot action: go back to select, like Excalidraw
+    setTool('select'); toolRef.current = 'select'
     const size = fontSizeRef.current
     if (stickyId || isNewSticky) {
       if (!val) {
@@ -1737,7 +1997,7 @@ export function CanvasView() {
       const ctx = canvasRef.current?.getContext('2d')
       if (ctx) {
         ctx.save()
-        ctx.font = `13px ${FONT_SANS}`
+        ctx.font = `13px ${FONT_HAND}`
         const lines = wrapCanvasText(ctx, val, Math.max(w - 16, 10))
         ctx.restore()
         neededH = Math.max(neededH, lines.length * 13 * 1.3 + 16)
@@ -1745,12 +2005,14 @@ export function CanvasView() {
       if (stickyId) {
         commit(shapesRef.current.map(s => s.id === stickyId ? { ...s, text: val, h: neededH } as Shape : s))
       } else {
+        const id = uid()
         commit([...shapesRef.current, {
-          id: uid(), type: 'sticky',
+          id, type: 'sticky',
           x: textInput.wx, y: textInput.wy,
           w: STICKY_DEFAULT_W, h: neededH,
           text: val, color: DEFAULT_STICKY_COLOR, fill: 'none', width: 1,
         } as StickyShape])
+        setSelection(new Set([id]))
       }
       return
     }
@@ -1764,24 +2026,13 @@ export function CanvasView() {
           return rest as Shape
         }))
       } else {
-        const ctx = canvasRef.current?.getContext('2d')
         commit(shapesRef.current.map(s => {
           if (s.id !== containerId || (s.type !== 'rect' && s.type !== 'ellipse')) return s
           const boundText: BoundText = {
             text: val, size, fontFamily: fontFamilyRef.current,
             bold: boldRef.current, italic: italicRef.current, color: colorRef.current,
           }
-          const withText = { ...s, boundText } as RectShape | EllipseShape
-          if (!ctx) return withText
-          const b = shapeBounds(withText)
-          const pad = 8
-          ctx.save()
-          ctx.font = `${boundText.italic ? 'italic ' : ''}${boundText.bold ? 'bold ' : ''}${boundText.size}px ${boundText.fontFamily}`
-          const lines  = wrapCanvasText(ctx, boundText.text, Math.max(b.w - pad * 2, 10))
-          ctx.restore()
-          const neededH = lines.length * boundText.size * 1.25 + pad * 2
-          if (neededH <= b.h) return withText
-          return applyBoundsToShape(withText, { ...b, h: neededH }) as Shape
+          return fitContainer({ ...s, boundText } as RectShape | EllipseShape)
         }))
       }
       return
@@ -1801,15 +2052,17 @@ export function CanvasView() {
     } else {
       // Creating a new shape
       if (!val) return
+      const id = uid()
       commit([...shapesRef.current, {
-        id: uid(), type: 'text',
+        id, type: 'text',
         x: textInput.wx, y: textInput.wy + size,
         text: val, size, fontFamily: fontFamilyRef.current,
         bold: boldRef.current, italic: italicRef.current,
         color: colorRef.current, fill: 'none', width: 1,
       } as TextShape])
+      setSelection(new Set([id]))
     }
-  }, [textInput, commit])
+  }, [textInput, commit, setSelection])
 
   // ── Toolbar handlers ─────────────────────────────────────────────────────────
 
@@ -1988,11 +2241,12 @@ export function CanvasView() {
             style={{
               left: textInput.sx, top: textInput.sy,
               width: textInput.boxW, height: textInput.boxH,
-              padding: '8px', boxSizing: 'border-box',
-              fontSize, fontFamily, fontWeight: bold ? 'bold' : 'normal', fontStyle: italic ? 'italic' : 'normal',
+              padding: 0, boxSizing: 'border-box',
+              fontSize: fontSize * zoom, fontFamily, fontWeight: bold ? 'bold' : 'normal', fontStyle: italic ? 'italic' : 'normal',
               color, caretColor: color, zIndex: 50, lineHeight: 1.25,
               whiteSpace: 'pre-wrap', wordBreak: 'break-word',
             }}
+            onInput={onEditorInput}
             onKeyDown={e => {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); commitText() }
               if (e.key === 'Escape') { e.preventDefault(); commitText() }
@@ -2010,14 +2264,15 @@ export function CanvasView() {
             style={{
               left: textInput.sx, top: textInput.sy,
               width: textInput.boxW, height: textInput.boxH,
-              padding: '8px', boxSizing: 'border-box',
-              fontSize: 13, fontFamily: FONT_SANS,
+              padding: 8 * zoom, boxSizing: 'border-box',
+              fontSize: 13 * zoom, fontFamily: FONT_HAND,
               color: STICKY_TEXT_COLOR, caretColor: STICKY_TEXT_COLOR, zIndex: 50, lineHeight: 1.3,
               whiteSpace: 'pre-wrap', wordBreak: 'break-word',
               background: textInput.stickyId
                 ? (shapesRef.current.find(s => s.id === textInput.stickyId) as StickyShape | undefined)?.color ?? DEFAULT_STICKY_COLOR
                 : DEFAULT_STICKY_COLOR,
             }}
+            onInput={onEditorInput}
             onKeyDown={e => {
               if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); commitText() }
               if (e.key === 'Escape') { e.preventDefault(); commitText() }
@@ -2034,7 +2289,7 @@ export function CanvasView() {
               left: textInput.sx, top: textInput.sy - Math.min(fontSize, 32),
               fontSize: Math.min(Math.max(14, fontSize), 32),
               fontFamily, fontWeight: bold ? 'bold' : 'normal', fontStyle: italic ? 'italic' : 'normal',
-              color, caretColor: color, borderBottom: `1.5px solid ${color}`, minWidth: 80, zIndex: 50,
+              color, caretColor: color, minWidth: 80, zIndex: 50,
             }}
             defaultValue={textInput?.initialValue ?? ''}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitText() }; if (e.key === 'Escape') { e.preventDefault(); commitText() } }}

@@ -3,7 +3,7 @@ import { uid, TEMPLATE_PLACEHOLDER_COLOR } from './canvasTypes'
 import type { TemplateCategory } from './canvasTemplates'
 
 const C  = TEMPLATE_PLACEHOLDER_COLOR
-const FN = 'Inter, system-ui, sans-serif'
+const FN = 'Kalam, "Comic Sans MS", cursive'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function s(fields: Record<string, any>): Shape {

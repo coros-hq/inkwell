@@ -7,6 +7,7 @@ interface Base {
   color: string
   fill: string
   width: number
+  rotation?: number   // radians, clockwise, around the shape's bounds center
   groupId?: string   // shapes sharing the same groupId are treated as one group
   note?: string       // markdown note content attached to this shape (edited via the full notes panel)
   noteShared?: boolean // true if `note` is replicated across every member of groupId
@@ -75,9 +76,88 @@ export function shapeBounds(s: Shape): { x: number; y: number; w: number; h: num
   }
 }
 
+/** Maps a world point into the shape's unrotated frame (identity when the shape isn't rotated) */
+export function unrotatePoint(s: Shape, px: number, py: number): Point {
+  if (!s.rotation) return { x: px, y: py }
+  const b = shapeBounds(s), cx = b.x + b.w / 2, cy = b.y + b.h / 2
+  const c = Math.cos(-s.rotation), sn = Math.sin(-s.rotation)
+  const dx = px - cx, dy = py - cy
+  return { x: cx + dx * c - dy * sn, y: cy + dx * sn + dy * c }
+}
+
+function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+  const dx = x2 - x1, dy = y2 - y1, l2 = dx * dx + dy * dy
+  const t = l2 ? Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / l2)) : 0
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy))
+}
+
+function distToPolyline(px: number, py: number, pts: Point[]): number {
+  if (pts.length === 1) return Math.hypot(px - pts[0].x, py - pts[0].y)
+  let d = Infinity
+  for (let i = 1; i < pts.length; i++) d = Math.min(d, distToSegment(px, py, pts[i - 1].x, pts[i - 1].y, pts[i].x, pts[i].y))
+  return d
+}
+
+/** Precise hit test: strokes hit near the line, ellipses use the real curve, boxes use their bounds. */
 export function hitTest(s: Shape, px: number, py: number): boolean {
-  const b   = shapeBounds(s)
-  const pad = Math.max(10, s.width * 2)
-  return px >= b.x - pad && px <= b.x + b.w + pad
-      && py >= b.y - pad && py <= b.y + b.h + pad
+  if (s.rotation) { const q = unrotatePoint(s, px, py); px = q.x; py = q.y }
+  const tol = Math.max(8, s.width * 2)
+  switch (s.type) {
+    case 'path':
+      return s.pts.length > 0 && distToPolyline(px, py, s.pts) <= tol
+    case 'line':
+      return distToSegment(px, py, s.x1, s.y1, s.x2, s.y2) <= tol
+    case 'arrow': {
+      const cx = s.cpx ?? (s.x1 + s.x2) / 2, cy = s.cpy ?? (s.y1 + s.y2) / 2
+      const pts: Point[] = []
+      for (let i = 0; i <= 16; i++) {
+        const t = i / 16, u = 1 - t
+        pts.push({ x: u * u * s.x1 + 2 * u * t * cx + t * t * s.x2, y: u * u * s.y1 + 2 * u * t * cy + t * t * s.y2 })
+      }
+      return distToPolyline(px, py, pts) <= tol
+    }
+    case 'ellipse': {
+      const rx = Math.abs(s.rx) + tol, ry = Math.abs(s.ry) + tol
+      const nx = (px - s.cx) / rx, ny = (py - s.cy) / ry
+      return nx * nx + ny * ny <= 1
+    }
+    default: {
+      const b = shapeBounds(s)
+      return px >= b.x - tol && px <= b.x + b.w + tol && py >= b.y - tol && py <= b.y + b.h + tol
+    }
+  }
+}
+
+/** Empty (unfilled, unlabeled) rect/ellipse: only its outline counts as a hit, so shapes inside stay clickable */
+function isHollowContainer(s: Shape): boolean {
+  return (s.type === 'rect' || s.type === 'ellipse') && s.fill === 'none' && !s.boundText
+}
+
+function nearOutline(s: Shape, px: number, py: number): boolean {
+  const tol = Math.max(8, s.width * 2)
+  if (s.type === 'ellipse') {
+    const rx = Math.abs(s.rx) - tol, ry = Math.abs(s.ry) - tol
+    if (rx <= 0 || ry <= 0) return true
+    const nx = (px - s.cx) / rx, ny = (py - s.cy) / ry
+    return nx * nx + ny * ny >= 1
+  }
+  const b = shapeBounds(s)
+  return !(px > b.x + tol && px < b.x + b.w - tol && py > b.y + tol && py < b.y + b.h - tol)
+}
+
+/**
+ * Topmost shape under the point. Hollow containers only win by their outline,
+ * but if nothing else is under the cursor they still grab from the inside —
+ * so frames never swallow what's inside them, yet remain easy to drag.
+ */
+export function hitTopmost(shapes: Shape[], px: number, py: number): Shape | null {
+  let interior: Shape | null = null
+  for (let i = shapes.length - 1; i >= 0; i--) {
+    const s = shapes[i]
+    if (!hitTest(s, px, py)) continue
+    const q = unrotatePoint(s, px, py)
+    if (isHollowContainer(s) && !nearOutline(s, q.x, q.y)) { interior ??= s; continue }
+    return s
+  }
+  return interior
 }

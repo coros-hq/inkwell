@@ -19,6 +19,7 @@ export function NoteList() {
     moveNotes,
     bodyGlass,
     glassOpacity,
+    theme,
   } = useAppStore()
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date')
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null)
@@ -59,9 +60,9 @@ export function NoteList() {
     <div
       className={cn(
         'w-[272px] shrink-0 flex flex-col h-full overflow-hidden border-r border-border-strong',
-        bodyGlass ? '' : 'bg-sidebar',
+        bodyGlass ? 'glass-pane' : 'bg-sidebar',
       )}
-      style={bodyGlass ? glassBg('sidebar', glassOpacity) : undefined}
+      style={bodyGlass ? glassBg('sidebar', glassOpacity, theme) : undefined}
     >
       <div
         className={cn(

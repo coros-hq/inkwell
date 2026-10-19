@@ -100,6 +100,7 @@ export function SettingsDialog() {
     bodyGlass, setBodyGlass,
     glassOpacity, setGlassOpacity,
     canvasEnabled, setCanvasEnabled,
+    brainstormEnabled, setBrainstormEnabled,
     canvasLinkedVaultPath, setCanvasLinkedVaultPath,
   } = useAppStore()
 
@@ -476,6 +477,13 @@ export function SettingsDialog() {
                     description="Freehand drawing and diagramming — add a Draw page to the sidebar"
                   >
                     <ToggleSwitch checked={canvasEnabled} onChange={setCanvasEnabled} />
+                  </SettingRow>
+
+                  <SettingRow
+                    label="Brainstorm"
+                    description="Private outliner for ideas — add a Brainstorm page to the sidebar and the /brainstorm embed"
+                  >
+                    <ToggleSwitch checked={brainstormEnabled} onChange={setBrainstormEnabled} />
                   </SettingRow>
 
                   {canvasEnabled && (

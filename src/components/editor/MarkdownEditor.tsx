@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { EditorState } from '@codemirror/state'
-import { EditorView, keymap, drawSelection } from '@codemirror/view'
+import { EditorState, EditorSelection } from '@codemirror/state'
+import { EditorView, keymap, drawSelection, rectangularSelection } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, undo, redo } from '@codemirror/commands'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
 import { languages } from '@codemirror/language-data'
@@ -12,7 +12,7 @@ import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next'
 import { getVaultSession, type NoteBinding } from '../../lib/sync/vaultSession'
 import { cn } from '../../lib/utils'
 
-import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField } from '../../lib/editorExtensions'
+import { markdownHighlighting, codeHighlighting, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField, tabsPreviewField } from '../../lib/editorExtensions'
 import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
 import { useEditorViewRef } from './EditorViewContext'
 import { deleteAttachmentFile, makeAttachmentMarkdown } from '../../lib/attachments'
@@ -261,6 +261,36 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
       }
     }
 
+    // Cmd/Ctrl+D: select the word under the cursor, then add the next occurrence
+    // of the selected text as another cursor (VS Code behaviour).
+    const selectNextOccurrence = (view: EditorView) => {
+      const { state } = view
+      const main = state.selection.main
+      if (main.empty) {
+        const ranges = state.selection.ranges.map((r) => state.wordAt(r.head) ?? r)
+        view.dispatch({ selection: EditorSelection.create(ranges, state.selection.mainIndex), scrollIntoView: true })
+        return true
+      }
+      const text = state.sliceDoc(main.from, main.to)
+      const doc = state.doc.toString()
+      let at = doc.indexOf(text, main.to)
+      if (at < 0) at = doc.indexOf(text)
+      // Skip occurrences that are already selected.
+      const taken = (from: number) => state.selection.ranges.some((r) => r.from === from)
+      let guard = 0
+      while (at >= 0 && taken(at) && guard++ < 10000) {
+        const next = doc.indexOf(text, at + text.length)
+        if (next < 0 || next === at) { at = -1; break }
+        at = next
+      }
+      if (at < 0 || taken(at)) return true
+      view.dispatch({
+        selection: state.selection.addRange(EditorSelection.range(at, at + text.length), true),
+        scrollIntoView: true,
+      })
+      return true
+    }
+
     const undoFn = (view: EditorView) => (binding ? binding.undoManager.undo() !== null : undo(view))
     const redoFn = (view: EditorView) => (binding ? binding.undoManager.redo() !== null : redo(view))
 
@@ -270,7 +300,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         // Must be the first extension — it needs to see keystrokes before the
         // default keymap does so it can interpret them as vim motions/commands
         // instead of plain text input while in Normal/Visual mode.
-        ...(vimModeEnabled ? [vim({ status: true })] : []),
+        ...(vimModeEnabled ? [vim({ status: false })] : []),
         ...(binding
           ? [
               yCollab(binding.ytext, binding.awareness, { undoManager: binding.undoManager }),
@@ -283,6 +313,12 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         // back to the opaque native browser highlight, which turns a selection
         // over a code block into an unreadable solid-blue rectangle.
         drawSelection(),
+        // Multiple cursors: Cmd/Ctrl-click (or Alt-click) adds one, Shift+Alt-drag makes
+        // a column selection, Cmd/Ctrl+D adds the next match.
+        EditorState.allowMultipleSelections.of(true),
+        EditorView.clickAddsSelectionRange.of((e) => e.metaKey || e.ctrlKey || e.altKey),
+        rectangularSelection({ eventFilter: (e) => e.altKey && e.shiftKey }),
+        keymap.of([{ key: 'Mod-d', run: selectNextOccurrence, preventDefault: true }]),
         // Chromium's contenteditable fires its own native undo/redo (beforeinput
         // historyUndo/historyRedo) which bypasses CodeMirror's managed history and
         // corrupts editor state. This only surfaces on Chromium-based WebViews
@@ -384,7 +420,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         // code-only tags (keyword, string, number, …) still get coloured.
         codeHighlighting,
         markdownHighlighting,
-        ...(liveConceal ? [wikiLinkPlugin, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField] : []),
+        ...(liveConceal ? [wikiLinkPlugin, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, tabsPreviewField, refEmbedPreviewField, tablePreviewField] : []),
         highlightMarkPlugin,
         tablePlugin,
         createFileEmbedPlugin(vaultPath ?? '', handleRemoveEmbed, useAppStore.getState().notes.find(n => n.id === noteId)?.searchRoot),

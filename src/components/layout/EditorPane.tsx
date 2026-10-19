@@ -109,6 +109,7 @@ export function EditorPane() {
     vaultPath,
     bodyGlass,
     glassOpacity,
+    theme,
   } = useAppStore();
 
   const primaryNoteId = lastSelectedNoteId ?? selectedNoteIds[0] ?? null;
@@ -245,8 +246,8 @@ export function EditorPane() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {noteSidebarMode === "tabs" && <TabBar />}
         <div
-          className={cn("flex-1 flex flex-col items-center justify-center gap-5", bodyGlass ? "" : "bg-background")}
-          style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
+          className={cn("flex-1 flex flex-col items-center justify-center gap-5", bodyGlass ? "glass-card" : "bg-background")}
+          style={bodyGlass ? glassBg('background', glassOpacity, theme, 'card') : undefined}
         >
           <div className="w-16 h-16 flex items-center justify-center rounded-2xl bg-surface border border-border-strong shadow-sm">
             <PenLine className="w-7 h-7 text-muted-foreground" strokeWidth={1.75} />
@@ -282,8 +283,8 @@ export function EditorPane() {
 
   return (
     <div
-      className={cn("flex-1 flex overflow-hidden min-w-0", bodyGlass ? "" : "bg-background")}
-      style={bodyGlass ? glassBg('background', glassOpacity) : undefined}
+      className={cn("flex-1 flex overflow-hidden min-w-0", bodyGlass ? "glass-card" : "bg-background")}
+      style={bodyGlass ? glassBg('background', glassOpacity, theme, 'card') : undefined}
     >
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {noteSidebarMode === "tabs" && <TabBar />}

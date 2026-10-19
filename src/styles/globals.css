@@ -7,6 +7,46 @@ html, body, #root {
   background: transparent !important;
 }
 
+/* ── Glass polish ───────────────────────────────────────────────────────────
+   Sidebar and note list sit directly on the native macOS blur: hairline
+   translucent dividers, soft translucent hover/selected pills and a faint top
+   sheen. The editor floats above them as a rounded card. The tokens are
+   overridden only inside .glass-pane, so editor content keeps the real theme. */
+.glass-pane {
+  --border:        0 0% 0% / 0.06;
+  --border-strong: 0 0% 0% / 0.08;
+  --surface:       0 0% 0% / 0.05;
+  --muted:         0 0% 100% / 0.6;
+  --active:        0 0% 100% / 0.85;
+  background-image: linear-gradient(to bottom, hsl(0 0% 100% / 0.10), transparent 35%);
+}
+.dark .glass-pane {
+  --border:        0 0% 100% / 0.07;
+  --border-strong: 0 0% 100% / 0.09;
+  --surface:       0 0% 100% / 0.07;
+  --muted:         0 0% 100% / 0.08;
+  --active:        0 0% 100% / 0.14;
+  background-image: linear-gradient(to bottom, hsl(0 0% 100% / 0.05), transparent 35%);
+}
+.glass-pane .bg-active {
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.07), 0 0 0 0.5px rgb(0 0 0 / 0.05);
+}
+.dark .glass-pane .bg-active {
+  box-shadow: 0 0 0 0.5px rgb(255 255 255 / 0.08);
+}
+.glass-card {
+  margin: 8px;
+  border-radius: 12px;
+  border: 0.5px solid rgb(0 0 0 / 0.08);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.05), 0 10px 30px rgb(0 0 0 / 0.08);
+  backdrop-filter: saturate(180%) blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(24px);
+}
+.dark .glass-card {
+  border-color: rgb(255 255 255 / 0.09);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 12px 32px rgb(0 0 0 / 0.35);
+}
+
 /* Window drag regions — WebKit native approach, works without IPC permissions */
 [data-tauri-drag-region] {
   -webkit-app-region: drag;
@@ -184,6 +224,8 @@ html, body, #root {
     --code-num:  30 68% 40%;         /* numbers — amber     */
     --code-fn:   212 52% 44%;        /* functions / types   */
     --code-meta: 188 55% 34%;        /* meta / decorators   */
+    --code-type: var(--code-fn);     /* types / classes (themes may split from functions) */
+    --code-op:   var(--muted-foreground); /* operators / punctuation */
   }
   .dark {
     --code-block-bg: 36 10% 7%;   /* dark: warm near-black, matches midnight hue */
@@ -222,6 +264,105 @@ html[data-theme="midnight"] {
   --tag-text:          209 55% 72%;
   --destructive:        4 68% 62%;
   --code-block-bg:      0 0% 8%;
+}
+
+/* Palette from craftzdog/solarized-osaka.nvim: bg/base04 192 100 5, bg_highlight 192 100 11,
+   base02 192 81 14, base0 186 8 65, base00 196 13 45, base01 194 14 40, blue 205 69 49. */
+html[data-theme="solarized_osaka"] {
+  color-scheme: dark;
+  /* syntax groups: Keyword/Operator green500, String/Constant/Number cyan500, Comment base01,
+     Function/Identifier blue500, Type yellow500, PreProc red500 */
+  --code-kw:   68 100% 30%;
+  --code-op:   68 100% 30%;
+  --code-str:  175 59% 40%;
+  --code-num:  175 59% 40%;
+  --code-cmt:  194 14% 40%;
+  --code-fn:   205 69% 49%;
+  --code-type: 45 100% 35%;
+  --code-meta:   1 71% 52%;
+  --background:        192 100% 5%;
+  --foreground:        186 8% 65%;
+  --card:              192 100% 8%;
+  --card-foreground:   186 8% 65%;
+  --sidebar:           192 100% 5%;
+  --panel:             192 100% 8%;
+  --surface:           192 100% 11%;
+  --active:            192 81% 14%;
+  --border:            192 81% 14%;
+  --border-strong:     192 60% 22%;
+  --input:             192 81% 14%;
+  --accent:            205 69% 49%;
+  --accent-foreground: 192 100% 5%;
+  --muted:             192 100% 11%;
+  --muted-foreground:  196 13% 45%;
+  --tertiary:          194 14% 40%;
+  --code-bg:           192 100% 8%;
+  --tag-bg:            205 81% 12%;
+  --tag-text:          205 90% 62%;
+  --destructive:         1 71% 52%;
+  --code-block-bg:     192 100% 3%;
+}
+
+html[data-theme="noir_ember"] {
+  color-scheme: dark;
+  --background:        0 0% 6%;
+  --foreground:        40 15% 92%;
+  --card:              0 0% 9%;
+  --card-foreground:   40 15% 92%;
+  --sidebar:           0 0% 4%;
+  --panel:             0 0% 9%;
+  --surface:           0 0% 12%;
+  --active:            24 40% 16%;
+  --border:            0 0% 14%;
+  --border-strong:     0 0% 24%;
+  --input:             0 0% 14%;
+  --accent:            24 95% 55%;
+  --accent-foreground: 0 0% 6%;
+  --muted:             0 0% 12%;
+  --muted-foreground:  30 6% 56%;
+  --tertiary:          30 5% 38%;
+  --code-bg:           0 0% 10%;
+  --tag-bg:            24 50% 14%;
+  --tag-text:          26 95% 62%;
+  --destructive:        0 72% 58%;
+  --code-block-bg:      0 0% 3.5%;
+  --code-kw:   24 95% 60%;
+  --code-str:  40 55% 68%;
+  --code-num:  18 90% 65%;
+  --code-fn:   38 85% 62%;
+  --code-type: 30 30% 75%;
+  --code-meta: 20 70% 55%;
+}
+
+html[data-theme="ivory_ember"] {
+  color-scheme: light;
+  --background:        40 20% 99%;
+  --foreground:        24 12% 10%;
+  --card:              0 0% 100%;
+  --card-foreground:   24 12% 10%;
+  --sidebar:           40 14% 96%;
+  --panel:             0 0% 100%;
+  --surface:           40 12% 93%;
+  --active:            24 90% 94%;
+  --border:            40 10% 89%;
+  --border-strong:     40 8% 78%;
+  --input:             40 10% 89%;
+  --accent:            22 90% 48%;
+  --accent-foreground: 0 0% 100%;
+  --muted:             40 12% 94%;
+  --muted-foreground:  25 6% 42%;
+  --tertiary:          25 5% 62%;
+  --code-bg:           40 12% 94%;
+  --tag-bg:            24 90% 94%;
+  --tag-text:          20 85% 38%;
+  --destructive:        0 65% 46%;
+  --code-block-bg:     40 14% 96%;
+  --code-kw:   22 85% 44%;
+  --code-str:  35 60% 32%;
+  --code-num:  15 75% 42%;
+  --code-fn:   28 70% 36%;
+  --code-type: 24 25% 30%;
+  --code-meta: 12 60% 42%;
 }
 
 html[data-theme="parchment"] {
@@ -475,7 +616,12 @@ html[data-theme="onyx"] {
 .hljs-title.class_          { color: hsl(var(--foreground)); font-weight: 600; }
 
 .hljs-type,
-.hljs-built_in              { color: hsl(var(--code-fn)); }
+.hljs-built_in,
+.hljs-title.class_,
+.hljs-title.class_.inherited__ { color: hsl(var(--code-type)); }
+.hljs-title.function_       { color: hsl(var(--code-fn)); font-weight: inherit; }
+.hljs-operator,
+.hljs-punctuation           { color: hsl(var(--code-op)); }
 
 .hljs-variable,
 .hljs-params                { color: hsl(var(--foreground) / 0.82); }

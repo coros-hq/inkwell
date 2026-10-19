@@ -525,27 +525,38 @@ export interface FolderMeta {
   icon?: string
   /** Show this folder's notes grouped under their first tag. */
   groupByTags?: boolean
+  /** User-assigned tags, shown in the sidebar's Tags view. */
+  tags?: string[]
 }
 
-export async function writeFoldersFile(vaultPath: string, meta: Record<string, FolderMeta>): Promise<void> {
+/** A user-created tag: folders reference it by name. */
+export interface TagDef {
+  name: string
+  /** CSS colour, picked from the tag colour palette. */
+  color: string
+}
+
+export async function writeFoldersFile(vaultPath: string, meta: Record<string, FolderMeta>, tags: TagDef[] = []): Promise<void> {
   if (!isTauri) return
   try {
     const { writeTextFile, mkdir, exists } = await import('@tauri-apps/plugin-fs')
     const dir = `${vaultPath}/${INKWELL_DIR}`
     if (!await exists(dir)) await mkdir(dir, { recursive: true })
     markSelfWrite(`${dir}/${FOLDERS_FILE}`)
-    await writeTextFile(`${dir}/${FOLDERS_FILE}`, JSON.stringify({ version: 1, folders: meta }, null, 2))
+    await writeTextFile(`${dir}/${FOLDERS_FILE}`, JSON.stringify({ version: 1, folders: meta, tags }, null, 2))
   } catch (e) { console.error('Failed to write folders.json:', e) }
 }
 
-export async function readFoldersFile(vaultPath: string): Promise<Record<string, FolderMeta>> {
-  if (!isTauri) return {}
+export async function readFoldersFile(vaultPath: string): Promise<{ folders: Record<string, FolderMeta>; tags: TagDef[] }> {
+  const empty = { folders: {}, tags: [] }
+  if (!isTauri) return empty
   try {
     const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
     const filePath = `${vaultPath}/${INKWELL_DIR}/${FOLDERS_FILE}`
-    if (!await exists(filePath)) return {}
-    return (JSON.parse(await readTextFile(filePath)).folders ?? {}) as Record<string, FolderMeta>
-  } catch { return {} }
+    if (!await exists(filePath)) return empty
+    const data = JSON.parse(await readTextFile(filePath))
+    return { folders: (data.folders ?? {}) as Record<string, FolderMeta>, tags: (data.tags ?? []) as TagDef[] }
+  } catch { return empty }
 }
 
 // ── Board data (boards.json) ──────────────────────────────────────────────────

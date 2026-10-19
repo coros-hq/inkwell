@@ -2,7 +2,7 @@ import type { Shape } from './canvasTypes'
 import { uid, TEMPLATE_PLACEHOLDER_COLOR } from './canvasTypes'
 
 const C  = TEMPLATE_PLACEHOLDER_COLOR
-const FN = 'Inter, system-ui, sans-serif'
+const FN = 'Kalam, "Comic Sans MS", cursive'
 const W2 = 2
 const W1 = 1.5
 

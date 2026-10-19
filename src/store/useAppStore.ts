@@ -42,6 +42,7 @@ import {
   readFoldersFile,
   writeFoldersFile,
   type FolderMeta,
+  type TagDef,
   writeAppData,
 } from "../lib/vault";
 import {
@@ -282,6 +283,8 @@ interface AppState {
   recordingShortcut: boolean;
   canvasEnabled: boolean;
   setCanvasEnabled: (enabled: boolean) => void;
+  brainstormEnabled: boolean;
+  setBrainstormEnabled: (enabled: boolean) => void;
   // Canvas data is stored globally (independent of whichever vault is open) by
   // default. If set, canvas data instead reads/writes to this specific vault's
   // .inkwell/canvas.json regardless of the open vault.
@@ -384,6 +387,17 @@ interface AppState {
   folderMeta: Record<string, FolderMeta>;
   setFolderIcon: (folderId: string, icon: string | null) => void;
   toggleFolderGroupByTags: (folderId: string) => void;
+  /** User-created tags (name + colour), persisted in .inkwell/folders.json. */
+  tagDefs: TagDef[];
+  createTag: (name: string, color: string) => void;
+  updateTag: (oldName: string, name: string, color: string) => void;
+  deleteTag: (name: string) => void;
+  /** Add (on) or remove (off) a tag on each of the given folders. */
+  setFoldersTag: (folderIds: string[], tag: string, on: boolean) => void;
+  /** Folders ticked with ⌘/Ctrl-click, the target of tag assignment. */
+  selectedFolderIds: string[];
+  toggleFolderSelected: (id: string) => void;
+  clearSelectedFolders: () => void;
 
   createBoard: (name: string) => void;
   deleteBoard: (id: string) => void;
@@ -508,8 +522,12 @@ function dropFolderMeta(meta: Record<string, FolderMeta>, id: string): Record<st
   return out
 }
 
-function persistFolderMeta(vaultPath: string | null, meta: Record<string, FolderMeta>) {
-  if (vaultPath) writeFoldersFile(vaultPath, meta)
+function isMetaEmpty(e: FolderMeta): boolean {
+  return !e.icon && !e.groupByTags && !e.tags?.length
+}
+
+function persistFolderMeta(vaultPath: string | null, meta: Record<string, FolderMeta>, tags: TagDef[] = useAppStore.getState().tagDefs) {
+  if (vaultPath) writeFoldersFile(vaultPath, meta, tags)
 }
 
 function renameFolderInTree(folders: Folder[], id: string, newName: string, newId: string, newPath: string): Folder[] {
@@ -806,6 +824,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   shortcuts: loadShortcuts(),
   recordingShortcut: false,
   canvasEnabled: localStorage.getItem("inkwell-canvas-enabled") === "true",
+  brainstormEnabled: localStorage.getItem("inkwell-brainstorm-enabled") === "true",
   canvasLinkedVaultPath: localStorage.getItem("inkwell-canvas-linked-vault"),
   vimModeEnabled: localStorage.getItem("inkwell-vim-mode") === "true",
   abbreviationTrigger: localStorage.getItem("inkwell-abbrev-trigger") ?? ":",
@@ -829,6 +848,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   boardTasks: [],
   activeBoardId: null,
   folderMeta: {},
+  tagDefs: [],
+  selectedFolderIds: [],
   activeBoardTaskId: null,
   sharedVault: null,
   syncStatus: "idle",
@@ -939,10 +960,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ brainstorms, activeBrainstormId: brainstorms[0]?.id ?? null });
     }).catch(console.error);
 
-    set({ folderMeta: {} });
-    readFoldersFile(path).then((folderMeta) => {
+    set({ folderMeta: {}, tagDefs: [], selectedFolderIds: [] });
+    readFoldersFile(path).then(({ folders: folderMeta, tags: tagDefs }) => {
       if (get().vaultPath !== path) return;
-      set({ folderMeta });
+      set({ folderMeta, tagDefs });
     }).catch(console.error);
 
     // Git sync settings live in this vault's own app.json, not the VaultData
@@ -1239,6 +1260,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     localStorage.setItem("inkwell-canvas-enabled", String(enabled));
     set({ canvasEnabled: enabled });
     if (!enabled && get().activeView === "canvas") {
+      set({ activeView: "notes" });
+    }
+  },
+
+  setBrainstormEnabled: (enabled) => {
+    localStorage.setItem("inkwell-brainstorm-enabled", String(enabled));
+    set({ brainstormEnabled: enabled });
+    if (!enabled && get().activeView === "brainstorm") {
       set({ activeView: "notes" });
     }
   },
@@ -1689,10 +1718,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     const entry = { ...next[folderId] }
     if (icon) entry.icon = icon
     else delete entry.icon
-    if (entry.icon || entry.groupByTags) next[folderId] = entry
+    if (!isMetaEmpty(entry)) next[folderId] = entry
     else delete next[folderId]
     set({ folderMeta: next })
-    if (vaultPath) writeFoldersFile(vaultPath, next)
+    persistFolderMeta(vaultPath, next)
   },
 
   toggleFolderGroupByTags: (folderId) => {
@@ -1701,11 +1730,69 @@ export const useAppStore = create<AppState>((set, get) => ({
     const entry = { ...next[folderId] }
     if (entry.groupByTags) delete entry.groupByTags
     else entry.groupByTags = true
-    if (entry.icon || entry.groupByTags) next[folderId] = entry
+    if (!isMetaEmpty(entry)) next[folderId] = entry
     else delete next[folderId]
     set({ folderMeta: next })
-    if (vaultPath) writeFoldersFile(vaultPath, next)
+    persistFolderMeta(vaultPath, next)
   },
+
+  createTag: (name, color) => {
+    const trimmed = name.trim().replace(/^#+/, '')
+    if (!trimmed || get().tagDefs.some((t) => t.name.toLowerCase() === trimmed.toLowerCase())) return
+    const tagDefs = [...get().tagDefs, { name: trimmed, color }]
+    set({ tagDefs })
+    persistFolderMeta(get().vaultPath, get().folderMeta, tagDefs)
+  },
+
+  updateTag: (oldName, name, color) => {
+    const trimmed = name.trim().replace(/^#+/, '')
+    const { tagDefs, folderMeta, vaultPath } = get()
+    if (!trimmed || (trimmed.toLowerCase() !== oldName.toLowerCase() && tagDefs.some((t) => t.name.toLowerCase() === trimmed.toLowerCase()))) return
+    const nextDefs = tagDefs.map((t) => (t.name === oldName ? { name: trimmed, color } : t))
+    const nextMeta: Record<string, FolderMeta> = {}
+    for (const [k, v] of Object.entries(folderMeta)) {
+      nextMeta[k] = v.tags ? { ...v, tags: v.tags.map((t) => (t === oldName ? trimmed : t)) } : v
+    }
+    set({ tagDefs: nextDefs, folderMeta: nextMeta })
+    persistFolderMeta(vaultPath, nextMeta, nextDefs)
+  },
+
+  deleteTag: (name) => {
+    const { tagDefs, folderMeta, vaultPath } = get()
+    const nextDefs = tagDefs.filter((t) => t.name !== name)
+    const nextMeta: Record<string, FolderMeta> = {}
+    for (const [k, v] of Object.entries(folderMeta)) {
+      const entry = v.tags ? { ...v, tags: v.tags.filter((t) => t !== name) } : v
+      if (!entry.tags?.length) delete entry.tags
+      if (!isMetaEmpty(entry)) nextMeta[k] = entry
+    }
+    set({ tagDefs: nextDefs, folderMeta: nextMeta })
+    persistFolderMeta(vaultPath, nextMeta, nextDefs)
+  },
+
+  setFoldersTag: (folderIds, tag, on) => {
+    const { folderMeta, vaultPath } = get()
+    const next = { ...folderMeta }
+    for (const id of folderIds) {
+      const entry = { ...next[id] }
+      const tags = (entry.tags ?? []).filter((t) => t !== tag)
+      if (on) tags.push(tag)
+      if (tags.length) entry.tags = tags
+      else delete entry.tags
+      if (!isMetaEmpty(entry)) next[id] = entry
+      else delete next[id]
+    }
+    set({ folderMeta: next })
+    persistFolderMeta(vaultPath, next)
+  },
+
+  toggleFolderSelected: (id) =>
+    set((s) => ({
+      selectedFolderIds: s.selectedFolderIds.includes(id)
+        ? s.selectedFolderIds.filter((x) => x !== id)
+        : [...s.selectedFolderIds, id],
+    })),
+  clearSelectedFolders: () => set({ selectedFolderIds: [] }),
 
   renameFolder: (id, newName) => {
     const { folders, vaultPath } = get()

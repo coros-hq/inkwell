@@ -21,6 +21,27 @@ export const THEMES: ThemeDef[] = [
     preview: { bg: '#1a1714', sidebar: '#161412', accent: '#c07840', text: '#f5f4f2', border: '#2e2a26' },
   },
   {
+    id: 'solarized_osaka',
+    label: 'Solarized Osaka',
+    description: 'Solarized teal with blue accents',
+    dark: true,
+    preview: { bg: '#00141a', sidebar: '#00141a', accent: '#278bd3', text: '#9fabad', border: '#073541' },
+  },
+  {
+    id: 'noir_ember',
+    label: 'Noir Ember',
+    description: 'Luxury black with burnt orange',
+    dark: true,
+    preview: { bg: '#0f0f0f', sidebar: '#0a0a0a', accent: '#f9761f', text: '#eeece8', border: '#242424' },
+  },
+  {
+    id: 'ivory_ember',
+    label: 'Ivory Ember',
+    description: 'Luxury white with burnt orange',
+    dark: false,
+    preview: { bg: '#fdfdfc', sidebar: '#f6f5f3', accent: '#e95d0c', text: '#1d1916', border: '#e6e4e0' },
+  },
+  {
     id: 'parchment',
     label: 'Parchment',
     description: 'Warm cream with golden ink',

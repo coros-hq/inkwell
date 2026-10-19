@@ -3,7 +3,7 @@ import { FileText, Search, X } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 
 export function SearchOverlay() {
-  const { searchOpen, searchQuery, setSearchOpen, setSearchQuery, notes, selectNote } = useAppStore()
+  const { searchOpen, searchQuery, setSearchOpen, setSearchQuery, notes, selectNote, folderMeta } = useAppStore()
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -25,12 +25,23 @@ export function SearchOverlay() {
 
   if (!searchOpen) return null
 
-  const filtered = searchQuery.trim()
-    ? notes.filter(n =>
-        n.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        n.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        n.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
+  // "#tag" searches tags only; otherwise tags (note's own or its folder chain's) match alongside title/content.
+  const raw = searchQuery.trim().toLowerCase()
+  const tagOnly = raw.startsWith('#')
+  const q = raw.replace(/^#+/, '')
+  const folderTags = (folder: string | null): string[] => {
+    const out: string[] = []
+    for (let f = folder; f; f = f.includes('/') ? f.slice(0, f.lastIndexOf('/')) : null) {
+      out.push(...(folderMeta[f]?.tags ?? []))
+    }
+    return out
+  }
+  const filtered = raw
+    ? notes.filter(n => {
+        const tagHit = [...n.tags, ...folderTags(n.folder)].some(t => t.toLowerCase().includes(q))
+        if (tagOnly) return tagHit
+        return n.title.toLowerCase().includes(raw) || n.content.toLowerCase().includes(raw) || tagHit
+      })
     : notes.slice(0, 8)
 
   const highlight = (text: string) => {

@@ -16,6 +16,7 @@ import {
   MoreHorizontal,
   Lightbulb,
 } from "lucide-react";
+import { TagsSection, TagFolderResults } from './TagsView'
 import { SettingsDialog } from '../settings/SettingsDialog'
 import {
   DndContext,
@@ -122,6 +123,34 @@ function DropLine({ pos }: { pos: "top" | "bottom" }) {
     >
       <span className="w-2 h-2 rounded-full bg-accent shrink-0 ml-1.5" />
       <div className="flex-1 h-[1.5px] bg-accent" />
+    </div>
+  );
+}
+
+const sectionHeading = "text-[12px] font-semibold text-tertiary px-2 mb-1";
+
+function QuickLink({
+  icon: Icon,
+  label,
+  active,
+  onClick,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        treeRowClass,
+        "px-2.5 cursor-pointer",
+        active ? "bg-accent text-accent-foreground" : "text-foreground hover:bg-surface",
+      )}
+      onClick={onClick}
+    >
+      <Icon className={cn("w-3.5 h-3.5 shrink-0", !active && "text-muted-foreground")} />
+      <span className="truncate">{label}</span>
     </div>
   );
 }
@@ -297,6 +326,9 @@ function FolderRow({
   const { selectedNoteIds, toggleFolder, activeView, setActiveView, createNote } =
     useAppStore();
   const folderMeta = useAppStore((s) => s.folderMeta[folder.id]);
+  const allFolderMeta = useAppStore((s) => s.folderMeta);
+  const tagDefs = useAppStore((s) => s.tagDefs);
+  const isTicked = useAppStore((s) => s.selectedFolderIds.includes(folder.id));
   const [collapsedTags, setCollapsedTags] = useState<Set<string>>(new Set());
   const isRenamingThis = renamingId === folder.id;
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -308,24 +340,26 @@ function FolderRow({
     }
   }, [isRenamingThis]);
 
-  // Optional grouping: notes sit under their first tag; untagged ones go last.
-  const noteGroups: { tag: string | null; notes: Note[] }[] | null = folderMeta?.groupByTags
+  // Optional grouping: subfolders and notes sit under their first tag; untagged ones go last.
+  const groups: { tag: string | null; folders: FolderType[]; notes: Note[] }[] | null = folderMeta?.groupByTags
     ? (() => {
-        const byTag = new Map<string, Note[]>();
-        const untagged: Note[] = [];
-        for (const n of folder.notes) {
-          const t = n.tags[0];
-          if (!t) untagged.push(n);
-          else byTag.set(t, [...(byTag.get(t) ?? []), n]);
-        }
-        const groups = [...byTag.entries()]
-          .sort(([a], [b]) => a.localeCompare(b))
-          .map(([tag, notes]) => ({ tag: tag as string | null, notes }));
-        if (untagged.length) groups.push({ tag: null, notes: untagged });
-        return groups;
+        const byTag = new Map<string, { tag: string; folders: FolderType[]; notes: Note[] }>();
+        const untagged = { tag: null as string | null, folders: [] as FolderType[], notes: [] as Note[] };
+        const bucket = (t: string | undefined) => {
+          if (!t) return untagged;
+          const k = t.toLowerCase();
+          let g = byTag.get(k);
+          if (!g) { g = { tag: t, folders: [], notes: [] }; byTag.set(k, g); }
+          return g;
+        };
+        for (const c of folder.children) bucket(allFolderMeta[c.id]?.tags?.[0]).folders.push(c);
+        for (const n of folder.notes) bucket(n.tags[0]).notes.push(n);
+        const list = [...byTag.values()].sort((a, b) => a.tag.localeCompare(b.tag)) as typeof untagged[];
+        if (untagged.folders.length || untagged.notes.length) list.push(untagged);
+        return list;
       })()
     : null;
-  const noteOrderedIds = (noteGroups ? noteGroups.flatMap((g) => g.notes) : folder.notes).map((n) => n.id);
+  const noteOrderedIds = (groups ? groups.flatMap((g) => g.notes) : folder.notes).map((n) => n.id);
   const paddingLeft = folderPadding(depth);
   const dndId = `folder:${folder.id}`;
 
@@ -396,6 +430,22 @@ function FolderRow({
           );
         };
 
+  const renderChild = (child: FolderType) => (
+    <FolderRow
+                  key={child.id}
+                  folder={child}
+                  depth={depth + 1}
+                  siblingFolderIds={childFolderIds}
+                  onFolderContextMenu={onFolderContextMenu}
+                  onNoteContextMenu={onNoteContextMenu}
+                  dropIndicator={dropIndicator}
+                  renamingId={renamingId}
+                  onStartRename={onStartRename}
+                  onCommitRename={onCommitRename}
+                  onCancelRename={onCancelRename}
+                />
+  );
+
   return (
     <div>
       {/* Folder header row — droppable wraps the visible row */}
@@ -405,14 +455,21 @@ function FolderRow({
           ref={setDragRef}
           className={cn(
             treeRowClass,
-            "cursor-pointer",
-            !dropInto && "hover:bg-surface",
+            "relative cursor-pointer",
+            !dropInto && !isTicked && "hover:bg-surface",
+            isTicked && !dropInto && "bg-active",
             dropInto && "ring-2 ring-accent bg-accent/15",
             isDragging && "opacity-20 pointer-events-none",
           )}
           style={{ paddingLeft }}
-          onClick={() => {
+          onClick={(e) => {
             if (isRenamingThis) return;
+            // ⌘/Ctrl-click ticks folders for tag assignment instead of expanding.
+            if (e.metaKey || e.ctrlKey) {
+              useAppStore.getState().toggleFolderSelected(folder.id);
+              return;
+            }
+            if (useAppStore.getState().selectedFolderIds.length) useAppStore.getState().clearSelectedFolders();
             // Folders aren't selectable — a click only expands/collapses,
             // leaving the active note untouched.
             toggleFolder(folder.id);
@@ -467,6 +524,17 @@ function FolderRow({
             </span>
           )}
 
+          {!isRenamingThis && (folderMeta?.tags?.length ?? 0) > 0 && (
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 group-hover:hidden pointer-events-none">
+              {folderMeta!.tags!.map((t) => {
+                const def = tagDefs.find((d) => d.name === t);
+                return def ? (
+                  <span key={t} className="w-2 h-2 rounded-full" style={{ background: def.color }} title={t} />
+                ) : null;
+              })}
+            </span>
+          )}
+
           {!isRenamingThis && (
             <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0 flex items-center gap-0.5">
               <button
@@ -495,24 +563,8 @@ function FolderRow({
 
       {folder.expanded && (
         <div className="mt-1">
-          {folder.children.map((child) => (
-            <FolderRow
-              key={child.id}
-              folder={child}
-              depth={depth + 1}
-              siblingFolderIds={childFolderIds}
-              onFolderContextMenu={onFolderContextMenu}
-              onNoteContextMenu={onNoteContextMenu}
-              dropIndicator={dropIndicator}
-              renamingId={renamingId}
-              onStartRename={onStartRename}
-              onCommitRename={onCommitRename}
-              onCancelRename={onCancelRename}
-            />
-          ))}
-
-          {noteGroups
-            ? noteGroups.map((g) => {
+          {groups
+            ? groups.map((g) => {
                 const key = g.tag ?? "__untagged__";
                 const collapsed = collapsedTags.has(key);
                 return (
@@ -531,13 +583,17 @@ function FolderRow({
                     >
                       {collapsed ? <ChevronRight className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                       <span className="truncate">{g.tag ? `#${g.tag}` : "Untagged"}</span>
-                      <span className="ml-1 opacity-60">{g.notes.length}</span>
+                      <span className="ml-1 opacity-60">{g.folders.length + g.notes.length}</span>
                     </button>
+                    {!collapsed && g.folders.map(renderChild)}
                     {!collapsed && g.notes.map(renderNote)}
                   </div>
                 );
               })
-            : folder.notes.map(renderNote)}
+            : <>
+                {folder.children.map(renderChild)}
+                {folder.notes.map(renderNote)}
+              </>}
         </div>
       )}
     </div>
@@ -568,12 +624,15 @@ export function Sidebar() {
     renameFolder,
     setFolderIcon,
     toggleFolderGroupByTags,
+    toggleFolder,
     openPrompt,
     selectedFolderId,
     clearFolderSelection,
     sidebarGlass,
     glassOpacity,
+    theme,
     canvasEnabled,
+    brainstormEnabled,
     updateInfo,
     updateInstallState,
     installUpdate,
@@ -633,6 +692,17 @@ export function Sidebar() {
   const rootFolderIds = folders.map((f) => f.id);
 
   const [iconPickerFolderId, setIconPickerFolderId] = useState<string | null>(null);
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const openFolderInTree = (folder: FolderType) => {
+    setActiveTag(null);
+    const chain: string[] = [];
+    let cur: FolderType | null = folder;
+    while (cur) { chain.unshift(cur.id); cur = cur.parentId ? findFolderById(folders, cur.parentId) : null; }
+    for (const id of chain) {
+      const f = findFolderById(useAppStore.getState().folders, id);
+      if (f && !f.expanded) toggleFolder(id);
+    }
+  };
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -910,6 +980,23 @@ export function Sidebar() {
 
   // ── Context menus ───────────────────────────────────────────────────────────
 
+  // One row per existing tag. If the right-clicked folder is part of a ⌘-click
+  // selection the toggle applies to every ticked folder, otherwise just to it.
+  const tagMenuItems = (folder: FolderType) => {
+    const st = useAppStore.getState();
+    const targets = st.selectedFolderIds.includes(folder.id) ? st.selectedFolderIds : [folder.id];
+    return st.tagDefs.map((t, i) => {
+      const allHave = targets.every((id) => st.folderMeta[id]?.tags?.includes(t.name));
+      return {
+        label: t.name,
+        dotColor: t.color,
+        checked: allHave,
+        separator: i === 0,
+        onClick: () => st.setFoldersTag(targets, t.name, !allHave),
+      };
+    });
+  };
+
   const openFolderContextMenu = (e: React.MouseEvent, folder: FolderType) => {
     e.preventDefault();
     e.stopPropagation();
@@ -920,10 +1007,11 @@ export function Sidebar() {
         { label: "New note", onClick: () => createNote(folder.id) },
         { label: "Rename", onClick: () => startRename(folder.id) },
         { label: "Change icon…", onClick: () => setIconPickerFolderId(folder.id) },
+        ...tagMenuItems(folder),
         {
           label: useAppStore.getState().folderMeta[folder.id]?.groupByTags
-            ? "Ungroup notes"
-            : "Group notes by tag",
+            ? "Ungroup"
+            : "Group by tag",
           onClick: () => toggleFolderGroupByTags(folder.id),
         },
         {
@@ -1046,9 +1134,9 @@ export function Sidebar() {
         className={cn(
           "shrink-0 flex flex-col h-full overflow-hidden relative border-r border-border-strong",
           // glass = translucent tint over the native macOS blur (see set_vibrancy); no CSS blur
-          sidebarGlass ? "" : "bg-sidebar",
+          sidebarGlass ? "glass-pane" : "bg-sidebar",
         )}
-        style={{ width: sidebarWidth, ...(sidebarGlass ? glassBg('sidebar', glassOpacity) : {}) }}
+        style={{ width: sidebarWidth, ...(sidebarGlass ? glassBg('sidebar', glassOpacity, theme) : {}) }}
       >
         <div
           onMouseDown={startResize}
@@ -1089,7 +1177,7 @@ export function Sidebar() {
 
         <div className="px-3 pb-3.5">
           <button
-            className="w-full flex items-center gap-2 h-8 px-2.5 bg-muted border border-border-strong rounded-md text-[13px] font-medium text-muted-foreground hover:text-foreground hover:border-accent/40 transition-colors"
+            className="w-full flex items-center gap-2 h-8 px-2.5 bg-background border border-border-strong rounded-md text-[13px] font-medium text-muted-foreground hover:text-foreground hover:border-accent/40 transition-colors"
             onClick={() => setSearchOpen(true)}
           >
             <Search className="w-3.5 h-3.5" strokeWidth={2.25} />
@@ -1116,10 +1204,30 @@ export function Sidebar() {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-2 space-y-4">
-          {pinnedNotes.length > 0 && (
+        <div className="flex-1 overflow-y-auto px-2 space-y-5">
+          <div>
+            <p className={sectionHeading}>Quick links</p>
+            <QuickLink icon={FileText} label="Notes" active={activeView === "notes"} onClick={() => setActiveView("notes")} />
+            <QuickLink icon={LayoutGrid} label="Board" active={activeView === "board"} onClick={() => setActiveView("board")} />
+            {brainstormEnabled && (
+              <QuickLink icon={Lightbulb} label="Brainstorm" active={activeView === "brainstorm"} onClick={() => setActiveView("brainstorm")} />
+            )}
+            {canvasEnabled && (
+              <QuickLink icon={PenSquare} label="Draw" active={activeView === "canvas"} onClick={() => setActiveView("canvas")} />
+            )}
+          </div>
+
+          <div className="max-h-[42vh] overflow-y-auto space-y-4 -mx-1 px-1">
+          {activeTag && (
+            <TagFolderResults
+              tag={activeTag}
+              onFolderContextMenu={openFolderContextMenu}
+              onOpenFolder={openFolderInTree}
+            />
+          )}
+          {!activeTag && pinnedNotes.length > 0 && (
             <div>
-              <p className="uppercase text-[10.5px] font-semibold tracking-wider text-tertiary px-2 mb-1">
+              <p className={sectionHeading}>
                 Pinned
               </p>
               {pinnedNotes.map((note) => {
@@ -1146,6 +1254,7 @@ export function Sidebar() {
             </div>
           )}
 
+          {!activeTag && (
           <div>
             {/* Library heading — click to deselect folder, DnD root drop zone */}
             <div
@@ -1159,13 +1268,13 @@ export function Sidebar() {
             >
               <p
                 className={cn(
-                  "uppercase text-[10.5px] font-semibold tracking-wider flex-1",
+                  "text-[12px] font-semibold flex-1",
                   selectedFolderId === null
                     ? "text-foreground"
                     : "text-tertiary",
                 )}
               >
-                Library
+                Folders
               </p>
               {isRootOver && (
                 <span className="text-[9px] text-accent font-medium">
@@ -1229,10 +1338,15 @@ export function Sidebar() {
               )}
             />
           </div>
+          )}
+
+          </div>
+
+          <TagsSection active={activeTag} onSelect={setActiveTag} />
 
           {externalNotes.length > 0 && (
             <div>
-              <p className="uppercase text-[10.5px] font-semibold tracking-wider text-tertiary px-2 mb-1">
+              <p className={sectionHeading}>
                 Open Files
               </p>
               {externalNotes.map((note) => {
@@ -1257,94 +1371,6 @@ export function Sidebar() {
               })}
             </div>
           )}
-
-          <div>
-            <p className="uppercase text-[10.5px] font-semibold tracking-wider text-tertiary px-2 mb-1">
-              Quick Access
-            </p>
-            <div
-              className={cn(
-                treeRowClass,
-                "px-2 cursor-pointer hover:bg-surface",
-                activeView === "board" && "bg-active",
-              )}
-              onClick={() => setActiveView("board")}
-            >
-              <LayoutGrid
-                className={cn(
-                  "w-3.5 h-3.5",
-                  activeView === "board"
-                    ? "text-accent"
-                    : "text-muted-foreground",
-                )}
-              />
-              <span
-                className={cn(
-                  activeView === "board"
-                    ? "text-accent font-medium"
-                    : "text-foreground",
-                )}
-              >
-                Board
-              </span>
-            </div>
-
-            <div
-              className={cn(
-                treeRowClass,
-                "px-2 cursor-pointer hover:bg-surface",
-                activeView === "brainstorm" && "bg-active",
-              )}
-              onClick={() => setActiveView("brainstorm")}
-            >
-              <Lightbulb
-                className={cn(
-                  "w-3.5 h-3.5",
-                  activeView === "brainstorm"
-                    ? "text-accent"
-                    : "text-muted-foreground",
-                )}
-              />
-              <span
-                className={cn(
-                  activeView === "brainstorm"
-                    ? "text-accent font-medium"
-                    : "text-foreground",
-                )}
-              >
-                Brainstorm
-              </span>
-            </div>
-
-            {canvasEnabled && (
-              <div
-                className={cn(
-                  treeRowClass,
-                  "px-2 cursor-pointer hover:bg-surface",
-                  activeView === "canvas" && "bg-active",
-                )}
-                onClick={() => setActiveView("canvas")}
-              >
-                <PenSquare
-                  className={cn(
-                    "w-3.5 h-3.5",
-                    activeView === "canvas"
-                      ? "text-accent"
-                      : "text-muted-foreground",
-                  )}
-                />
-                <span
-                  className={cn(
-                    activeView === "canvas"
-                      ? "text-accent font-medium"
-                      : "text-foreground",
-                  )}
-                >
-                  Draw
-                </span>
-              </div>
-            )}
-          </div>
         </div>
 
         {/* Update notice — quiet, dismissible, never a modal */}
@@ -1459,6 +1485,15 @@ function findNotesInFolder(
   if (folder.id === folderId) return folder.notes;
   for (const child of folder.children) {
     const found = findNotesInFolder(child, folderId);
+    if (found) return found;
+  }
+  return null;
+}
+
+function findFolderById(folders: FolderType[], id: string): FolderType | null {
+  for (const f of folders) {
+    if (f.id === id) return f;
+    const found = findFolderById(f.children, id);
     if (found) return found;
   }
   return null;
