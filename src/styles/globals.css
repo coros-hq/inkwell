@@ -585,6 +585,58 @@ html[data-theme="onyx"] {
   --code-block-bg:     0 0% 8%;
 }
 
+html[data-theme="catppuccin_mocha"] {
+  color-scheme: dark;
+  /* Catppuccin Mocha — base #1e1e2e, text #cdd6f4, mauve accent #cba6f7 */
+  --background:         240 21% 15%;
+  --foreground:         226 64% 88%;
+  --card:               240 21% 15%;
+  --card-foreground:    226 64% 88%;
+  --sidebar:            240 21% 12%;
+  --panel:              240 21% 15%;
+  --surface:            237 16% 23%;
+  --active:             234 13% 31%;
+  --border:             237 16% 23%;
+  --border-strong:      232 12% 39%;
+  --input:              237 16% 23%;
+  --accent:             267 84% 81%;
+  --accent-foreground:  240 23% 9%;
+  --muted:              237 16% 23%;
+  --muted-foreground:   228 24% 72%;
+  --tertiary:           231 11% 47%;
+  --code-bg:            240 21% 12%;
+  --tag-bg:             237 16% 23%;
+  --tag-text:           267 84% 81%;
+  --destructive:        343 81% 75%;
+  --code-block-bg:      240 23% 9%;
+}
+
+html[data-theme="catppuccin_latte"] {
+  color-scheme: light;
+  /* Catppuccin Latte — base #eff1f5, text #4c4f69, mauve accent #8839ef */
+  --background:         220 23% 95%;
+  --foreground:         234 16% 35%;
+  --card:               0 0% 100%;
+  --card-foreground:    234 16% 35%;
+  --sidebar:            220 22% 92%;
+  --panel:              225 25% 97%;
+  --surface:            220 22% 92%;
+  --active:             223 16% 83%;
+  --border:             223 16% 83%;
+  --border-strong:      227 12% 71%;
+  --input:              223 16% 83%;
+  --accent:             266 85% 58%;
+  --accent-foreground:  0 0% 100%;
+  --muted:              220 22% 92%;
+  --muted-foreground:   233 10% 47%;
+  --tertiary:           228 11% 65%;
+  --code-bg:            220 22% 92%;
+  --tag-bg:             258 83% 91%;
+  --tag-text:           266 85% 58%;
+  --destructive:        347 87% 44%;
+  --code-block-bg:      220 21% 89%;
+}
+
 /* ── Syntax highlighting ─────────────────────────────────────────────────── */
 /* Unlayered so nothing can override. rehype-highlight adds .hljs-* classes. */
 /* Background is stripped here; the pre.inkwell-code-block provides it.      */

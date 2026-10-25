@@ -105,9 +105,32 @@ jobs:
             | Platform | File |
             |----------|------|
             | macOS (Apple Silicon + Intel) | `inkwell_*.dmg` |
-            | Windows | `inkwell_*_x64-setup.exe` |
+            | Windows (installer) | `inkwell_*_x64-setup.exe` |
+            | Windows (portable — unzip and run, no install) | `inkwell_*_x64-portable.zip` |
             | Linux (Debian/Ubuntu) | `inkwell_*_amd64.deb` |
             | Linux (universal) | `inkwell_*_amd64.AppImage` |
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      # Portable Windows build: just the app executable in a zip, runnable without an
+      # installer or admin rights. `tauri build` embeds the frontend in the binary, so
+      # inkwell.exe is self-contained (WebView2 ships with Windows 11 and Edge).
+      - name: Package portable Windows build
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          $zip = "inkwell_${{ github.ref_name }}_x64-portable.zip"
+          Compress-Archive -Path src-tauri/target/release/inkwell.exe -DestinationPath $zip
+          "PORTABLE_ZIP=$zip" >> $env:GITHUB_ENV
+
+      - name: Attach portable build to the release
+        if: matrix.platform == 'windows-latest'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          draft: true
+          files: ${{ env.PORTABLE_ZIP }}
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}

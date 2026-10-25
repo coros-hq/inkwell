@@ -1,4 +1,4 @@
-import { MousePointer2, Pencil, Square, Circle, Minus, MoveRight, Type, StickyNote, Undo2, Redo2, ZoomIn, ZoomOut, LayoutTemplate, Waves, FileText, Maximize2, Grid3x3 } from 'lucide-react'
+import { MousePointer2, Pencil, Square, Circle, Minus, MoveRight, Type, StickyNote, Undo2, Redo2, ZoomIn, ZoomOut, LayoutTemplate, ImagePlus, Waves, FileText, Maximize2, Grid3x3 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Tool } from './canvasTypes'
 
@@ -102,6 +102,7 @@ interface Props {
   onRedo:       () => void
   onZoom:       (delta: number) => void
   onTemplates:  () => void
+  onImage:      () => void
   showTemplates: boolean
   onSketchy:    () => void
   onToggleGrid: () => void
@@ -316,6 +317,15 @@ export function CanvasToolbar(p: Props) {
           )}
         >
           <Grid3x3 size={14} />
+        </button>
+
+        {/* Image upload (images can also be pasted with ⌘V) */}
+        <button
+          onClick={p.onImage}
+          title="Add image or Excalidraw file · or paste"
+          className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <ImagePlus size={14} />
         </button>
 
         {/* Templates */}

@@ -37,6 +37,21 @@ export function getInitials(name: string): string {
     .slice(0, 2)
 }
 
+/** Number of whitespace-separated words, without allocating a word array (hot path on every keystroke). */
+export function countWords(text: string): number {
+  let count = 0
+  let inWord = false
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i)
+    // Same set as the regex class \s
+    const space = c === 32 || (c >= 9 && c <= 13) || c === 0xa0 || c === 0x1680 || (c >= 0x2000 && c <= 0x200a)
+      || c === 0x2028 || c === 0x2029 || c === 0x202f || c === 0x205f || c === 0x3000 || c === 0xfeff
+    if (space) inWord = false
+    else if (!inWord) { inWord = true; count++ }
+  }
+  return count
+}
+
 export function extractTitleFromContent(content: string): string {
   const match = content.match(/^#\s+(.+)$/m)
   if (match) {

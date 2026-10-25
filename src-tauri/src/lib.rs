@@ -6,6 +6,30 @@ use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 const MAIN_LABEL: &str = "main";
 const QUICK_NOTE_LABEL: &str = "quick-note";
 
+/// True when running as the bare portable `inkwell.exe` (unzipped, not installed).
+/// An installed copy is recognisable on Windows: the NSIS installer puts
+/// `uninstall.exe` beside the app, and the MSI installs under Program Files. The
+/// in-app updater downloads an installer, which makes no sense for a portable copy.
+#[tauri::command]
+fn is_portable() -> bool {
+    #[cfg(windows)]
+    {
+        let Some(dir) = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf())) else {
+            return false;
+        };
+        if dir.join("uninstall.exe").exists() {
+            return false;
+        }
+        let under_program_files = ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]
+            .iter()
+            .filter_map(|k| std::env::var_os(k))
+            .any(|pf| dir.starts_with(pf));
+        return !under_program_files;
+    }
+    #[cfg(not(windows))]
+    false
+}
+
 /// Toggle macOS NSVisualEffectView (native sidebar glass) on the main window.
 /// No-op on non-macOS platforms.
 ///
@@ -159,7 +183,7 @@ pub fn run() {
     }
 
     builder
-        .invoke_handler(tauri::generate_handler![set_vibrancy, list_system_fonts])
+        .invoke_handler(tauri::generate_handler![set_vibrancy, list_system_fonts, is_portable])
         .setup(|app| {
             #[cfg(desktop)]
             {

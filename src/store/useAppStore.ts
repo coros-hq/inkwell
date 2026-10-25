@@ -12,11 +12,13 @@ import type {
   BoardComment,
   Brainstorm,
   BrainstormNode,
+  CalendarEvent,
   LinkedItem,
   Attachment,
 } from "../types";
 import {
   extractTitleFromContent,
+  countWords,
   setContentTitle,
   slugifyTitle,
 } from "../lib/utils";
@@ -32,8 +34,10 @@ import {
   writeBoardsFile,
   readBrainstormsFile,
   writeBrainstormsFile,
+  readCalendarFile,
+  writeCalendarFile,
   pickExternalMarkdownFile,
-  readExternalNote,
+  loadExternalNote,
   addExternalFileToVault,
   removeExternalFileFromVault,
   renameExternalFileInVault,
@@ -60,6 +64,7 @@ import {
   describeError,
 } from "../lib/gitSync";
 import { saveNote } from "../lib/fs";
+import { openExternalUrl } from "../lib/openExternal";
 import { loadShortcuts, saveShortcuts, DEFAULT_SHORTCUTS } from "../lib/shortcuts";
 import { checkForAppUpdate } from "../lib/updateCheck";
 import type { Update } from "@tauri-apps/plugin-updater";
@@ -148,7 +153,7 @@ Tables render with subtle row striping:
 ## Keyboard shortcuts
 
 - **⌘K** — search across all notes
-- **⌘B** — toggle the sidebar
+- **⌘⇧B** — toggle the sidebar
 - **⌘F** — search inside the current note
 
 Open **Settings** (bottom of the sidebar) to choose a theme, adjust the editor font, or switch vaults.
@@ -285,6 +290,8 @@ interface AppState {
   setCanvasEnabled: (enabled: boolean) => void;
   brainstormEnabled: boolean;
   setBrainstormEnabled: (enabled: boolean) => void;
+  calendarEnabled: boolean;
+  setCalendarEnabled: (enabled: boolean) => void;
   // Canvas data is stored globally (independent of whichever vault is open) by
   // default. If set, canvas data instead reads/writes to this specific vault's
   // .inkwell/canvas.json regardless of the open vault.
@@ -298,6 +305,9 @@ interface AppState {
   setAbbreviations: (abbrevs: Abbreviation[]) => void;
   searchOpen: boolean;
   searchQuery: string;
+  /** Which tab the search overlay (⌘K) / command palette (⌘⇧P) opens on. */
+  searchMode: 'notes' | 'commands' | 'tags';
+  setSearchMode: (mode: 'notes' | 'commands' | 'tags') => void;
   activeTaskId: string | null;
   saveStatus: "saved" | "saving" | "idle";
   /** Set when a disk write failed; cleared by the next successful save. */
@@ -307,6 +317,8 @@ interface AppState {
   confirm: ConfirmConfig | null;
   updateInfo: Update | null;
   updateInstallState: "idle" | "installing" | "error";
+  /** Running as the unzipped portable build (Windows): updates are a manual download, not an in-app install. */
+  isPortable: boolean;
   checkForUpdates: () => Promise<void>;
   installUpdate: () => Promise<void>;
   dismissUpdateNotice: () => void;
@@ -354,6 +366,9 @@ interface AppState {
   setActiveTask: (id: string | null) => void;
   sidebarOpen: boolean;
   toggleSidebar: () => void;
+  /** Distraction-free: only the open note's editor is shown. Not persisted. */
+  focusMode: boolean;
+  toggleFocusMode: () => void;
   /** 'list' shows the NoteList column; 'tabs' hides it in favor of a
    *  VSCode/Obsidian-style tab strip at the top of the editor pane. */
   noteSidebarMode: "list" | "tabs";
@@ -376,6 +391,15 @@ interface AppState {
   deleteBrainstorm: (id: string) => void;
   setBrainstormRoot: (id: string, root: BrainstormNode[]) => void;
   brainstormRefRequest: { pos: number } | null;
+  // ─── Calendar (personal weekly planner, local-only) ─────────────────────────
+  calendarEvents: CalendarEvent[];
+  /** Set by search to make the Calendar jump to an event and open its sheet. */
+  calendarFocusId: string | null;
+  openCalendarEvent: (id: string) => void;
+  clearCalendarFocus: () => void;
+  addCalendarEvent: (event: Omit<CalendarEvent, "id" | "done"> & { done?: boolean }) => string;
+  updateCalendarEvent: (id: string, patch: Partial<Omit<CalendarEvent, "id">>) => void;
+  deleteCalendarEvent: (id: string) => void;
   openBrainstormRefDialog: (pos: number) => void;
   closeBrainstormRefDialog: () => void;
 
@@ -397,6 +421,8 @@ interface AppState {
   deleteTag: (name: string) => void;
   /** Add (on) or remove (off) a tag on each of the given folders. */
   setFoldersTag: (folderIds: string[], tag: string, on: boolean) => void;
+  /** Add (on) or remove (off) a tag on each of the given notes (stored in their frontmatter). */
+  setNotesTag: (noteIds: string[], tag: string, on: boolean) => void;
   /** Folders ticked with ⌘/Ctrl-click, the target of tag assignment. */
   selectedFolderIds: string[];
   toggleFolderSelected: (id: string) => void;
@@ -776,6 +802,98 @@ function saveBrainstorms(immediate = false) {
   else brainstormSaveTimer = setTimeout(run, 400);
 }
 
+// Past this size a note is written on a trailing debounce while typing: every
+// keystroke would otherwise serialize and ship the whole file over IPC. Smaller
+// notes keep the immediate write. Pending writes are flushed when the vault
+// changes and when the window is hidden or closing.
+const LARGE_NOTE_CHARS = 100_000;
+const LARGE_NOTE_WRITE_DELAY_MS = 500;
+const pendingNoteWrites = new Map<string, ReturnType<typeof setTimeout>>();
+
+type StoreSet = (partial: Partial<AppState> | ((s: AppState) => Partial<AppState>)) => void
+// Rewrites each note's tags through `next`, updating both the flat list and the folder
+// tree, and saving only the notes whose tags actually changed.
+function applyNoteTags(set: StoreSet, get: () => AppState, next: (n: Note) => string[]) {
+  const changed = new Map<string, Note>()
+  for (const n of get().notes) {
+    const tags = next(n)
+    if (tags.length !== n.tags.length || tags.some((t, i) => t !== n.tags[i])) changed.set(n.id, { ...n, tags })
+  }
+  if (!changed.size) return
+  set((s) => {
+    let folders = s.folders
+    for (const [id, n] of changed) folders = updateFolderNotes(folders, id, () => n)
+    return { notes: s.notes.map((n) => changed.get(n.id) ?? n), folders }
+  })
+  for (const n of changed.values()) persistNote(n)
+}
+
+function persistNote(n: Note) {
+  (n.external ? saveNote(n.path, n.content) : writeNoteFile(n)).catch(console.error);
+}
+
+function scheduleNoteWrite(note: Note) {
+  const pending = pendingNoteWrites.get(note.id);
+  if (pending) clearTimeout(pending);
+  if (note.content.length < LARGE_NOTE_CHARS) {
+    pendingNoteWrites.delete(note.id);
+    persistNote(note);
+    return;
+  }
+  pendingNoteWrites.set(
+    note.id,
+    setTimeout(() => {
+      pendingNoteWrites.delete(note.id);
+      const latest = useAppStore.getState().notes.find((n) => n.id === note.id);
+      if (latest) persistNote(latest);
+    }, LARGE_NOTE_WRITE_DELAY_MS),
+  );
+}
+
+export function flushNoteWrites() {
+  for (const [id, timer] of pendingNoteWrites) {
+    clearTimeout(timer);
+    const latest = useAppStore.getState().notes.find((n) => n.id === id);
+    if (latest) persistNote(latest);
+  }
+  pendingNoteWrites.clear();
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", flushNoteWrites);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushNoteWrites();
+  });
+}
+
+// Calendar is app-wide (not tied to a vault): one file in the app data dir,
+// loaded once and debounced like brainstorms. Saves wait for that first load so
+// an early edit can never overwrite the file with an empty list.
+let calendarSaveTimer: ReturnType<typeof setTimeout> | null = null;
+let calendarLoad: Promise<void> | null = null;
+function loadCalendarOnce(legacyVaultPath: string) {
+  calendarLoad ??= readCalendarFile(legacyVaultPath)
+    .then((data) => {
+      // Keep anything added before the file finished loading.
+      const early = useAppStore.getState().calendarEvents;
+      const loaded = data?.events ?? [];
+      const seen = new Set(loaded.map((e) => e.id));
+      useAppStore.setState({ calendarEvents: [...loaded, ...early.filter((e) => !seen.has(e.id))] });
+    })
+    .catch(console.error);
+  return calendarLoad;
+}
+function saveCalendar(immediate = false) {
+  if (calendarSaveTimer) clearTimeout(calendarSaveTimer);
+  const run = () => {
+    calendarSaveTimer = null;
+    const write = () => writeCalendarFile({ version: 1, events: useAppStore.getState().calendarEvents });
+    (calendarLoad ? calendarLoad.then(write) : write()).catch(console.error);
+  };
+  if (immediate) run();
+  else calendarSaveTimer = setTimeout(run, 400);
+}
+
 // Write boards immediately after any board mutation.
 // localStorage write is synchronous (survives Tauri WebView reloads and app restarts).
 // Disk write is async but also completes quickly for normal close/reopen.
@@ -833,16 +951,19 @@ export const useAppStore = create<AppState>((set, get) => ({
   recordingShortcut: false,
   canvasEnabled: localStorage.getItem("inkwell-canvas-enabled") === "true",
   brainstormEnabled: localStorage.getItem("inkwell-brainstorm-enabled") === "true",
+  calendarEnabled: localStorage.getItem("inkwell-calendar-enabled") === "true",
   canvasLinkedVaultPath: localStorage.getItem("inkwell-canvas-linked-vault"),
   vimModeEnabled: localStorage.getItem("inkwell-vim-mode") === "true",
   abbreviationTrigger: localStorage.getItem("inkwell-abbrev-trigger") ?? ":",
   abbreviations: JSON.parse(localStorage.getItem("inkwell-abbreviations") ?? "[]"),
   searchOpen: false,
   searchQuery: "",
+  searchMode: "notes",
   activeTaskId: null,
   saveStatus: "saved",
   saveError: null,
   sidebarOpen: true,
+  focusMode: false,
   noteSidebarMode:
     (localStorage.getItem("inkwell-note-sidebar-mode") as "list" | "tabs" | null) ?? "list",
   prompt: null,
@@ -853,6 +974,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   brainstorms: [],
   activeBrainstormId: null,
   brainstormRefRequest: null,
+  calendarEvents: [],
+  calendarFocusId: null,
   boardColumns: [],
   boardTasks: [],
   activeBoardId: null,
@@ -878,6 +1001,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     // Flush pending brainstorm edits to the vault we're leaving, otherwise the
     // debounced write would land in the new vault with its (empty) list.
     if (brainstormSaveTimer) saveBrainstorms(true);
+    if (calendarSaveTimer) saveCalendar(true);
+    flushNoteWrites();
 
     // Flush boards to boards.json before switching vaults
     const current = get();
@@ -983,6 +1108,8 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ brainstorms, activeBrainstormId: brainstorms[0]?.id ?? null });
     }).catch(console.error);
 
+    loadCalendarOnce(path);
+
     set({ folderMeta: {}, tagDefs: [], selectedFolderIds: [] });
     readFoldersFile(path).then(({ folders: folderMeta, tags: tagDefs }) => {
       if (get().vaultPath !== path) return;
@@ -1001,7 +1128,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   closeVault: () => {
+    flushNoteWrites();
     if (brainstormSaveTimer) saveBrainstorms(true);
+    if (calendarSaveTimer) saveCalendar(true);
     set({
       brainstorms: [],
       activeBrainstormId: null,
@@ -1252,7 +1381,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({ shortcuts: { ...DEFAULT_SHORTCUTS } });
   },
 
+  isPortable: false,
+
   checkForUpdates: async () => {
+    try {
+      const { invoke } = await import("@tauri-apps/api/core");
+      set({ isPortable: await invoke<boolean>("is_portable") });
+    } catch { /* not running in Tauri */ }
     const update = await checkForAppUpdate();
     if (update) set({ updateInfo: update, updateInstallState: "idle" });
   },
@@ -1260,6 +1395,11 @@ export const useAppStore = create<AppState>((set, get) => ({
   installUpdate: async () => {
     const update = get().updateInfo;
     if (!update) return;
+    // A portable copy has nothing to install over: send the user to the download page for the new zip.
+    if (get().isPortable) {
+      openExternalUrl("https://github.com/coros-hq/inkwell/releases/latest");
+      return;
+    }
     set({ updateInstallState: "installing" });
     try {
       await update.downloadAndInstall();
@@ -1295,6 +1435,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
   },
 
+  setCalendarEnabled: (enabled) => {
+    localStorage.setItem("inkwell-calendar-enabled", String(enabled));
+    set({ calendarEnabled: enabled });
+    if (!enabled && get().activeView === "calendar") {
+      set({ activeView: "notes" });
+    }
+  },
+
   setCanvasLinkedVaultPath: (path) => {
     if (path) localStorage.setItem("inkwell-canvas-linked-vault", path);
     else localStorage.removeItem("inkwell-canvas-linked-vault");
@@ -1318,6 +1466,7 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   setSearchOpen: (open) => set({ searchOpen: open }),
   setSearchQuery: (q) => set({ searchQuery: q }),
+  setSearchMode: (mode) => set({ searchMode: mode }),
 
   pinNote: (id) => {
     set((s) => ({
@@ -1405,7 +1554,23 @@ export const useAppStore = create<AppState>((set, get) => ({
   openExternalNote: async () => {
     const { vaultPath, notes } = get();
     if (!vaultPath) return;
-    const path = await pickExternalMarkdownFile();
+    const showOpenError = (path: string | null, reason: string) =>
+      get().openConfirm({
+        title: "Couldn't open file",
+        description: path ? `${path}\n\n${reason}` : reason,
+        confirmLabel: "OK",
+        cancelLabel: "Close",
+        onConfirm: () => {},
+      });
+
+    let path: string | null;
+    try {
+      path = await pickExternalMarkdownFile();
+    } catch (e) {
+      console.error("[inkwell] file picker failed:", e);
+      showOpenError(null, `The file picker failed: ${e instanceof Error ? e.message : String(e)}`);
+      return;
+    }
     if (!path) return;
 
     const existing = notes.find((n) => n.path === path);
@@ -1422,9 +1587,19 @@ export const useAppStore = create<AppState>((set, get) => ({
       return;
     }
 
-    const note = await readExternalNote(path);
-    if (!note) return;
-    await addExternalFileToVault(vaultPath, path);
+    const result = await loadExternalNote(path);
+    if ("error" in result) {
+      showOpenError(path, result.message);
+      return;
+    }
+    const note = result.note;
+    // Remembering the file for the next launch is best-effort: failing to record
+    // it must not stop it from opening now.
+    try {
+      await addExternalFileToVault(vaultPath, path);
+    } catch (e) {
+      console.error("[inkwell] couldn't remember external file:", e);
+    }
 
     set((s) => ({
       notes: [note, ...s.notes],
@@ -1641,7 +1816,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   updateNote: (id, content) => {
-    const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+    const wordCount = countWords(content);
     const title = extractTitleFromContent(content);
     const updatedAt = new Date();
     set((s) => {
@@ -1652,10 +1827,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       // External files never get inkwell's frontmatter wrapping — they're saved as
       // plain raw text so a foreign file's existing format is left untouched.
       const updated = updatedNotes.find((n) => n.id === id);
-      if (updated) {
-        if (updated.external) saveNote(updated.path, updated.content).catch(console.error);
-        else writeNoteFile(updated).catch(console.error);
-      }
+      if (updated) scheduleNoteWrite(updated);
       return {
         notes: updatedNotes,
         folders: updateFolderNotes(s.folders, id, (n) => ({
@@ -1670,7 +1842,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   applyRemoteNoteUpdate: (id, content) => {
-    const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+    const wordCount = countWords(content);
     const title = extractTitleFromContent(content);
     const updatedAt = new Date();
     set((s) => {
@@ -1778,6 +1950,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
     set({ tagDefs: nextDefs, folderMeta: nextMeta })
     persistFolderMeta(vaultPath, nextMeta, nextDefs)
+    if (trimmed !== oldName) applyNoteTags(set, get, (n) => n.tags.map((t) => (t === oldName ? trimmed : t)))
   },
 
   deleteTag: (name) => {
@@ -1791,6 +1964,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
     set({ tagDefs: nextDefs, folderMeta: nextMeta })
     persistFolderMeta(vaultPath, nextMeta, nextDefs)
+    applyNoteTags(set, get, (n) => n.tags.filter((t) => t !== name))
+  },
+
+  setNotesTag: (noteIds, tag, on) => {
+    const ids = new Set(noteIds)
+    applyNoteTags(set, get, (n) => {
+      if (!ids.has(n.id)) return n.tags
+      const rest = n.tags.filter((t) => t !== tag)
+      return on ? [...rest, tag] : rest
+    })
   },
 
   setFoldersTag: (folderIds, tag, on) => {
@@ -1947,6 +2130,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setActiveTask: (id) => set({ activeTaskId: id }),
 
   toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
+  toggleFocusMode: () => set((s) => ({ focusMode: !s.focusMode })),
 
   setNoteSidebarMode: (mode) => {
     localStorage.setItem("inkwell-note-sidebar-mode", mode);
@@ -1994,6 +2178,24 @@ export const useAppStore = create<AppState>((set, get) => ({
       ),
     }));
     saveBrainstorms();
+  },
+  openCalendarEvent: (id) => set({ calendarFocusId: id, activeView: "calendar" }),
+  clearCalendarFocus: () => set({ calendarFocusId: null }),
+  addCalendarEvent: (event) => {
+    const id = genId("cal");
+    set((s) => ({ calendarEvents: [...s.calendarEvents, { done: false, ...event, id }] }));
+    saveCalendar();
+    return id;
+  },
+  updateCalendarEvent: (id, patch) => {
+    set((s) => ({
+      calendarEvents: s.calendarEvents.map((e) => (e.id === id ? { ...e, ...patch } : e)),
+    }));
+    saveCalendar();
+  },
+  deleteCalendarEvent: (id) => {
+    set((s) => ({ calendarEvents: s.calendarEvents.filter((e) => e.id !== id) }));
+    saveCalendar(true);
   },
   openBrainstormRefDialog: (pos) => set({ brainstormRefRequest: { pos } }),
   closeBrainstormRefDialog: () => set({ brainstormRefRequest: null }),
@@ -2419,6 +2621,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     set((s) => {
       let data = read;
+      // External files are listed in app.json, which can lag behind the store
+      // (e.g. the window-focus rescan fires while the Open File dialog is still
+      // closing, before the new entry is written). Don't let a rescan drop a
+      // file that's currently open in memory.
+      const missingExternal = s.notes.filter((n) => n.external && !read.notes.some((m) => m.id === n.id));
+      if (missingExternal.length) data = { ...data, notes: [...data.notes, ...missingExternal] };
       const adopt = opts?.adoptContentFor;
       if (adopt) {
         // Keep in-memory bodies for notes whose file wasn't named as changed —
@@ -2430,13 +2638,18 @@ export const useAppStore = create<AppState>((set, get) => ({
           if (!cur || adopt.has(n.path)) return n;
           return { ...n, content: cur.content, title: cur.title, wordCount: cur.wordCount, updatedAt: cur.updatedAt };
         };
-        const expanded = new Map<string, boolean>();
-        const collect = (fs: Folder[]) => fs.forEach((f) => { expanded.set(f.id, f.expanded); collect(f.children); });
-        collect(s.folders);
         const remap = (fs: Folder[]): Folder[] =>
-          fs.map((f) => ({ ...f, expanded: expanded.get(f.id) ?? f.expanded, notes: f.notes.map(keep), children: remap(f.children) }));
-        data = { ...read, notes: read.notes.map(keep), folders: remap(read.folders) };
+          fs.map((f) => ({ ...f, notes: f.notes.map(keep), children: remap(f.children) }));
+        data = { ...data, notes: data.notes.map(keep), folders: remap(read.folders) };
       }
+
+      // A rescan reads every folder as collapsed; carry over what the user has open.
+      const expanded = new Map<string, boolean>();
+      const collect = (fs: Folder[]) => fs.forEach((f) => { expanded.set(f.id, f.expanded); collect(f.children); });
+      collect(s.folders);
+      const restoreExpanded = (fs: Folder[]): Folder[] =>
+        fs.map((f) => ({ ...f, expanded: expanded.get(f.id) ?? f.expanded, children: restoreExpanded(f.children) }));
+      data = { ...data, folders: restoreExpanded(data.folders) };
 
       const primaryId = s.lastSelectedNoteId ?? s.selectedNoteIds[0] ?? null;
       const currentPrimary = primaryId ? s.notes.find((n) => n.id === primaryId) : undefined;

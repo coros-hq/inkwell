@@ -2,6 +2,9 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { QuickNoteCapture } from "./components/quicknote/QuickNoteCapture";
+import { installExternalLinkHandler } from "./lib/openExternal";
+
+installExternalLinkHandler();
 
 // The quick-note popup (opened via the global Cmd+N shortcut / tray menu)
 // loads this same SPA entry with a `quicknote` query param, so it renders a

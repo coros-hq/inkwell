@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { EditorState, EditorSelection } from '@codemirror/state'
+import { EditorState, EditorSelection, Prec } from '@codemirror/state'
 import { EditorView, keymap, drawSelection, rectangularSelection } from '@codemirror/view'
 import { defaultKeymap, history, historyKeymap, undo, redo } from '@codemirror/commands'
 import { markdown, markdownLanguage } from '@codemirror/lang-markdown'
@@ -17,8 +17,9 @@ import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
 import { useEditorViewRef } from './EditorViewContext'
 import { deleteAttachmentFile, makeAttachmentMarkdown } from '../../lib/attachments'
 import { saveClipboardImage } from '../../lib/images'
-import { applyInlineFormat } from '../../lib/editorFormatting'
+import { applyInlineFormat, changeListIndent, continueOutlineItem } from '../../lib/editorFormatting'
 import { NOTE_REF_RE, WIKILINK_RE, navigateToNote, navigateToWikiLink } from '../../lib/noteReferences'
+import { openExternalUrl } from '../../lib/openExternal'
 
 interface MarkdownEditorProps {
   noteId: string
@@ -319,6 +320,12 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         EditorView.clickAddsSelectionRange.of((e) => e.metaKey || e.ctrlKey || e.altKey),
         rectangularSelection({ eventFilter: (e) => e.altKey && e.shiftKey }),
         keymap.of([{ key: 'Mod-d', run: selectNextOccurrence, preventDefault: true }]),
+        // Tab / Shift-Tab nest and un-nest bullet and numbered list items.
+        Prec.high(keymap.of([
+          { key: 'Tab', run: (v) => changeListIndent(v, 1) },
+          { key: 'Shift-Tab', run: (v) => changeListIndent(v, -1) },
+          { key: 'Enter', run: continueOutlineItem },
+        ])),
         // Chromium's contenteditable fires its own native undo/redo (beforeinput
         // historyUndo/historyRedo) which bypasses CodeMirror's managed history and
         // corrupts editor state. This only surfaces on Chromium-based WebViews
@@ -393,6 +400,16 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
             if (liveConceal && !(event.metaKey || event.ctrlKey) &&
                 view.state.selection.ranges.some(r => view.state.doc.lineAt(r.head).number === line.number)) return false
             const offsetInLine = pos - line.from
+            // `[text](https://…)` links and bare URLs open in the browser.
+            const urlRe = /\[[^\]]*\]\(\s*<?((?:https?:\/\/|mailto:)[^)\s>]+)>?[^)]*\)|(?:https?:\/\/|mailto:)[^\s<>)\]]+/gi
+            let urlMatch: RegExpExecArray | null
+            while ((urlMatch = urlRe.exec(line.text))) {
+              if (offsetInLine >= urlMatch.index && offsetInLine <= urlMatch.index + urlMatch[0].length) {
+                event.preventDefault()
+                openExternalUrl(urlMatch[1] ?? urlMatch[0])
+                return true
+              }
+            }
             const re = new RegExp(NOTE_REF_RE.source, 'g')
             let match: RegExpExecArray | null
             while ((match = re.exec(line.text))) {

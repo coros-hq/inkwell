@@ -4,7 +4,8 @@ import { useAppStore } from '../../store/useAppStore'
 import { FolderIcon } from '../shared/FolderIcon'
 import { TagDialog } from '../shared/TagDialog'
 import { cn } from '../../lib/utils'
-import type { Folder } from '../../types'
+import type { Folder, Note } from '../../types'
+import { FileText } from 'lucide-react'
 
 function flattenFolders(folders: Folder[], out: Folder[] = []): Folder[] {
   for (const f of folders) { out.push(f); flattenFolders(f.children, out) }
@@ -24,6 +25,7 @@ interface SectionProps {
 export function TagsSection({ active, onSelect }: SectionProps) {
   const tagDefs = useAppStore((s) => s.tagDefs)
   const folderMeta = useAppStore((s) => s.folderMeta)
+  const notes = useAppStore((s) => s.notes)
   const selectedFolderIds = useAppStore((s) => s.selectedFolderIds)
   const { createTag, updateTag, deleteTag, setFoldersTag, clearSelectedFolders } = useAppStore.getState()
   const [dialog, setDialog] = useState<{ name: string; color: string } | 'new' | null>(null)
@@ -31,8 +33,9 @@ export function TagsSection({ active, onSelect }: SectionProps) {
   const counts = useMemo(() => {
     const c = new Map<string, number>()
     for (const m of Object.values(folderMeta)) m.tags?.forEach((t) => c.set(t, (c.get(t) ?? 0) + 1))
+    for (const n of notes) n.tags.forEach((t) => c.set(t, (c.get(t) ?? 0) + 1))
     return c
-  }, [folderMeta])
+  }, [folderMeta, notes])
 
   const picking = selectedFolderIds.length > 0
 
@@ -120,16 +123,31 @@ interface ResultsProps {
   tag: string
   onFolderContextMenu: (e: React.MouseEvent, folder: Folder) => void
   onOpenFolder: (folder: Folder) => void
+  onNoteContextMenu?: (e: React.MouseEvent, note: Note) => void
 }
 
 /** Flat list of every folder carrying the active tag (replaces the tree while a tag is active). */
-export function TagFolderResults({ tag, onFolderContextMenu, onOpenFolder }: ResultsProps) {
+export function TagFolderResults({ tag, onFolderContextMenu, onOpenFolder, onNoteContextMenu }: ResultsProps) {
   const folders = useAppStore((s) => s.folders)
   const folderMeta = useAppStore((s) => s.folderMeta)
   const matches = flattenFolders(folders).filter((f) => folderMeta[f.id]?.tags?.includes(tag))
-  if (matches.length === 0) return <p className="text-xs text-muted-foreground px-2 py-1">No folders with this tag</p>
+  const taggedNotes = useAppStore((s) => s.notes).filter((n) => n.tags.includes(tag))
+  const selectNote = useAppStore((s) => s.selectNote)
+  if (matches.length === 0 && taggedNotes.length === 0) return <p className="text-xs text-muted-foreground px-2 py-1">Nothing has this tag</p>
   return (
     <div>
+      {taggedNotes.map((n) => (
+        <div
+          key={n.id}
+          className="flex items-center gap-1.5 h-[30px] px-2 rounded-md text-[13px] font-medium text-foreground hover:bg-surface cursor-pointer"
+          onClick={() => selectNote(n.id)}
+          onContextMenu={(e) => onNoteContextMenu?.(e, n)}
+          title={n.path}
+        >
+          <FileText className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+          <span className="truncate">{n.title}</span>
+        </div>
+      ))}
       {matches.map((f) => (
         <div
           key={f.id}

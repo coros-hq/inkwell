@@ -77,6 +77,20 @@ export const THEMES: ThemeDef[] = [
     preview: { bg: '#282828', sidebar: '#1d2021', accent: '#d79921', text: '#ebdbb2', border: '#504945' },
   },
   {
+    id: 'catppuccin_mocha',
+    label: 'Catppuccin Mocha',
+    description: 'Soothing pastel dark with mauve',
+    dark: true,
+    preview: { bg: '#1e1e2e', sidebar: '#181825', accent: '#cba6f7', text: '#cdd6f4', border: '#313244' },
+  },
+  {
+    id: 'catppuccin_latte',
+    label: 'Catppuccin Latte',
+    description: 'Soothing pastel light with mauve',
+    dark: false,
+    preview: { bg: '#eff1f5', sidebar: '#e6e9ef', accent: '#8839ef', text: '#4c4f69', border: '#ccd0da' },
+  },
+  {
     id: 'sepia',
     label: 'Sepia',
     description: 'Aged paper with terracotta',

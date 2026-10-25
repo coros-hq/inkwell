@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { isDarkTheme, THEMES, loadCustomThemes } from '../../lib/themes'
 import { deriveThemeVars, applyCustomThemeVars, clearCustomThemeVars } from '../../lib/themeUtils'
 import { Sidebar } from './Sidebar'
@@ -7,6 +7,7 @@ import { EditorPane } from './EditorPane'
 import { BoardView } from '../board/BoardView'
 import { CanvasView } from '../canvas/CanvasView'
 import { BrainstormView } from '../brainstorm/BrainstormView'
+import { CalendarView } from '../calendar/CalendarView'
 import { TaskDrawer } from '../board/TaskDrawer'
 import { SearchOverlay } from '../shared/SearchOverlay'
 import { NamePromptDialog } from '../shared/NamePromptDialog'
@@ -19,6 +20,7 @@ import { onWriteError } from '../../lib/safeFs'
 import { readVaultFS, writeAppData, readAppData, addRecentVault, getLastVaultPath } from '../../lib/vault'
 import type { AppData } from '../../lib/vault'
 import { comboMatches } from '../../lib/shortcuts'
+import { focusFileNav, focusNavList } from '../../lib/listKeyNav'
 import { startVaultSync, stopVaultSync } from '../../lib/sync/vaultSession'
 import { onAuthStateChange } from '../../lib/auth'
 import { startVaultWatcher } from '../../lib/vaultWatcher'
@@ -27,7 +29,7 @@ import { ConflictBanner } from '../editor/ConflictBanner'
 import { CollabGlobals } from '../collab/CollabGlobals'
 
 export function AppShell() {
-  const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, noteSidebarMode, sidebarGlass, bodyGlass, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
+  const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, focusMode, noteSidebarMode, sidebarGlass, bodyGlass, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoCommitTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -114,9 +116,11 @@ export function AppShell() {
       if (saveTimer.current) clearTimeout(saveTimer.current)
       saveTimer.current = setTimeout(async () => {
         const vp = state.vaultPath!
-        // Preserve existing noteMeta — don't clobber it with {}
+        // Start from what's on disk so fields this effect doesn't own
+        // (externalFiles, gitSyncEnabled, gitAutoCommit, noteMeta, …) survive.
         const existing = await readAppData(vp)
         const appData: AppData = {
+          ...existing,
           version: 1,
           tasks: state.tasks,
           boards: state.boards,
@@ -209,14 +213,62 @@ export function AppShell() {
     const handler = (e: KeyboardEvent) => {
       const { shortcuts, recordingShortcut } = useAppStore.getState()
       if (recordingShortcut) return
+      if (comboMatches(e, shortcuts.commandPalette)) {
+        e.preventDefault()
+        useAppStore.getState().setSearchMode('commands')
+        setSearchOpen(true)
+        return
+      }
       if (comboMatches(e, shortcuts.search)) {
         e.preventDefault()
+        useAppStore.getState().setSearchMode('notes')
         setSearchOpen(true)
         return
       }
       if (comboMatches(e, shortcuts.toggleSidebar)) {
         e.preventDefault()
         toggleSidebar()
+        return
+      }
+      if (comboMatches(e, shortcuts.focusMode)) {
+        e.preventDefault()
+        const s = useAppStore.getState()
+        if (s.activeView === 'notes') s.toggleFocusMode()
+        return
+      }
+      if (comboMatches(e, shortcuts.toggleEditorMode)) {
+        e.preventDefault()
+        const s = useAppStore.getState()
+        const id = s.lastSelectedNoteId ?? s.selectedNoteIds[0]
+        if (s.activeView === 'notes' && id) s.setNoteEditorMode(id, s.getEditorMode(id) === 'markdown' ? 'normal' : 'markdown')
+        return
+      }
+      if (e.key === 'Escape' && useAppStore.getState().focusMode) {
+        useAppStore.getState().toggleFocusMode()
+        return
+      }
+      if (comboMatches(e, shortcuts.focusFiles)) {
+        e.preventDefault()
+        const st = useAppStore.getState()
+        if (st.activeView !== 'notes') st.setActiveView('notes')
+        if (st.focusMode) st.toggleFocusMode()
+        const wasClosed = !st.sidebarOpen
+        if (wasClosed) st.toggleSidebar()
+        const active = st.lastSelectedNoteId ?? st.selectedNoteIds[0]
+        setTimeout(() => focusFileNav(active ? `note:${active}` : null), wasClosed ? 260 : 0)
+        return
+      }
+      if (comboMatches(e, shortcuts.focusNotes)) {
+        e.preventDefault()
+        const st = useAppStore.getState()
+        if (st.activeView !== 'notes') st.setActiveView('notes')
+        if (st.focusMode) st.toggleFocusMode()
+        if (st.noteSidebarMode === 'tabs') st.setNoteSidebarMode('list')
+        const active = st.lastSelectedNoteId ?? st.selectedNoteIds[0]
+        setTimeout(() => {
+          const list = document.querySelector<HTMLElement>('[data-nav-list="notelist"]')
+          if (list) focusNavList(list, active ? `note:${active}` : null)
+        }, 0)
         return
       }
       if (comboMatches(e, shortcuts.openFile)) {
@@ -298,11 +350,11 @@ export function AppShell() {
 
   return (
     <div className={cn("flex h-screen w-screen overflow-hidden", !(sidebarGlass || bodyGlass) && "bg-background")}>
-      {sidebarOpen && <Sidebar />}
+      <SidebarSlide open={sidebarOpen && !focusMode} />
 
       {activeView === 'notes' && (
         <>
-          {noteSidebarMode === 'list' && <NoteList />}
+          {noteSidebarMode === 'list' && !focusMode && <NoteList />}
           <EditorPane />
         </>
       )}
@@ -313,15 +365,46 @@ export function AppShell() {
 
       {activeView === 'brainstorm' && <BrainstormView />}
 
+      {activeView === 'calendar' && <CalendarView />}
+
       {activeView === 'trash' && <TrashView />}
 
-      <TaskDrawer />
+      {!focusMode && <TaskDrawer />}
 
       <SearchOverlay />
       <NamePromptDialog />
       <ConfirmDialog />
       <ConflictBanner />
       <CollabGlobals />
+    </div>
+  )
+}
+
+// Slides the sidebar in/out by animating a 0fr <-> 1fr grid track; the sidebar keeps its
+// own fixed pixel width so its content never reflows mid-animation. It stays mounted
+// only while visible or animating, so a closed sidebar is not running in the background.
+function SidebarSlide({ open }: { open: boolean }) {
+  const [mounted, setMounted] = useState(open)
+  const [expanded, setExpanded] = useState(open)
+  useEffect(() => {
+    if (open) {
+      setMounted(true)
+      const id = requestAnimationFrame(() => requestAnimationFrame(() => setExpanded(true)))
+      return () => cancelAnimationFrame(id)
+    }
+    setExpanded(false)
+    const t = setTimeout(() => setMounted(false), 220)
+    return () => clearTimeout(t)
+  }, [open])
+  if (!mounted) return null
+  return (
+    <div
+      className="grid shrink-0 h-full transition-[grid-template-columns] duration-200 ease-out"
+      style={{ gridTemplateColumns: expanded ? '1fr' : '0fr' }}
+    >
+      <div className="min-w-0 overflow-hidden h-full" inert={!open}>
+        <Sidebar />
+      </div>
     </div>
   )
 }

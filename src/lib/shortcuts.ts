@@ -13,7 +13,12 @@ export interface ShortcutDef {
 
 export const SHORTCUT_DEFS: ShortcutDef[] = [
   { id: 'search', label: 'Search', description: 'Open the search overlay', defaultCombo: 'mod+k' },
-  { id: 'toggleSidebar', label: 'Toggle Sidebar', description: 'Show or hide the sidebar', defaultCombo: 'mod+b' },
+  { id: 'commandPalette', label: 'Command Palette', description: 'Search every shortcut and run it', defaultCombo: 'mod+shift+p' },
+  { id: 'toggleSidebar', label: 'Toggle Sidebar', description: 'Show or hide the sidebar', defaultCombo: 'mod+shift+b' },
+  { id: 'focusMode', label: 'Focus Mode', description: 'Hide everything except the open note', defaultCombo: 'mod+shift+d' },
+  { id: 'toggleEditorMode', label: 'Single / Split Mode', description: 'Switch the open note between Normal (single) and Markdown (split) mode', defaultCombo: 'mod+shift+e' },
+  { id: 'focusFiles', label: 'Focus File Tree', description: 'Move keyboard focus to the folders & notes (arrows, Enter, F2 to rename, Esc to return to the editor)', defaultCombo: 'mod+0' },
+  { id: 'focusNotes', label: 'Focus Note List', description: 'Move keyboard focus to the notes of the open folder', defaultCombo: 'mod+9' },
   { id: 'openFile', label: 'Open File', description: 'Open a standalone .md file into this vault', defaultCombo: 'mod+o' },
   { id: 'findInNote', label: 'Find in Note', description: 'Search within the current note', defaultCombo: 'mod+f' },
   // Not "mod+n" — that combo is already claimed globally (even when the app is
@@ -32,6 +37,8 @@ export function loadShortcuts(): Record<string, string> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     const saved = raw ? (JSON.parse(raw) as Record<string, string>) : {}
+    // Old default collided with the editor's Bold; a saved copy of it is not a user choice.
+    if (saved.toggleSidebar === 'mod+b') delete saved.toggleSidebar
     return { ...DEFAULT_SHORTCUTS, ...saved }
   } catch {
     return { ...DEFAULT_SHORTCUTS }

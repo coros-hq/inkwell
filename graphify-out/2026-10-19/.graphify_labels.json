@@ -122,6 +122,7 @@
   "120": "searchHighlightExtension.ts",
   "121": "MarkdownChart",
   "122": "TabsWidget",
+  "123": "writeJsonAtomic",
   "124": "CodeCopyWidget",
   "125": "DataTableWidget",
   "126": "BulletWidget",

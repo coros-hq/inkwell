@@ -70,7 +70,7 @@ export interface Comment {
 
 /** Normal = single-pane WYSIWYG editor. Markdown = resizable raw-source + preview split. */
 export type EditorMode = 'normal' | 'markdown'
-export type ActiveView = 'notes' | 'board' | 'canvas' | 'brainstorm' | 'trash'
+export type ActiveView = 'notes' | 'board' | 'canvas' | 'brainstorm' | 'calendar' | 'trash'
 
 // ─── Board system ─────────────────────────────────────────────────────────────
 
@@ -126,4 +126,19 @@ export interface Brainstorm {
   createdAt: string
   updatedAt: string
   root: BrainstormNode[]
+}
+
+// ─── Calendar (personal weekly planner) ───────────────────────────────────────
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  date: string        // local calendar day, YYYY-MM-DD
+  endDate?: string    // last day (inclusive) of a multi-day event; omitted for single-day
+  startTime?: string  // HH:MM, omitted for all-day items
+  endTime?: string    // HH:MM
+  color?: string      // key into the calendar palette
+  notes?: string
+  done: boolean
+  order?: number      // position among a day's all-day cards (lower first)
 }

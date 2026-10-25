@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Plus, Trash2, LayoutGrid } from 'lucide-react'
 import {
   DndContext,
@@ -16,7 +17,7 @@ import {
 import { useAppStore } from '../../store/useAppStore'
 import { KanbanColumn } from './KanbanColumn'
 import { TaskCard } from './TaskCard'
-import { cn } from '../../lib/utils'
+import { cn, glassBg } from '../../lib/utils'
 import type { BoardTask, BoardColumn } from '../../types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -81,7 +82,16 @@ export function BoardView() {
     openConfirm,
     sidebarOpen,
     toggleSidebar,
+    bodyGlass,
+    glassOpacity,
+    theme,
   } = useAppStore()
+
+  // With the window blur on, the board sits on the same translucent glass card as the editor.
+  const surface = {
+    className: bodyGlass ? 'glass-card' : 'bg-background',
+    style: bodyGlass ? glassBg('background', glassOpacity, theme, 'card') : undefined,
+  }
 
   const board = boards.find(b => b.id === activeBoardId)
   const columns: BoardColumn[] = board
@@ -260,13 +270,13 @@ export function BoardView() {
 
   if (boards.length === 0) {
     return (
-      <div className="flex-1 flex flex-col bg-background overflow-hidden min-w-0">
+      <div className={cn('flex-1 flex flex-col overflow-hidden min-w-0', surface.className)} style={surface.style}>
         <div className="h-10 shrink-0 border-b border-border flex items-center px-4 gap-2" data-tauri-drag-region>
           {!sidebarOpen && (
             <button
               className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
               onClick={toggleSidebar}
-              title="Show sidebar (⌘B)"
+              title="Show sidebar (⌘⇧B)"
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -290,14 +300,14 @@ export function BoardView() {
   const totalTasks = columns.reduce((sum, c) => sum + c.taskIds.length, 0)
 
   return (
-    <div className="flex-1 flex flex-col bg-background overflow-hidden min-w-0">
+    <div className={cn('flex-1 flex flex-col overflow-hidden min-w-0', surface.className)} style={surface.style}>
       {/* Top bar */}
       <div className="h-10 shrink-0 border-b border-border flex items-center px-4 gap-3 relative" data-tauri-drag-region>
         {!sidebarOpen && (
           <button
             className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface transition-colors shrink-0"
             onClick={toggleSidebar}
-            title="Show sidebar (⌘B)"
+            title="Show sidebar (⌘⇧B)"
           >
             <LayoutGrid className="w-4 h-4" />
           </button>
@@ -416,7 +426,9 @@ export function BoardView() {
           </div>
         </div>
 
-        {/* Drag overlay */}
+        {/* Drag overlay — portaled: the glass card's backdrop-filter would otherwise become the
+            containing block for its position:fixed and offset it from the cursor. */}
+        {createPortal(
         <DragOverlay dropAnimation={{ duration: 120, easing: 'ease-out' }}>
           {draggingTask && (
             <div className="w-[260px] opacity-95 border border-accent/40 rounded-lg">
@@ -433,7 +445,9 @@ export function BoardView() {
               </div>
             </div>
           )}
-        </DragOverlay>
+        </DragOverlay>,
+        document.body,
+        )}
       </DndContext>
     </div>
   )

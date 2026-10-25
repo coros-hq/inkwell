@@ -1,5 +1,5 @@
 import type { EditorView } from '@codemirror/view'
-import { EditorSelection } from '@codemirror/state'
+import { EditorSelection, type EditorState } from '@codemirror/state'
 
 // Shared inline/block markdown-toggling logic, used by both the floating
 // toolbar (mouse) and the editor's own keymap (Cmd/Ctrl+B, +I, ...).
@@ -193,4 +193,86 @@ export function applyBulletColorFormat(view: EditorView, color: string | null) {
   }
   if (changes.length) view.dispatch({ changes })
   view.focus()
+}
+
+const LIST_LINE_RE = /^\s*(?:[-*+]|\d+(?:\.\d+)*[.)]?)\s/
+const LIST_INDENT = '    '
+// Numbered item: "1." at the top level, outline labels like "1.2" when nested.
+const NUM_RE = /^([ \t]*)(\d+(?:\.\d+)*)(\.?)([ \t])/
+
+const levelOf = (indent: string) => Math.floor(indent.replace(/\t/g, LIST_INDENT).length / LIST_INDENT.length)
+const labelText = (label: string) => (label.includes('.') ? label : label + '.')
+const nextLabel = (label: string) => {
+  const parts = label.split('.')
+  parts[parts.length - 1] = String(Number(parts[parts.length - 1]) + 1)
+  return parts.join('.')
+}
+
+// Label for a numbered item placed at `level` directly after line `lineNo`'s predecessors.
+function outlineLabel(state: EditorState, lineNo: number, level: number): string {
+  for (let n = lineNo - 1; n >= 1; n--) {
+    const m = NUM_RE.exec(state.doc.line(n).text)
+    if (!m) { if (state.doc.line(n).text.trim() === '') continue; return '1' }
+    const lv = levelOf(m[1])
+    if (lv === level) return nextLabel(m[2])
+    if (lv === level - 1) return `${m[2]}.1`
+    if (lv < level - 1) break
+  }
+  return '1'
+}
+
+// Tab / Shift-Tab on bullet and numbered list lines nests or un-nests the item.
+// Returns false when no selected line is a list item, so Tab falls through.
+export function changeListIndent(view: EditorView, dir: 1 | -1): boolean {
+  const { state } = view
+  const lines: { from: number; text: string; no: number }[] = []
+  let last = -1
+  for (const r of state.selection.ranges) {
+    const end = state.doc.lineAt(r.to).number
+    for (let n = Math.max(state.doc.lineAt(r.from).number, last + 1); n <= end; n++) {
+      const l = state.doc.line(n)
+      lines.push({ from: l.from, text: l.text, no: n })
+      last = n
+    }
+  }
+  if (!lines.some(l => LIST_LINE_RE.test(l.text))) return false
+
+  const single = lines.length === 1
+  const changes = lines.flatMap((l): { from: number; to?: number; insert?: string }[] => {
+    if (!LIST_LINE_RE.test(l.text)) return []
+    const strip = /^(\t| {1,4})/.exec(l.text)
+    if (dir === -1 && !strip) return []
+    const num = NUM_RE.exec(l.text)
+    if (single && num) {
+      const level = Math.max(0, levelOf(num[1]) + dir)
+      const label = outlineLabel(state, l.no, level)
+      const indent = LIST_INDENT.repeat(level)
+      return [{ from: l.from, to: l.from + num[0].length, insert: `${indent}${labelText(label)}${num[4]}` }]
+    }
+    return dir === 1 ? [{ from: l.from, insert: LIST_INDENT }] : [{ from: l.from, to: l.from + strip![0].length }]
+  })
+  if (changes.length) view.dispatch({ changes, userEvent: dir === 1 ? 'input.indent' : 'delete.dedent' })
+  return true
+}
+
+// Enter on a nested outline item ("1.2 text") starts the next one ("1.3 "); an empty
+// item is removed. Plain "1." items are left to the markdown keymap.
+export function continueOutlineItem(view: EditorView): boolean {
+  const { state } = view
+  const sel = state.selection.main
+  if (!sel.empty) return false
+  const line = state.doc.lineAt(sel.head)
+  const m = NUM_RE.exec(line.text)
+  if (!m || !m[2].includes('.') || sel.head < line.from + m[0].length) return false
+  if (line.text.slice(m[0].length).trim() === '') {
+    view.dispatch({ changes: { from: line.from, to: line.to, insert: '' } })
+    return true
+  }
+  const insert = `\n${m[1]}${nextLabel(m[2])}${m[3]}${m[4]}`
+  view.dispatch({
+    changes: { from: sel.head, insert },
+    selection: { anchor: sel.head + insert.length },
+    userEvent: 'input',
+  })
+  return true
 }

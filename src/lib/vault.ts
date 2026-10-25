@@ -30,7 +30,7 @@
  * Note.path   = absolute path to the .md file
  */
 
-import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, LinkedItem, Brainstorm } from '../types'
+import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, LinkedItem, Brainstorm, CalendarEvent } from '../types'
 import { slugifyTitle } from './utils'
 import { genId } from './id'
 import { markSelfWrite } from './selfWriteRegistry'
@@ -44,6 +44,7 @@ const BOARDS_FILE = 'boards.json'
 const FOLDERS_FILE = 'folders.json'
 const TEAM_FILE = 'team.json'
 const BRAINSTORMS_FILE = 'brainstorms.json'
+const CALENDAR_FILE = 'calendar.json'
 const CANVAS_FILE = 'canvas.json'
 const CANVAS_NOTES_FILE = 'canvas-notes.md'
 const RECENT_KEY = 'inkwell-recent-vaults'
@@ -300,7 +301,8 @@ async function readDirectory(
     parentId,
     children: childFolders,
     notes: folderNotes,
-    expanded: true,
+    // Folders start collapsed on every load; the open/closed state lives in memory only.
+    expanded: false,
   }
   return { folder, notes: allNotes }
 }
@@ -373,9 +375,13 @@ export async function readVaultFS(vaultPath: string): Promise<VaultData | null> 
   if (externalPaths.length > 0) {
     const stillValid: string[] = []
     for (const path of externalPaths) {
-      const note = await readExternalNote(path)
-      if (note) {
-        allNotes.push(note)
+      const result = await loadExternalNote(path)
+      if ('note' in result) {
+        allNotes.push(result.note)
+        stillValid.push(path)
+      } else if (result.error !== 'missing') {
+        // Unreadable right now (typically outside the fs scope after a restart) is
+        // not the same as deleted — keep the entry so it isn't forgotten for good.
         stillValid.push(path)
       }
     }
@@ -608,6 +614,47 @@ export async function writeBrainstormsFile(vaultPath: string, data: BrainstormsD
 export async function readBrainstormsFile(vaultPath: string): Promise<BrainstormsData | null> {
   if (!isTauri) return null
   try { return await readJsonResilient<BrainstormsData>(`${vaultPath}/${INKWELL_DIR}/${BRAINSTORMS_FILE}`) } catch { return null }
+}
+
+// ── Calendar data (calendar.json) ─────────────────────────────────────────────
+// Personal and app-wide: lives in the app data directory, not in any vault, so
+// every vault shows the same calendar and nothing is pushed to a team session.
+
+export interface CalendarData {
+  version: number
+  events: CalendarEvent[]
+}
+
+async function calendarPath(): Promise<string> {
+  const { appDataDir } = await import('@tauri-apps/api/path')
+  const { mkdir, exists } = await import('@tauri-apps/plugin-fs')
+  const dir = (await appDataDir()).replace(/\/$/, '')
+  if (!await exists(dir)) await mkdir(dir, { recursive: true })
+  return `${dir}/${CALENDAR_FILE}`
+}
+
+export async function writeCalendarFile(data: CalendarData): Promise<void> {
+  if (!isTauri) return
+  try {
+    await writeJsonAtomic(await calendarPath(), JSON.stringify(data, null, 2))
+  } catch (e) { console.error('Failed to write calendar:', e) }
+}
+
+/**
+ * Read the global calendar. When none exists yet, adopt the calendar of
+ * `legacyVaultPath` (older versions stored it per vault) and persist it.
+ */
+export async function readCalendarFile(legacyVaultPath?: string): Promise<CalendarData | null> {
+  if (!isTauri) return null
+  try {
+    const path = await calendarPath()
+    const { exists } = await import('@tauri-apps/plugin-fs')
+    if (await exists(path)) return await readJsonResilient<CalendarData>(path)
+    if (!legacyVaultPath) return null
+    const legacy = await readJsonResilient<CalendarData>(`${legacyVaultPath}/${INKWELL_DIR}/${CALENDAR_FILE}`)
+    if (legacy?.events?.length) await writeCalendarFile(legacy)
+    return legacy
+  } catch { return null }
 }
 
 // ── Canvas data (~/.inkwell/canvas.json) ───────────────────────────────────────
@@ -861,16 +908,37 @@ export function externalNoteId(absolutePath: string): string {
   return `ext:${absolutePath}`
 }
 
-export async function readExternalNote(absolutePath: string): Promise<Note | null> {
-  if (!isTauri) return null
+export type ExternalNoteResult =
+  | { note: Note }
+  // missing: the file is gone. denied: Tauri's fs scope doesn't cover it (e.g. it
+  // sits outside the home folder and the Open File grant didn't survive a restart).
+  | { error: 'missing' | 'denied' | 'unreadable'; message: string }
+
+const errText = (e: unknown) => (e instanceof Error ? e.message : String(e))
+const isScopeError = (e: unknown) => /forbidden|not allowed|scope|permission/i.test(errText(e))
+
+/** Like readExternalNote, but says *why* a file couldn't be opened instead of returning null. */
+export async function loadExternalNote(absolutePath: string): Promise<ExternalNoteResult> {
+  if (!isTauri) return { error: 'unreadable', message: 'Opening files needs the desktop app.' }
+  const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
   try {
-    const { readTextFile, exists } = await import('@tauri-apps/plugin-fs')
-    if (!await exists(absolutePath)) return null
-    const raw = await readTextFile(absolutePath)
-    const filename = absolutePath.split('/').pop() ?? absolutePath
-    const now = new Date()
-    const searchRoot = await findExternalSearchRoot(absolutePath)
-    return {
+    if (!await exists(absolutePath)) return { error: 'missing', message: 'The file no longer exists.' }
+  } catch (e) {
+    if (isScopeError(e)) return { error: 'denied', message: 'Inkwell is not allowed to read this location.' }
+    return { error: 'unreadable', message: errText(e) }
+  }
+  let raw: string
+  try {
+    raw = await readTextFile(absolutePath)
+  } catch (e) {
+    if (isScopeError(e)) return { error: 'denied', message: 'Inkwell is not allowed to read this location.' }
+    return { error: 'unreadable', message: errText(e) }
+  }
+  const filename = absolutePath.split('/').pop() ?? absolutePath
+  const now = new Date()
+  const searchRoot = await findExternalSearchRoot(absolutePath)
+  return {
+    note: {
       id: externalNoteId(absolutePath),
       title: extractTitle(raw, filename),
       content: raw,
@@ -885,8 +953,13 @@ export async function readExternalNote(absolutePath: string): Promise<Note | nul
       linkedItems: [],
       external: true,
       searchRoot,
-    }
-  } catch { return null }
+    },
+  }
+}
+
+export async function readExternalNote(absolutePath: string): Promise<Note | null> {
+  const result = await loadExternalNote(absolutePath)
+  return 'note' in result ? result.note : null
 }
 
 export async function pickExternalMarkdownFile(): Promise<string | null> {
@@ -896,7 +969,7 @@ export async function pickExternalMarkdownFile(): Promise<string | null> {
     directory: false,
     multiple: false,
     title: 'Open Markdown File',
-    filters: [{ name: 'Markdown', extensions: ['md', 'markdown'] }],
+    filters: [{ name: 'Markdown & text', extensions: ['md', 'markdown', 'mdx', 'txt'] }],
   })
   if (typeof result === 'string') return result
   return null

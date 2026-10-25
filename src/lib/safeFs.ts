@@ -107,7 +107,17 @@ async function drain(path: string, state: WriteState): Promise<void> {
 // ── JSON state files ──────────────────────────────────────────────────────────
 
 export function writeJsonAtomic(path: string, data: unknown): Promise<void> {
-  return writeFileAtomic(path, JSON.stringify(data, null, 2), { keepBackup: true })
+  // Callers often hand over text they already serialized; stringifying it again would
+  // store a quoted JSON string that reads back as a string instead of an object.
+  return writeFileAtomic(path, typeof data === 'string' ? data : JSON.stringify(data, null, 2), { keepBackup: true })
+}
+
+// Files written by an earlier build were stringified twice, so they parse to a string
+// holding the real JSON. Unwrap that so existing data (tags, boards, calendar…) loads.
+function parseJsonDeep<T>(text: string): T {
+  let value: unknown = JSON.parse(text)
+  if (typeof value === 'string') value = JSON.parse(value)
+  return value as T
 }
 
 /**
@@ -121,7 +131,7 @@ export async function readJsonResilient<T>(path: string): Promise<T | null> {
   const { readTextFile, exists, copyFile } = await import('@tauri-apps/plugin-fs')
   if (await exists(path)) {
     try {
-      return JSON.parse(await readTextFile(path)) as T
+      return parseJsonDeep<T>(await readTextFile(path))
     } catch (e) {
       console.error('[inkwell] corrupt data file, trying backup:', path, e)
       try { await copyFile(path, `${path}.corrupt-${Date.now()}`) } catch { /* best effort */ }
@@ -129,7 +139,7 @@ export async function readJsonResilient<T>(path: string): Promise<T | null> {
   }
   const bak = path + BAK_SUFFIX
   try {
-    if (await exists(bak)) return JSON.parse(await readTextFile(bak)) as T
+    if (await exists(bak)) return parseJsonDeep<T>(await readTextFile(bak))
   } catch (e) {
     console.error('[inkwell] backup also unreadable:', bak, e)
   }

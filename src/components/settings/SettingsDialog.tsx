@@ -101,6 +101,7 @@ export function SettingsDialog() {
     glassOpacity, setGlassOpacity,
     canvasEnabled, setCanvasEnabled,
     brainstormEnabled, setBrainstormEnabled,
+    calendarEnabled, setCalendarEnabled,
     canvasLinkedVaultPath, setCanvasLinkedVaultPath,
   } = useAppStore()
 
@@ -484,6 +485,13 @@ export function SettingsDialog() {
                     description="Private outliner for ideas — add a Brainstorm page to the sidebar and the /brainstorm embed"
                   >
                     <ToggleSwitch checked={brainstormEnabled} onChange={setBrainstormEnabled} />
+                  </SettingRow>
+
+                  <SettingRow
+                    label="Calendar"
+                    description="Private weekly planner — add a Calendar page to the sidebar to plan your week"
+                  >
+                    <ToggleSwitch checked={calendarEnabled} onChange={setCalendarEnabled} />
                   </SettingRow>
 
                   {canvasEnabled && (

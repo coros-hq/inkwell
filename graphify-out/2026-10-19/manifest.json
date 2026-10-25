@@ -40,8 +40,8 @@
     "semantic_hash": ""
   },
   "src-tauri/gen/schemas/capabilities.json": {
-    "mtime": 1790345542.8323038,
-    "ast_hash": "ef8991ebb8de8934a8c8c31e36cd63f0",
+    "mtime": 1792441973.663889,
+    "ast_hash": "b4be6fe91299dd65436b491bac25547f",
     "semantic_hash": ""
   },
   "src-tauri/gen/schemas/desktop-schema.json": {
@@ -195,8 +195,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/AppShell.tsx": {
-    "mtime": 1792441600.2882783,
-    "ast_hash": "c4ec02f8196b7f283bc88633ec71e41e",
+    "mtime": 1792442121.9264956,
+    "ast_hash": "309e84f3bb349d64879e1fa3bd4fa927",
     "semantic_hash": ""
   },
   "src/components/layout/EditorPane.tsx": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
-    "mtime": 1792407507.7367167,
-    "ast_hash": "003487c4abd50d976731d55b5f2f39f6",
+    "mtime": 1792442121.9268413,
+    "ast_hash": "e643b59691de72e90cbcaae92dc9d89e",
     "semantic_hash": ""
   },
   "src/components/quicknote/QuickNoteCapture.tsx": {
@@ -375,8 +375,8 @@
     "semantic_hash": ""
   },
   "src/types/index.ts": {
-    "mtime": 1791456461.3077483,
-    "ast_hash": "6428badf8fad75ba94d11bf2f7fbec42",
+    "mtime": 1792442105.9599733,
+    "ast_hash": "e77a4221af50d53c2881cccb05cf74f0",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
@@ -995,8 +995,13 @@
     "semantic_hash": ""
   },
   "src/lib/safeFs.ts": {
-    "mtime": 1792441552.3662493,
-    "ast_hash": "304099c5df833b2a9912131819295662",
+    "mtime": 1792442102.2598903,
+    "ast_hash": "3c16c4447ca721a8ab5d99ada4ba6454",
+    "semantic_hash": ""
+  },
+  "src/components/trash/TrashView.tsx": {
+    "mtime": 1792442121.8122294,
+    "ast_hash": "889ab0140c8f05d78e23488113d50245",
     "semantic_hash": ""
   }
 }

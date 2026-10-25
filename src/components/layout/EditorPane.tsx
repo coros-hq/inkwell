@@ -107,6 +107,7 @@ export function EditorPane() {
     renameNote,
     sidebarOpen,
     toggleSidebar,
+    focusMode,
     vaultPath,
     bodyGlass,
     glassOpacity,
@@ -245,7 +246,7 @@ export function EditorPane() {
   if (!note) {
     return (
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-        {noteSidebarMode === "tabs" && <TabBar />}
+        {noteSidebarMode === "tabs" && !focusMode && <TabBar />}
         <div
           className={cn("flex-1 flex flex-col items-center justify-center gap-5", bodyGlass ? "glass-card" : "bg-background")}
           style={bodyGlass ? glassBg('background', glassOpacity, theme, 'card') : undefined}
@@ -293,13 +294,15 @@ export function EditorPane() {
     >
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {noteSidebarMode === "tabs" && <TabBar />}
+        {/* Keeps the macOS window controls clear of the text in focus mode */}
+        {focusMode && <div className="h-8 shrink-0" data-tauri-drag-region />}
         {/* Top bar — minimal: breadcrumb + title left, actions tucked right, no divider */}
-        <div className="h-12 shrink-0 flex items-center px-5 gap-3" data-tauri-drag-region>
+        <div className={cn("shrink-0 flex items-center px-5 gap-3", focusMode ? "hidden" : "h-12")} data-tauri-drag-region>
           {!sidebarOpen && (
             <button
               className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors shrink-0"
               onClick={toggleSidebar}
-              title="Show sidebar (⌘B)"
+              title="Show sidebar (⌘⇧B)"
             >
               <PanelLeftOpen className="w-4 h-4" />
             </button>
@@ -441,7 +444,7 @@ export function EditorPane() {
         </div>
 
         {/* Meta line */}
-        {editorMode === "markdown" && (
+        {editorMode === "markdown" && !focusMode && (
           <div className="px-10 pt-2 pb-0 shrink-0">
             <p className="text-xs text-muted-foreground">
               {parentFolder && `${parentFolder.name} / `}
@@ -472,8 +475,8 @@ export function EditorPane() {
               <SplitView noteId={note.id} content={note.content} />
             )}
 
-            {editorMode === "normal" && <EditorToolbar />}
-            {editorMode === "normal" && <StructureRail content={note.content} scrollerEl={scrollerEl} />}
+            {editorMode === "normal" && !focusMode && <EditorToolbar />}
+            {editorMode === "normal" && !focusMode && <StructureRail content={note.content} scrollerEl={scrollerEl} />}
             {/* Mounted for both modes — the "/chart" slash command is available in the
                 Markdown-mode source pane too (see SplitView), and needs somewhere to
                 route openChartInsertDialog()'s request regardless of which pane it fired from. */}
@@ -485,10 +488,10 @@ export function EditorPane() {
       </div>
 
       {/* Right panels */}
-      {linksOpen && (
+      {linksOpen && !focusMode && (
         <LinksPanel noteId={note.id} onClose={() => setLinksOpen(false)} />
       )}
-      {mediaOpen && (
+      {mediaOpen && !focusMode && (
         <MediaPanel noteId={note.id} onClose={() => setMediaOpen(false)} />
       )}
 

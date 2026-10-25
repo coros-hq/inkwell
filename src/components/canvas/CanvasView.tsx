@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { StickyNote, Keyboard, X } from 'lucide-react'
+import { imageFilesToShapes } from './canvasImages'
+import { parseExcalidraw, excalidrawToShapes } from './excalidrawImport'
 import rough from 'roughjs'
 import type { RoughCanvas } from 'roughjs/bin/canvas'
 import type { Drawable } from 'roughjs/bin/core'
 import { useAppStore } from '../../store/useAppStore'
+import { cn, glassBg } from '../../lib/utils'
 import { CanvasToolbar, FONT_HAND } from './CanvasToolbar'
 import { CanvasNotesSheet } from './CanvasNotesSheet'
 import { CanvasTemplatesPicker } from './CanvasTemplatesPicker'
 import { CanvasCategoryPanel } from './CanvasCategoryPanel'
 import type { DiagramTemplate, TemplateCategory } from './canvasTemplates'
 import { uid, hitTest, hitTopmost, shapeBounds, recolorTemplateShapes, unrotatePoint } from './canvasTypes'
-import type { Shape, Tool, Point, PathShape, RectShape, EllipseShape, LineShape, ArrowShape, TextShape, BoundText, StickyShape } from './canvasTypes'
+import type { Shape, Tool, Point, PathShape, RectShape, EllipseShape, LineShape, ArrowShape, TextShape, BoundText, StickyShape, ImageShape } from './canvasTypes'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -48,7 +51,7 @@ function adaptInk(c: string, darkBg: boolean, ink: string): string {
 }
 
 function adaptShape(sh: Shape, darkBg: boolean, ink: string): Shape {
-  if (sh.type === 'sticky') return sh // pastel notes carry their own fixed dark text
+  if (sh.type === 'sticky' || sh.type === 'image') return sh // pastel notes carry their own fixed dark text
   const color = adaptInk(sh.color, darkBg, ink)
   const fill = sh.fill === 'none' ? sh.fill : adaptInk(sh.fill, darkBg, ink)
   let boundText: BoundText | undefined
@@ -85,6 +88,7 @@ function offsetShapes(shapes: Shape[], dx: number, dy: number): Shape[] {
       case 'arrow': { const a = s as ArrowShape; return { ...a, x1: a.x1+dx, y1: a.y1+dy, x2: a.x2+dx, y2: a.y2+dy, ...(a.cpx !== undefined ? { cpx: a.cpx+dx, cpy: a.cpy!+dy } : {}) } }
       case 'text':    return { ...s, x: (s as TextShape).x + dx, y: (s as TextShape).y + dy }
       case 'sticky':  return { ...s, x: (s as StickyShape).x + dx, y: (s as StickyShape).y + dy }
+      case 'image':   return { ...s, x: (s as ImageShape).x + dx, y: (s as ImageShape).y + dy }
       default:        return s
     }
   })
@@ -108,6 +112,7 @@ function applyBoundsToShape(s: Shape, nb: { x: number; y: number; w: number; h: 
   switch (s.type) {
     case 'rect':    return { ...(s as RectShape),    x, y, w, h }
     case 'sticky':  return { ...(s as StickyShape),  x, y, w, h }
+    case 'image':   return { ...(s as ImageShape),   x, y, w, h }
     case 'ellipse': return { ...(s as EllipseShape), cx: x + w / 2, cy: y + h / 2, rx: w / 2, ry: h / 2 }
     case 'path': {
       const b = shapeBounds(s), sx = b.w > 1 ? w / b.w : 1, sy = b.h > 1 ? h / b.h : 1
@@ -140,6 +145,7 @@ function offsetShape(s: Shape, dx: number, dy: number): Shape {
     case 'arrow': { const a = s as ArrowShape; return { ...a, x1: a.x1+dx, y1: a.y1+dy, x2: a.x2+dx, y2: a.y2+dy, ...(a.cpx !== undefined ? { cpx: a.cpx+dx, cpy: a.cpy!+dy } : {}) } }
     case 'text':    return { ...(s as TextShape),    x:  (s as TextShape).x   + dx, y:  (s as TextShape).y   + dy }
     case 'sticky':  return { ...(s as StickyShape),  x:  (s as StickyShape).x + dx, y:  (s as StickyShape).y + dy }
+    case 'image':   return { ...(s as ImageShape),   x:  (s as ImageShape).x + dx, y:  (s as ImageShape).y + dy }
   }
 }
 
@@ -192,6 +198,29 @@ function roughOptions(s: Shape) {
     disableMultiStroke: true,
     disableMultiStrokeFill: true,
   }
+}
+
+// Decoded pictures per shape id. Decoding is async, so a shape drawn before its
+// image is ready is skipped and the view is asked to repaint once it loads.
+const imageCache = new Map<string, { src: string; img: HTMLImageElement }>()
+let onImageReady: (() => void) | null = null
+
+function drawImageShape(ctx: CanvasRenderingContext2D, s: ImageShape) {
+  let entry = imageCache.get(s.id)
+  if (!entry || entry.src !== s.src) {
+    const img = new Image()
+    img.onload = () => onImageReady?.()
+    img.src = s.src
+    entry = { src: s.src, img }
+    imageCache.set(s.id, entry)
+  }
+  const { img } = entry
+  if (!img.complete || !img.naturalWidth) return
+  ctx.save()
+  ctx.imageSmoothingQuality = 'high'
+  ctx.beginPath(); ctx.roundRect(s.x, s.y, s.w, s.h, 4); ctx.clip()
+  ctx.drawImage(img, s.x, s.y, s.w, s.h)
+  ctx.restore()
 }
 
 type RoughCache = Map<string, { key: string; drawables: Drawable[] }>
@@ -283,6 +312,7 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | n
     case 'text': {
       const t = s as TextShape; ctx.font = ctxFont(t); ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y); break
     }
+    case 'image': drawImageShape(ctx, s as ImageShape); break
     case 'sticky': {
       // Always a clean flat card with a soft drop shadow — a sticky note is a UI
       // element, not a hand-drawn shape, so it's exempt from the sketchy toggle.
@@ -394,7 +424,7 @@ function drawBoundText(ctx: CanvasRenderingContext2D, s: RectShape | EllipseShap
 }
 
 const SHAPE_TYPE_LABELS: Record<Shape['type'], string> = {
-  path: 'Path', rect: 'Rectangle', ellipse: 'Ellipse', line: 'Line', arrow: 'Arrow', text: 'Text', sticky: 'Sticky note',
+  path: 'Path', rect: 'Rectangle', ellipse: 'Ellipse', line: 'Line', arrow: 'Arrow', text: 'Text', sticky: 'Sticky note', image: 'Image',
 }
 
 /** Friendly label for a shape's notes-panel title: its bound-text label if it has one, else its type */
@@ -587,7 +617,7 @@ const SHORTCUT_GROUPS: { title: string; items: [string, string][] }[] = [
     items: [
       ['⌘/Ctrl + A', 'Select all'], ['⇧ + click', 'Add/remove from selection'],
       ['Delete / Backspace', 'Delete selected'], ['Arrow keys', 'Nudge (⇧ for 10px)'],
-      ['⌘/Ctrl + D', 'Duplicate'], ['⌘/Ctrl + C / X / V', 'Copy / cut / paste'],
+      ['⌘/Ctrl + D', 'Duplicate'], ['⌘/Ctrl + C / X / V', 'Copy / cut / paste (images and Excalidraw too)'],
       ['⌘/Ctrl + G', 'Group'], ['⌘/Ctrl + ⇧ + G', 'Ungroup'],
       ['⌘/Ctrl + ⇧ + ]', 'Bring to front'], ['⌘/Ctrl + ⇧ + [', 'Send to back'],
     ],
@@ -601,13 +631,19 @@ const SHORTCUT_GROUPS: { title: string; items: [string, string][] }[] = [
 ]
 
 export function CanvasView() {
-  const { vaultPath, theme, canvasLinkedVaultPath } = useAppStore()
+  const { vaultPath, theme, canvasLinkedVaultPath, bodyGlass, glassOpacity } = useAppStore()
   const defaultColor = theme === 'light' ? DEFAULT_COLOR_LIGHT : DEFAULT_COLOR_DARK
 
   const canvasRef    = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const textRef      = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLDivElement>(null)
   const rafIdRef      = useRef<number | null>(null)
+  // Mirrors of the open text editor + its commit, readable from the mouse handlers.
+  // textCommittedRef remembers which editor was already committed so a click-outside
+  // followed by the input's blur can't commit the same text twice.
+  const textInputRef     = useRef<unknown>(null)
+  const commitTextRef    = useRef<() => void>(() => {})
+  const textCommittedRef = useRef<unknown>(null)
 
   // ── React state ──────────────────────────────────────────────────────────────
   const [tool,              setTool]              = useState<Tool>('select')
@@ -636,13 +672,13 @@ export function CanvasView() {
   const [showTemplates,     setShowTemplates]     = useState(false)
   const [categoryPanel,     setCategoryPanel]     = useState<TemplateCategory | null>(null)
   const [sketchy,           setSketchy]           = useState(true)
-  const [showGrid,          setShowGrid]          = useState(true)
+  const [showGrid,          setShowGrid]          = useState(false)
   const [showShortcuts,     setShowShortcuts]     = useState(false)
 
   // ── Canvas content refs ──────────────────────────────────────────────────────
   const shapesRef       = useRef<Shape[]>([])
   const sketchyRef       = useRef(true)
-  const showGridRef      = useRef(true)
+  const showGridRef      = useRef(false)
   const roughCanvasRef   = useRef<RoughCanvas | null>(null)
   const roughCacheRef    = useRef<RoughCache>(new Map())
   const historyRef     = useRef<Shape[][]>([])
@@ -834,8 +870,14 @@ export function CanvasView() {
     const DPR  = window.devicePixelRatio || 1
     const cssW = canvas.width / DPR, cssH = canvas.height / DPR
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0)
-    ctx.fillStyle = getCSSColor('--background', '#111')
-    ctx.fillRect(0, 0, cssW, cssH)
+    // With the window blur on, leave the canvas transparent so the translucent
+    // glass card behind it (and the native blur under that) shows through.
+    if (useAppStore.getState().bodyGlass) {
+      ctx.clearRect(0, 0, cssW, cssH)
+    } else {
+      ctx.fillStyle = getCSSColor('--background', '#111')
+      ctx.fillRect(0, 0, cssW, cssH)
+    }
     if (showGridRef.current) drawDotGrid(ctx, cssW, cssH, panRef.current, zoomRef.current)
 
     if (!roughCanvasRef.current) roughCanvasRef.current = rough.canvas(canvas)
@@ -937,7 +979,7 @@ export function CanvasView() {
     ctx.restore()
   }, [])
 
-  useEffect(() => { render() }, [theme, render])
+  useEffect(() => { render() }, [theme, bodyGlass, render])
   useEffect(() => { document.fonts?.load(`16px ${FONT_HAND}`).then(() => render()).catch(() => {}) }, [render])
   useEffect(() => { sketchyRef.current = sketchy; render() }, [sketchy, render])
   useEffect(() => { showGridRef.current = showGrid; render() }, [showGrid, render])
@@ -1237,6 +1279,10 @@ export function CanvasView() {
       return
     }
     if (e.button !== 0) return
+    // A click while a text editor is open only closes (commits) it. Letting it through
+    // would start a *new* text box in the same click, and the commit that follows would
+    // then save the old text at the new spot, duplicating it.
+    if (textInputRef.current) { commitTextRef.current(); return }
     const wp = toWorld(e)
 
     if (toolRef.current === 'select') {
@@ -1394,6 +1440,17 @@ export function CanvasView() {
       nb.w = Math.max(nb.w, MIN); nb.h = Math.max(nb.h, MIN)
       if (selectedIdsRef.current.size === 1) {
         const [id] = [...selectedIdsRef.current]
+        // Pictures keep their proportions, anchored at the corner opposite the handle.
+        if (shapesRef.current.find(s => s.id === id)?.type === 'image') {
+          const k = Math.max(nb.w / sb.w, nb.h / sb.h)
+          const nw = sb.w * k, nh = sb.h * k
+          const h = resizingRef.current
+          nb = {
+            x: h === 'tl' || h === 'bl' ? sb.x + sb.w - nw : sb.x,
+            y: h === 'tl' || h === 'tr' ? sb.y + sb.h - nh : sb.y,
+            w: nw, h: nh,
+          }
+        }
         shapesRef.current = shapesRef.current.map(s => s.id === id ? fitContainer(applyBoundsToShape(s, nb)) : s)
       } else {
         // Proportional group resize: scale each selected shape's own bounds against the group's start bounds
@@ -1798,6 +1855,61 @@ export function CanvasView() {
     setSelection(new Set(copies.map(c => c.id)))
   }, [commit, setSelection])
 
+  // ── Images (paste / upload) ──────────────────────────────────────────────────
+
+  const imageInputRef = useRef<HTMLInputElement>(null)
+  const pasteSeenRef  = useRef(false)
+
+  const viewCenter = useCallback((): Point => {
+    const r = containerRef.current?.getBoundingClientRect()
+    return {
+      x: ((r?.width ?? 800) / 2 - panRef.current.x) / zoomRef.current,
+      y: ((r?.height ?? 600) / 2 - panRef.current.y) / zoomRef.current,
+    }
+  }, [])
+
+  /** Inserts already-built shapes so their bounding box is centered on `center`, and selects them. */
+  const insertShapesAt = useCallback((shapes: Shape[], center: Point) => {
+    if (!shapes.length) return
+    const b = unionBounds(shapes)
+    const placed = offsetShapes(shapes, center.x - (b.x + b.w / 2), center.y - (b.y + b.h / 2))
+    commit([...shapesRef.current, ...placed])
+    setSelection(new Set(placed.map(s => s.id)))
+    setTool('select')
+  }, [commit, setSelection])
+
+  const addImageFiles = useCallback(async (files: File[], at?: Point) => {
+    const center = at ?? viewCenter()
+    const shapes = await imageFilesToShapes(files, center)
+    if (!shapes.length) return
+    commit([...shapesRef.current, ...shapes])
+    setSelection(new Set(shapes.map(s => s.id)))
+    setTool('select')
+  }, [commit, setSelection, viewCenter])
+
+  /** Excalidraw scene text (clipboard JSON or a .excalidraw file). Returns false if it isn't one. */
+  const importExcalidrawText = useCallback((text: string, at?: Point): boolean => {
+    const scene = parseExcalidraw(text)
+    if (!scene) return false
+    insertShapesAt(excalidrawToShapes(scene), at ?? viewCenter())
+    return true
+  }, [insertShapesAt, viewCenter])
+
+  /** Files from the upload button: pictures, plus .excalidraw / .json scenes. */
+  const addFiles = useCallback(async (files: File[]) => {
+    const images = files.filter(f => f.type.startsWith('image/'))
+    for (const f of files.filter(f => /\.(excalidraw|json)$/i.test(f.name))) {
+      if (!importExcalidrawText(await f.text())) console.warn('[canvas] not an Excalidraw file:', f.name)
+    }
+    if (images.length) await addImageFiles(images)
+  }, [addImageFiles, importExcalidrawText])
+
+  // Repaint when a freshly added/loaded picture finishes decoding.
+  useEffect(() => {
+    onImageReady = () => render()
+    return () => { onImageReady = null }
+  }, [render])
+
   // ── Keyboard ─────────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -1826,7 +1938,12 @@ export function CanvasView() {
           clearSelection()
         }
       }
-      if (!inInput && (ev.metaKey || ev.ctrlKey) && ev.key === 'v') { ev.preventDefault(); pasteClipboard() }
+      // Paste is left to the browser's `paste` event so image data on the clipboard is
+      // readable; if that event never arrives, fall back to the in-app clipboard.
+      if (!inInput && (ev.metaKey || ev.ctrlKey) && ev.key === 'v') {
+        pasteSeenRef.current = false
+        setTimeout(() => { if (!pasteSeenRef.current) pasteClipboard() }, 80)
+      }
 
       // Zoom: Shift+1 fit all, Shift+2 fit selection, Shift+0 reset to 100%
       if (!inInput && ev.shiftKey && !ev.metaKey && !ev.ctrlKey && ev.key === '1') { ev.preventDefault(); zoomToFit() }
@@ -1910,9 +2027,19 @@ export function CanvasView() {
         setCanUndo(true); setCanRedo(false); scheduleSave()
       }
     }
-    window.addEventListener('keydown', down); window.addEventListener('keyup', up)
-    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
-  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor, groupSelected, ungroupSelected, bringToFront, sendToBack, copySelected, pasteClipboard, zoomToFit, resetZoom, scheduleSave, startEdit])
+    const paste = (ev: ClipboardEvent) => {
+      if ((ev.target as Element | null)?.closest?.('input, textarea, .cm-editor, [contenteditable="true"]')) return
+      pasteSeenRef.current = true
+      // Excalidraw puts its scene on the clipboard as JSON text; prefer it over any image.
+      const text = ev.clipboardData?.getData('text/plain') ?? ''
+      if (text.length > 20 && importExcalidrawText(text, lastMouseWorldRef.current)) { ev.preventDefault(); return }
+      const images = [...(ev.clipboardData?.files ?? [])].filter(f => f.type.startsWith('image/'))
+      if (images.length) { ev.preventDefault(); void addImageFiles(images, lastMouseWorldRef.current); return }
+      if (clipboardRef.current?.length) { ev.preventDefault(); pasteClipboard() }
+    }
+    window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('paste', paste)
+    return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('paste', paste) }
+  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor, groupSelected, ungroupSelected, bringToFront, sendToBack, copySelected, pasteClipboard, addImageFiles, importExcalidrawText, zoomToFit, resetZoom, scheduleSave, startEdit])
 
   // Sync editingIdRef/editingContainerIdRef so render can skip the shape/text being edited
   useEffect(() => {
@@ -1970,7 +2097,8 @@ export function CanvasView() {
   // ── Text commit ──────────────────────────────────────────────────────────────
 
   const commitText = useCallback(() => {
-    if (!textInput) return
+    if (!textInput || textCommittedRef.current === textInput) return
+    textCommittedRef.current = textInput
     const { editingId, containerId, stickyId, isNewSticky } = textInput
     const isDivMode = !!(containerId || stickyId || isNewSticky)
     const rawVal = isDivMode
@@ -2064,6 +2192,8 @@ export function CanvasView() {
     }
   }, [textInput, commit, setSelection])
 
+  useEffect(() => { textInputRef.current = textInput; commitTextRef.current = commitText }, [textInput, commitText])
+
   // ── Toolbar handlers ─────────────────────────────────────────────────────────
 
   const applyToSelected = useCallback((patch: Partial<Shape>) => {
@@ -2115,7 +2245,10 @@ export function CanvasView() {
       : `Note — Group (${shapesRef.current.filter(s => s.groupId === notesTarget.groupId).length} shapes)`
 
   return (
-    <div className="flex-1 h-full overflow-hidden flex flex-row">
+    <div
+      className={cn('flex-1 overflow-hidden flex flex-row', bodyGlass ? 'glass-card' : 'h-full')}
+      style={bodyGlass ? glassBg('background', glassOpacity, theme, 'card') : undefined}
+    >
 
       {/* ── Canvas area ── */}
       <div ref={containerRef} className="relative h-full overflow-hidden flex-1">
@@ -2144,11 +2277,25 @@ export function CanvasView() {
           onBold={handleBold} onItalic={handleItalic}
           onUndo={undo} onRedo={redo} onZoom={handleZoom}
           onTemplates={() => setShowTemplates(v => !v)}
+          onImage={() => imageInputRef.current?.click()}
           showTemplates={showTemplates}
           sketchy={sketchy} onSketchy={() => setSketchy(v => !v)}
           showGrid={showGrid} onToggleGrid={() => setShowGrid(v => !v)}
           canAddNote={canAddNote} hasNote={hasNoteOnSelection} canPromoteSticky={canPromoteSticky}
           onAddNote={addNoteToSelection} onPromoteSticky={promoteStickyToNote}
+        />
+
+        <input
+          ref={imageInputRef}
+          type="file"
+          accept="image/*,.excalidraw,.json"
+          multiple
+          className="hidden"
+          onChange={e => {
+            const files = [...(e.target.files ?? [])]
+            e.target.value = ''
+            if (files.length) void addFiles(files)
+          }}
         />
 
         {/* Template picker */}

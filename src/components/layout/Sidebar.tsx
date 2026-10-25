@@ -15,6 +15,7 @@ import {
   ArrowRight,
   MoreHorizontal,
   Lightbulb,
+  CalendarDays,
 } from "lucide-react";
 import { TagsSection, TagFolderResults } from './TagsView'
 import { SettingsDialog } from '../settings/SettingsDialog'
@@ -69,6 +70,7 @@ import { FolderIcon } from "../shared/FolderIcon";
 import { FolderIconPicker } from "../shared/FolderIconPicker";
 import type { Folder as FolderType, Note } from "../../types";
 import { cn, glassBg } from "../../lib/utils";
+import { handleListKeyNav } from "../../lib/listKeyNav";
 import {
   confirmDeleteFolderItem,
   confirmDeleteNote,
@@ -109,7 +111,7 @@ function notePadding(depth: number): number {
 }
 
 const treeRowClass = cn(
-  "flex items-center gap-1.5 h-[30px] pr-1.5 rounded-md transition-colors min-w-0 text-[13px] font-medium",
+  "flex items-center gap-1.5 h-[30px] pr-1.5 rounded-md transition-colors min-w-0 text-[13px] font-medium outline-none focus:bg-accent/25 focus:text-foreground",
 );
 
 /** Drop insertion line — dot + rule, like Finder/VSCode. */
@@ -188,6 +190,7 @@ function NoteRow({
 }: NoteRowProps) {
   const dndId = `note:${note.id}`;
   const isRenaming = renamingId === note.id;
+  const tagDefs = useAppStore((s) => s.tagDefs);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -231,6 +234,8 @@ function NoteRow({
           isRenaming && "cursor-default",
         )}
         style={{ paddingLeft }}
+        data-nav="note"
+        data-nav-id={`note:${note.id}`}
         onClick={(e) => !isRenaming && handleNoteSelect(e, note.id, orderedIds)}
         onDoubleClick={(e) => { e.stopPropagation(); onStartRename(note.id); }}
         onContextMenu={onContextMenu}
@@ -265,6 +270,15 @@ function NoteRow({
             )}
           >
             {note.title}
+          </span>
+        )}
+
+        {!isRenaming && note.tags.length > 0 && (
+          <span className="flex items-center gap-1 shrink-0 group-hover:hidden pointer-events-none pr-1">
+            {note.tags.map((t) => {
+              const def = tagDefs.find((d) => d.name === t);
+              return def ? <span key={t} className="w-2 h-2 rounded-full" style={{ background: def.color }} title={t} /> : null;
+            })}
           </span>
         )}
 
@@ -462,6 +476,10 @@ function FolderRow({
             isDragging && "opacity-20 pointer-events-none",
           )}
           style={{ paddingLeft }}
+          data-nav="folder"
+          data-nav-id={`folder:${folder.id}`}
+          data-nav-expanded={folder.expanded}
+          data-nav-parent={folder.parentId ?? undefined}
           onClick={(e) => {
             if (isRenamingThis) return;
             // ⌘/Ctrl-click ticks folders for tag assignment instead of expanding.
@@ -633,9 +651,11 @@ export function Sidebar() {
     theme,
     canvasEnabled,
     brainstormEnabled,
+    calendarEnabled,
     updateInfo,
     updateInstallState,
     installUpdate,
+    isPortable,
     // dismissUpdateNotice,
   } = useAppStore();
 
@@ -997,6 +1017,24 @@ export function Sidebar() {
     });
   };
 
+  // Same toggle rows as folders; applies to every selected note when the
+  // right-clicked one is part of the selection.
+  const noteTagMenuItems = (noteId: string) => {
+    const st = useAppStore.getState();
+    const targets = st.selectedNoteIds.includes(noteId) ? st.selectedNoteIds : [noteId];
+    const targetNotes = st.notes.filter((n) => targets.includes(n.id));
+    return st.tagDefs.map((t, i) => {
+      const allHave = targetNotes.every((n) => n.tags.includes(t.name));
+      return {
+        label: t.name,
+        dotColor: t.color,
+        checked: allHave,
+        separator: i === 0,
+        onClick: () => st.setNotesTag(targets, t.name, !allHave),
+      };
+    });
+  };
+
   const openFolderContextMenu = (e: React.MouseEvent, folder: FolderType) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1036,6 +1074,7 @@ export function Sidebar() {
       y: e.clientY,
       items: [
         { label: "Rename", onClick: () => startRename(noteId) },
+        ...(external ? [] : noteTagMenuItems(noteId)),
         external
           ? {
             label: "Remove from library",
@@ -1212,18 +1251,22 @@ export function Sidebar() {
             {brainstormEnabled && (
               <QuickLink icon={Lightbulb} label="Brainstorm" active={activeView === "brainstorm"} onClick={() => setActiveView("brainstorm")} />
             )}
+            {calendarEnabled && (
+              <QuickLink icon={CalendarDays} label="Calendar" active={activeView === "calendar"} onClick={() => setActiveView("calendar")} />
+            )}
             {canvasEnabled && (
               <QuickLink icon={PenSquare} label="Draw" active={activeView === "canvas"} onClick={() => setActiveView("canvas")} />
             )}
             <QuickLink icon={Trash2} label="Trash" active={activeView === "trash"} onClick={() => setActiveView("trash")} />
           </div>
 
-          <div className="max-h-[42vh] overflow-y-auto space-y-4 -mx-1 px-1">
+          <div className="max-h-[42vh] overflow-y-auto space-y-4 -mx-1 px-1" data-nav-list="sidebar" onKeyDown={handleListKeyNav}>
           {activeTag && (
             <TagFolderResults
               tag={activeTag}
               onFolderContextMenu={openFolderContextMenu}
               onOpenFolder={openFolderInTree}
+              onNoteContextMenu={(e, n) => openNoteContextMenu(e, n.id, n.title, n.external)}
             />
           )}
           {!activeTag && pinnedNotes.length > 0 && (
@@ -1383,7 +1426,9 @@ export function Sidebar() {
               title={
                 updateInstallState === 'installing'
                   ? 'Downloading and installing — the app will restart automatically'
-                  : `Install version ${updateInfo.version}`
+                  : isPortable
+                    ? `Open the download page for version ${updateInfo.version}`
+                    : `Install version ${updateInfo.version}`
               }
               className="w-full flex items-center gap-2 rounded-md bg-accent/10 border border-accent/20 px-2 py-2 hover:bg-accent/15 transition-colors disabled:opacity-70 disabled:cursor-default"
             >

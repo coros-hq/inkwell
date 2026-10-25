@@ -8,6 +8,11 @@ import { StateField } from '@codemirror/state'
 import type { Range, EditorState } from '@codemirror/state'
 import katex from 'katex'
 import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import {
+  Bold, ChartColumn, CircleCheck, Code, Heading1, Heading2, Heading3, Highlighter, Italic, Lightbulb,
+  List, ListOrdered, Minus, PanelTop, Play, Quote, SquareCheck, SquareKanban, Table, Table2, type LucideIcon,
+} from 'lucide-react'
 import { createRoot, type Root } from 'react-dom/client'
 import { useAppStore } from '../store/useAppStore'
 import { MarkdownChart } from '../components/editor/MarkdownChart'
@@ -114,17 +119,38 @@ export const codeHighlighting = syntaxHighlighting(codeTokenHighlightStyle)
 // style with a `content` glyph below — see SLASH_COMMANDS' `type` field and the
 // 'iknote' type used for @-mentions.
 
-const ICON_GLYPH: Record<string, string> = {
-  ikheading1: 'H1', ikheading2: 'H2', ikheading3: 'H3',
-  ikbullet: '≡', iknumbered: '1.', iktodo: '☑', ikquote: '"',
-  ikcode: '</>', iktable: '▦', ikhighlight: '▮', ikdivider: '—',
-  ikbold: 'B', ikitalic: 'I', ikvideo: '▶', iknote: '📄',
+// Slash-menu icons are Lucide icons, rendered once to SVG and painted via a CSS mask so
+// they pick up the popup's accent colour. Types without one (e.g. the @-mention
+// 'iknote') fall back to a text glyph.
+const ICON_GLYPH: Record<string, string> = { iknote: '📄' }
+
+const ICON_COMPONENTS: Record<string, LucideIcon> = {
+  ikheading1: Heading1, ikheading2: Heading2, ikheading3: Heading3,
+  ikbullet: List, iknumbered: ListOrdered, iktodo: SquareCheck, ikquote: Quote,
+  ikcode: Code, iktable: Table2, ikmdtable: Table, iktabs: PanelTop,
+  ikhighlight: Highlighter, ikdivider: Minus, ikbold: Bold, ikitalic: Italic,
+  ikvideo: Play, ikboard: SquareKanban, iktask: CircleCheck, ikbrainstorm: Lightbulb,
+  ikchart: ChartColumn,
 }
 
 function iconRules(): Record<string, unknown> {
   const rules: Record<string, unknown> = {}
   for (const [type, glyph] of Object.entries(ICON_GLYPH)) {
     rules[`.cm-completionIcon-${type}`] = { '&:after': { content: `'${glyph}'` } }
+  }
+  for (const [type, Icon] of Object.entries(ICON_COMPONENTS)) {
+    const svg = renderToStaticMarkup(createElement(Icon, { size: 14, strokeWidth: 2, color: '#000' }))
+    const url = `url("data:image/svg+xml,${encodeURIComponent(svg)}")`
+    rules[`.cm-completionIcon-${type}`] = {
+      '&:after': {
+        content: '""',
+        width: '14px',
+        height: '14px',
+        backgroundColor: 'currentColor',
+        '-webkit-mask': `${url} center / contain no-repeat`,
+        mask: `${url} center / contain no-repeat`,
+      },
+    }
   }
   return rules
 }
@@ -214,8 +240,8 @@ const SLASH_COMMANDS = [
   { label: '/quote', displayLabel: 'Quote', detail: '> Blockquote', apply: '> ', type: 'ikquote' },
   { label: '/code', displayLabel: 'Code Block', detail: 'Fenced code block', apply: '```\n\n```', type: 'ikcode' },
   { label: '/table', displayLabel: 'Table', detail: 'Custom columns & data, like Notion', apply: '__DATA_TABLE__', type: 'iktable' },
-  { label: '/tabs', displayLabel: 'Tabs', detail: 'Tab group — each tab holds its own content', apply: '__TABS__', type: 'iktable' },
-  { label: '/mdtable', displayLabel: 'Markdown Table', detail: 'Plain 3-column pipe table', apply: '| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Cell     | Cell     | Cell     |\n', type: 'iktable' },
+  { label: '/tabs', displayLabel: 'Tabs', detail: 'Tab group — each tab holds its own content', apply: '__TABS__', type: 'iktabs' },
+  { label: '/mdtable', displayLabel: 'Markdown Table', detail: 'Plain 3-column pipe table', apply: '| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Cell     | Cell     | Cell     |\n', type: 'ikmdtable' },
   { label: '/highlight', displayLabel: 'Highlight', detail: '==highlighted text==', apply: '====', boost: -1, type: 'ikhighlight' },
   { label: '/divider', displayLabel: 'Divider', detail: '--- Horizontal rule', apply: '---\n', type: 'ikdivider' },
   { label: '/bold', displayLabel: 'Bold', detail: '**bold text**', apply: '****', boost: -1, type: 'ikbold' },
@@ -223,8 +249,8 @@ const SLASH_COMMANDS = [
   { label: '/video', displayLabel: 'Video Embed', detail: 'YouTube / Vimeo / Loom', apply: '__VIDEO_URL__', type: 'ikvideo' },
   { label: '/board', displayLabel: 'Board', detail: 'Embed a kanban board from the Board view', apply: '__BOARD_REF__', type: 'ikboard' },
   { label: '/task', displayLabel: 'Task', detail: 'Link a task from a board', apply: '__TASK_REF__', type: 'iktask' },
-  { label: '/brainstorm', displayLabel: 'Brainstorm', detail: 'Embed one of your private brainstorm outlines', apply: '__BRAINSTORM_REF__', type: 'ikboard' },
-  { label: '/chart', displayLabel: 'Chart', detail: 'Bar, line, pie & more — pick a type and fill in data', apply: '__CHART_DIALOG__' },
+  { label: '/brainstorm', displayLabel: 'Brainstorm', detail: 'Embed one of your private brainstorm outlines', apply: '__BRAINSTORM_REF__', type: 'ikbrainstorm' },
+  { label: '/chart', displayLabel: 'Chart', detail: 'Bar, line, pie & more — pick a type and fill in data', apply: '__CHART_DIALOG__', type: 'ikchart' },
 ]
 
 // `/chart` opens a dialog that only the main note editor (MarkdownEditor,
@@ -795,6 +821,29 @@ function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
         }
       },
     })
+
+    // <mark class="hl-red">…</mark> / <span class="tc-red">…</span>: hide the tags so only the
+    // coloured text shows. A tag reappears only while the selection actually overlaps it (not
+    // merely touches its edge), so selecting the coloured text to recolour it keeps them hidden.
+    const text = view.state.doc.sliceString(from, to)
+    COLOR_TAG_RE.lastIndex = 0
+    let m: RegExpExecArray | null
+    while ((m = COLOR_TAG_RE.exec(text)) !== null) {
+      const start = from + m.index
+      const openEnd = start + m[1].length
+      const closeStart = start + m[0].length - m[4].length
+      const end = start + m[0].length
+      // Leave literal examples inside code untouched.
+      let inCode = false
+      for (let n = syntaxTree(view.state).resolveInner(start, 1) as SyntaxNodeLike | null; n; n = n.parent) {
+        if (n.name === 'FencedCode' || n.name === 'InlineCode' || n.name === 'CodeBlock') { inCode = true; break }
+      }
+      if (inCode) continue
+      const touched = (a: number, b: number) =>
+        view.state.selection.ranges.some(r => (r.empty ? r.from > a && r.from < b : r.from < b && r.to > a))
+      if (!touched(start, openEnd)) decos.push(Decoration.replace({}).range(start, openEnd))
+      if (!touched(closeStart, end)) decos.push(Decoration.replace({}).range(closeStart, end))
+    }
   }
 
   return Decoration.set(decos, true)
@@ -833,102 +882,102 @@ type TableLineType = 'header' | 'separator' | 'row-even' | 'row-odd'
 // Lines that fall inside a fenced/indented code block — ASCII art in a code
 // sample (box-drawing with "|" columns) reads as a table by pure regex, but
 // it's literal code content and must be left alone.
-function codeBlockLineNumbers(view: EditorView): Set<number> {
-  const lines = new Set<number>()
-  syntaxTree(view.state).iterate({
-    enter(node) {
-      if (node.name !== 'FencedCode' && node.name !== 'CodeBlock') return
-      const startLine = view.state.doc.lineAt(node.from).number
-      const endLine = view.state.doc.lineAt(node.to).number
-      for (let l = startLine; l <= endLine; l++) lines.add(l)
-    },
-  })
-  return lines
+type SyntaxNodeLike = { name: string; parent: SyntaxNodeLike | null }
+
+function isInCodeBlock(state: EditorState, pos: number): boolean {
+  for (let n = syntaxTree(state).resolveInner(pos, 1) as SyntaxNodeLike | null; n; n = n.parent) {
+    if (n.name === 'FencedCode' || n.name === 'CodeBlock') return true
+  }
+  return false
 }
 
+// Only the viewport is classified (plus whole table blocks that straddle its
+// edges, so header/separator/zebra parity is computed from the block's real
+// start). Scanning the entire document on every edit made large notes lag.
 function buildTableDecorations(view: EditorView): DecorationSet {
   const decs: Range<Decoration>[] = []
-  const doc = view.state.doc
+  const { state } = view
+  const doc = state.doc
   const totalLines = doc.lines
-  const codeLines = codeBlockLineNumbers(view)
+  const emitted = new Set<number>()
 
-  // ── Pass 1: classify every line in the document ──────────────────────────
-  const lineTypes = new Map<number, TableLineType>()
+  const isRow = (n: number) => {
+    const line = doc.line(n)
+    // Resolve at the first non-blank char: an indented code block's node starts after its indent.
+    return isTableRow(line.text) && !isInCodeBlock(state, line.from + line.text.length - line.text.trimStart().length)
+  }
 
-  let i = 1
-  while (i <= totalLines) {
-    const lineText = doc.line(i).text
-    if (codeLines.has(i) || !isTableRow(lineText)) { i++; continue }
+  const emit = (lineNum: number, type: TableLineType) => {
+    const line = doc.line(lineNum)
+    // Line-level background decoration
+    const cls =
+      type === 'header' ? 'cm-table-header' :
+        type === 'separator' ? 'cm-table-separator' :
+          type === 'row-even' ? 'cm-table-row-even' :
+            'cm-table-row-odd'
+    decs.push(Decoration.line({ attributes: { class: cls } }).range(line.from))
 
-    // Collect consecutive table-row lines as a block
-    const blockLines: number[] = [i]
-    i++
-    while (i <= totalLines && !codeLines.has(i) && isTableRow(doc.line(i).text)) {
-      blockLines.push(i)
-      i++
-    }
-
-    // Find the first separator row within the block
-    let sepIdx = -1
-    for (let j = 0; j < blockLines.length; j++) {
-      if (isSeparatorRow(doc.line(blockLines[j]).text)) { sepIdx = j; break }
-    }
-
-    if (sepIdx > 0) {
-      // Standard GFM table: header(s) | separator | body rows
-      for (let j = 0; j < sepIdx; j++) lineTypes.set(blockLines[j], 'header')
-      lineTypes.set(blockLines[sepIdx], 'separator')
-      let bodyIdx = 0
-      for (let j = sepIdx + 1; j < blockLines.length; j++) {
-        lineTypes.set(blockLines[j], bodyIdx % 2 === 0 ? 'row-even' : 'row-odd')
-        bodyIdx++
-      }
-    } else if (sepIdx === 0) {
-      // Separator is the very first line (unusual)
-      lineTypes.set(blockLines[0], 'separator')
-      let bodyIdx = 0
-      for (let j = 1; j < blockLines.length; j++) {
-        lineTypes.set(blockLines[j], bodyIdx % 2 === 0 ? 'row-even' : 'row-odd')
-        bodyIdx++
-      }
-    } else {
-      // No separator — treat all as body rows
-      let bodyIdx = 0
-      for (const ln of blockLines) {
-        lineTypes.set(ln, bodyIdx % 2 === 0 ? 'row-even' : 'row-odd')
-        bodyIdx++
+    // Color each '|' pipe character (skip separator rows — dashes are the content)
+    if (type !== 'separator') {
+      const text = line.text
+      const pipeMark = Decoration.mark({ class: 'cm-table-pipe' })
+      for (let ci = 0; ci < text.length; ci++) {
+        if (text[ci] === '|') {
+          decs.push(pipeMark.range(line.from + ci, line.from + ci + 1))
+        }
       }
     }
   }
 
-  // ── Pass 2: emit decorations only for visible lines ───────────────────────
   for (const { from, to } of view.visibleRanges) {
-    const startLine = doc.lineAt(from).number
-    const endLine = doc.lineAt(to).number
+    const first = doc.lineAt(from).number
+    const last = doc.lineAt(to).number
+    const visible = (ln: number) => ln >= first && ln <= last && !emitted.has(ln)
 
-    for (let lineNum = startLine; lineNum <= endLine; lineNum++) {
-      const type = lineTypes.get(lineNum)
-      if (!type) continue
+    let i = first
+    if (isRow(first)) while (i > 1 && isRow(i - 1)) i--
 
-      const line = doc.line(lineNum)
+    while (i <= last) {
+      if (!isRow(i)) { i++; continue }
 
-      // Line-level background decoration
-      const cls =
-        type === 'header' ? 'cm-table-header' :
-          type === 'separator' ? 'cm-table-separator' :
-            type === 'row-even' ? 'cm-table-row-even' :
-              'cm-table-row-odd'
-      decs.push(Decoration.line({ attributes: { class: cls } }).range(line.from))
+      // Collect consecutive table-row lines as a block
+      const blockLines: number[] = [i]
+      i++
+      while (i <= totalLines && isRow(i)) {
+        blockLines.push(i)
+        i++
+      }
 
-      // Color each '|' pipe character (skip separator rows — dashes are the content)
-      if (type !== 'separator') {
-        const text = line.text
-        const pipeMark = Decoration.mark({ class: 'cm-table-pipe' })
-        for (let ci = 0; ci < text.length; ci++) {
-          if (text[ci] === '|') {
-            decs.push(pipeMark.range(line.from + ci, line.from + ci + 1))
-          }
+      // Find the first separator row within the block
+      let sepIdx = -1
+      for (let j = 0; j < blockLines.length; j++) {
+        if (isSeparatorRow(doc.line(blockLines[j]).text)) { sepIdx = j; break }
+      }
+
+      const types = new Map<number, TableLineType>()
+      const zebra = (fromIdx: number) => {
+        let bodyIdx = 0
+        for (let j = fromIdx; j < blockLines.length; j++) {
+          types.set(blockLines[j], bodyIdx % 2 === 0 ? 'row-even' : 'row-odd')
+          bodyIdx++
         }
+      }
+      if (sepIdx > 0) {
+        // Standard GFM table: header(s) | separator | body rows
+        for (let j = 0; j < sepIdx; j++) types.set(blockLines[j], 'header')
+        types.set(blockLines[sepIdx], 'separator')
+        zebra(sepIdx + 1)
+      } else if (sepIdx === 0) {
+        // Separator is the very first line (unusual)
+        types.set(blockLines[0], 'separator')
+        zebra(1)
+      } else {
+        // No separator — treat all as body rows
+        zebra(0)
+      }
+
+      for (const [ln, type] of types) {
+        if (visible(ln)) { emitted.add(ln); emit(ln, type) }
       }
     }
   }
@@ -1059,7 +1108,7 @@ class TableWidget extends WidgetType {
   ignoreEvent() { return true }
 }
 
-function buildTablePreviewDecorations(state: EditorState): DecorationSet {
+function buildTablePreviewDecorations(state: EditorState, spans: SelectionSpan[]): DecorationSet {
   const doc = state.doc
   const decos: Range<Decoration>[] = []
 
@@ -1071,6 +1120,7 @@ function buildTablePreviewDecorations(state: EditorState): DecorationSet {
       const from = firstLine.from
       const to = lastLine.to
       if (lastLine.number - firstLine.number < 1) return false
+      spans.push([from, to])
       if (overlapsSelection(state, from, to)) return false
 
       const lines = []
@@ -1101,14 +1151,7 @@ function buildTablePreviewDecorations(state: EditorState): DecorationSet {
   return Decoration.set(decos, true)
 }
 
-export const tablePreviewField = StateField.define<DecorationSet>({
-  create: (state) => buildTablePreviewDecorations(state),
-  update: (value, tr) => {
-    if (tr.docChanged || tr.selection) return buildTablePreviewDecorations(tr.state)
-    return value
-  },
-  provide: (f) => EditorView.decorations.from(f),
-})
+export const tablePreviewField = selectionAwareField(buildTablePreviewDecorations)
 
 // ─── ==Highlight== Mark Decoration ───────────────────────────────────────────
 
@@ -1207,11 +1250,55 @@ function overlapsSelection(state: EditorState, from: number, to: number): boolea
   return state.selection.ranges.some(r => r.from <= to && r.to >= from)
 }
 
+/** Ranges are sorted and non-overlapping (document order), so a binary search finds an overlap. */
 function overlapsAny(ranges: Array<[number, number]>, from: number, to: number): boolean {
-  return ranges.some(([a, b]) => from < b && to > a)
+  let lo = 0, hi = ranges.length
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (ranges[mid][1] <= from) lo = mid + 1
+    else hi = mid
+  }
+  return lo < ranges.length && ranges[lo][0] < to
 }
 
-function buildMathDecorations(state: EditorState): DecorationSet {
+// ─── Selection-aware live-preview fields ──────────────────────────────────────
+// Live-preview widgets (math, charts, tables, …) swap back to source while the
+// selection touches them. Rebuilding every field over the whole document on each
+// cursor move is O(document) and made large notes sluggish, so each builder also
+// reports the spans whose appearance depends on the selection, and a pure cursor
+// move only rebuilds when the old or new selection touches one of them.
+
+type SelectionSpan = [number, number]
+
+function selectionTouches(state: EditorState, spans: SelectionSpan[]): boolean {
+  for (const r of state.selection.ranges) {
+    if (overlapsAny(spans, r.from, r.to + 1) || overlapsAny(spans, r.from - 1, r.to)) return true
+  }
+  return false
+}
+
+interface SelectionAwareValue { set: DecorationSet; spans: SelectionSpan[] }
+
+function selectionAwareField(build: (state: EditorState, spans: SelectionSpan[]) => DecorationSet) {
+  const run = (state: EditorState): SelectionAwareValue => {
+    const spans: SelectionSpan[] = []
+    const set = build(state, spans)
+    return { set, spans: spans.sort((a, b) => a[0] - b[0]) }
+  }
+  return StateField.define<SelectionAwareValue>({
+    create: run,
+    update: (value, tr) => {
+      if (tr.docChanged) return run(tr.state)
+      if (tr.selection && (selectionTouches(tr.startState, value.spans) || selectionTouches(tr.state, value.spans))) {
+        return run(tr.state)
+      }
+      return value
+    },
+    provide: (f) => EditorView.decorations.from(f, v => v.set),
+  })
+}
+
+function buildMathDecorations(state: EditorState, spans: SelectionSpan[]): DecorationSet {
   const doc = state.doc
   const text = doc.toString()
   const decos: Range<Decoration>[] = []
@@ -1223,9 +1310,11 @@ function buildMathDecorations(state: EditorState): DecorationSet {
 
   syntaxTree(state).iterate({
     enter: (node) => {
+      // Children are skipped after recording a range so the lists stay sorted and
+      // non-nested, which overlapsAny's binary search relies on.
       if (node.name === 'InlineCode' || node.name === 'CodeBlock' || node.name === 'CodeText') {
         codeRanges.push([node.from, node.to])
-        return
+        return false
       }
       if (node.name !== 'FencedCode') return
 
@@ -1233,9 +1322,10 @@ function buildMathDecorations(state: EditorState): DecorationSet {
       const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
       if (!MATH_FENCE_LANGS.has(info)) {
         codeRanges.push([node.from, node.to])
-        return
+        return false
       }
       fenceRanges.push([node.from, node.to])
+      spans.push([node.from, node.to])
       if (overlapsSelection(state, node.from, node.to)) return
 
       const lastLine = doc.lineAt(node.to)
@@ -1257,12 +1347,14 @@ function buildMathDecorations(state: EditorState): DecorationSet {
   const blockRanges: Array<[number, number]> = []
   const blockRe = /\$\$([^]+?)\$\$/g
   let m: RegExpExecArray | null
-  while ((m = blockRe.exec(text)) !== null) {
+  const hasDollar = text.includes('$')
+  while (hasDollar && (m = blockRe.exec(text)) !== null) {
     const from = m.index
     const to = from + m[0].length
     const tex = m[1].trim()
     if (!tex || skip(from, to)) continue
     blockRanges.push([from, to])
+    spans.push([from, to])
     if (overlapsSelection(state, from, to)) continue
     decos.push(
       Decoration.replace({ widget: new KatexWidget(tex, true), block: true }).range(from, to),
@@ -1271,11 +1363,12 @@ function buildMathDecorations(state: EditorState): DecorationSet {
 
   // ── Inline:  $ … $  (single line, not $$, not preceded by \) ───────────────
   const inlineRe = /(?<![\\$])\$(?!\s)((?:\\\$|[^$\n])+?)(?<![\s\\])\$(?![\d$])/g
-  while ((m = inlineRe.exec(text)) !== null) {
+  while (hasDollar && (m = inlineRe.exec(text)) !== null) {
     const from = m.index
     const to = from + m[0].length
     const tex = m[1].trim()
     if (!tex || skip(from, to) || overlapsAny(blockRanges, from, to)) continue
+    spans.push([from, to])
     if (overlapsSelection(state, from, to)) continue
     decos.push(
       Decoration.replace({ widget: new KatexWidget(tex, false) }).range(from, to),
@@ -1285,14 +1378,7 @@ function buildMathDecorations(state: EditorState): DecorationSet {
   return Decoration.set(decos, true)
 }
 
-export const mathPreviewField = StateField.define<DecorationSet>({
-  create: (state) => buildMathDecorations(state),
-  update: (value, tr) => {
-    if (tr.docChanged || tr.selection) return buildMathDecorations(tr.state)
-    return value
-  },
-  provide: (f) => EditorView.decorations.from(f),
-})
+export const mathPreviewField = selectionAwareField(buildMathDecorations)
 
 // ─── Chart Live Preview (```chart fenced blocks) ──────────────────────────────
 // Mirrors the math widget above: a fenced ```chart block renders as the chart
@@ -1370,7 +1456,7 @@ class ChartWidget extends WidgetType {
   ignoreEvent() { return true }
 }
 
-function buildChartDecorations(state: EditorState): DecorationSet {
+function buildChartDecorations(state: EditorState, spans: SelectionSpan[]): DecorationSet {
   const doc = state.doc
   const decos: Range<Decoration>[] = []
 
@@ -1381,6 +1467,7 @@ function buildChartDecorations(state: EditorState): DecorationSet {
       const firstLine = doc.lineAt(node.from)
       const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
       if (info !== 'chart') return
+      spans.push([node.from, node.to])
       if (overlapsSelection(state, node.from, node.to)) return
 
       const lastLine = doc.lineAt(node.to)
@@ -1399,14 +1486,7 @@ function buildChartDecorations(state: EditorState): DecorationSet {
   return Decoration.set(decos, true)
 }
 
-export const chartPreviewField = StateField.define<DecorationSet>({
-  create: (state) => buildChartDecorations(state),
-  update: (value, tr) => {
-    if (tr.docChanged || tr.selection) return buildChartDecorations(tr.state)
-    return value
-  },
-  provide: (f) => EditorView.decorations.from(f),
-})
+export const chartPreviewField = selectionAwareField(buildChartDecorations)
 
 // ─── Data Table Live Preview (```table fenced blocks) ─────────────────────────
 // Same reveal model as charts: the block renders as an interactive, editable
@@ -1462,7 +1542,7 @@ class DataTableWidget extends WidgetType {
   ignoreEvent() { return true }
 }
 
-function buildDataTableDecorations(state: EditorState): DecorationSet {
+function buildDataTableDecorations(state: EditorState, spans: SelectionSpan[]): DecorationSet {
   const doc = state.doc
   const decos: Range<Decoration>[] = []
 
@@ -1473,6 +1553,7 @@ function buildDataTableDecorations(state: EditorState): DecorationSet {
       const firstLine = doc.lineAt(node.from)
       const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
       if (info !== 'table') return
+      spans.push([node.from, node.to])
       if (overlapsSelection(state, node.from, node.to)) return
 
       const lastLine = doc.lineAt(node.to)
@@ -1491,14 +1572,7 @@ function buildDataTableDecorations(state: EditorState): DecorationSet {
   return Decoration.set(decos, true)
 }
 
-export const dataTablePreviewField = StateField.define<DecorationSet>({
-  create: (state) => buildDataTableDecorations(state),
-  update: (value, tr) => {
-    if (tr.docChanged || tr.selection) return buildDataTableDecorations(tr.state)
-    return value
-  },
-  provide: (f) => EditorView.decorations.from(f),
-})
+export const dataTablePreviewField = selectionAwareField(buildDataTableDecorations)
 
 // ─── Tabs (```tabs fenced blocks) ─────────────────────────────────────────────
 // Same reveal model as tables: an interactive tab group in "Normal" mode,
@@ -1550,7 +1624,7 @@ class TabsWidget extends WidgetType {
   ignoreEvent() { return true }
 }
 
-function buildTabsDecorations(state: EditorState): DecorationSet {
+function buildTabsDecorations(state: EditorState, spans: SelectionSpan[]): DecorationSet {
   const doc = state.doc
   const decos: Range<Decoration>[] = []
 
@@ -1561,6 +1635,7 @@ function buildTabsDecorations(state: EditorState): DecorationSet {
       const firstLine = doc.lineAt(node.from)
       const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
       if (info !== 'tabs') return
+      spans.push([node.from, node.to])
       if (overlapsSelection(state, node.from, node.to)) return
 
       const lastLine = doc.lineAt(node.to)
@@ -1579,14 +1654,7 @@ function buildTabsDecorations(state: EditorState): DecorationSet {
   return Decoration.set(decos, true)
 }
 
-export const tabsPreviewField = StateField.define<DecorationSet>({
-  create: (state) => buildTabsDecorations(state),
-  update: (value, tr) => {
-    if (tr.docChanged || tr.selection) return buildTabsDecorations(tr.state)
-    return value
-  },
-  provide: (f) => EditorView.decorations.from(f),
-})
+export const tabsPreviewField = selectionAwareField(buildTabsDecorations)
 
 // ─── Board / Task embeds (```board / ```task fenced blocks) ───────────────────
 // The block body is just the board or task id; the card/kanban is rendered
@@ -1631,7 +1699,7 @@ class RefEmbedWidget extends WidgetType {
   ignoreEvent() { return true }
 }
 
-function buildRefEmbedDecorations(state: EditorState): DecorationSet {
+function buildRefEmbedDecorations(state: EditorState, spans: SelectionSpan[]): DecorationSet {
   const doc = state.doc
   const decos: Range<Decoration>[] = []
 
@@ -1641,6 +1709,7 @@ function buildRefEmbedDecorations(state: EditorState): DecorationSet {
       const firstLine = doc.lineAt(node.from)
       const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
       if (info !== 'board' && info !== 'task' && info !== 'brainstorm') return
+      spans.push([node.from, node.to])
       if (overlapsSelection(state, node.from, node.to)) return
 
       const lastLine = doc.lineAt(node.to)
@@ -1659,14 +1728,7 @@ function buildRefEmbedDecorations(state: EditorState): DecorationSet {
   return Decoration.set(decos, true)
 }
 
-export const refEmbedPreviewField = StateField.define<DecorationSet>({
-  create: (state) => buildRefEmbedDecorations(state),
-  update: (value, tr) => {
-    if (tr.docChanged || tr.selection) return buildRefEmbedDecorations(tr.state)
-    return value
-  },
-  provide: (f) => EditorView.decorations.from(f),
-})
+export const refEmbedPreviewField = selectionAwareField(buildRefEmbedDecorations)
 
 // ─── File Embed Plugin ────────────────────────────────────────────────────────
 // Syntax inserted at cursor:  ![[attachments/file.pdf|Display Name|3300]]

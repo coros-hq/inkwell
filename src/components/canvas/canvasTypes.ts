@@ -31,7 +31,10 @@ export interface TextShape    extends Base {
 }
 export interface StickyShape  extends Base { type: 'sticky';  x: number; y: number; w: number; h: number; text: string }
 
-export type Shape = PathShape | RectShape | EllipseShape | LineShape | ArrowShape | TextShape | StickyShape
+/** Pasted/uploaded picture. `src` is a data URL so the canvas file stays self-contained. */
+export interface ImageShape   extends Base { type: 'image';   x: number; y: number; w: number; h: number; src: string }
+
+export type Shape = PathShape | RectShape | EllipseShape | LineShape | ArrowShape | TextShape | StickyShape | ImageShape
 
 export function uid(): string {
   return Math.random().toString(36).slice(2, 9)
@@ -57,6 +60,7 @@ export function shapeBounds(s: Shape): { x: number; y: number; w: number; h: num
     }
     case 'rect':
     case 'sticky':
+    case 'image':
       return { x: Math.min(s.x, s.x + s.w), y: Math.min(s.y, s.y + s.h), w: Math.abs(s.w) || 1, h: Math.abs(s.h) || 1 }
     case 'ellipse':
       return { x: s.cx - Math.abs(s.rx), y: s.cy - Math.abs(s.ry), w: Math.abs(s.rx) * 2 || 1, h: Math.abs(s.ry) * 2 || 1 }

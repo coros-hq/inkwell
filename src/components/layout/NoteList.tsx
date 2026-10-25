@@ -1,8 +1,10 @@
-import { Star, Trash2, FileX, List, SquareStack, Clock, ArrowDownAZ } from 'lucide-react'
+import { NoteListEmpty } from './NoteListEmpty'
+import { Star, Trash2, List, SquareStack, Clock, ArrowDownAZ } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { TagChip } from '../shared/TagChip'
 import { formatDate } from '../../lib/utils'
 import { cn, glassBg } from '../../lib/utils'
+import { handleListKeyNav } from '../../lib/listKeyNav'
 import { useState } from 'react'
 import { confirmDeleteNote, confirmDeleteNotes } from '../../lib/deleteActions'
 import { handleNoteSelect } from '../../lib/noteSelection'
@@ -120,12 +122,9 @@ export function NoteList() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-2">
+      <div className="flex-1 overflow-y-auto px-2 pb-2" data-nav-list="notelist" onKeyDown={handleListKeyNav}>
         {displayNotes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2.5 mt-16 px-4 text-center">
-            <FileX className="w-7 h-7 text-tertiary" strokeWidth={1.75} />
-            <p className="text-sm font-semibold text-muted-foreground">No notes here yet</p>
-          </div>
+          <NoteListEmpty folderName={folder?.name} />
         ) : (
           displayNotes.map(note => {
             const isSelected = selectedNoteIds.includes(note.id)
@@ -133,8 +132,11 @@ export function NoteList() {
               <div
                 key={note.id}
                 draggable
+                tabIndex={-1}
+                data-nav="note"
+                data-nav-id={`note:${note.id}`}
                 className={cn(
-                  'group rounded-lg px-2.5 py-2.5 my-0.5 cursor-grab active:cursor-grabbing transition-colors',
+                  'group rounded-lg px-2.5 py-2.5 my-0.5 outline-none focus:bg-accent/25 focus:text-foreground cursor-grab active:cursor-grabbing transition-colors',
                   isSelected ? 'bg-active' : 'hover:bg-surface',
                 )}
                 onClick={e => handleNoteSelect(e, note.id, orderedIds)}

@@ -125,7 +125,11 @@ export function EditorToolbar() {
   }
 
   return (
-    <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 bg-card border border-border rounded-full shadow-md shadow-black/5 h-10 px-3 flex items-center gap-0.5">
+    <div
+      // Narrow panes: cap to the pane width and scroll sideways instead of clipping buttons.
+      className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 max-w-[calc(100%-1.5rem)] overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&>*]:shrink-0 bg-card border border-border rounded-full shadow-md shadow-black/5 h-10 px-3 flex items-center gap-0.5"
+      onWheel={(e) => { if (e.deltaY && !e.deltaX) e.currentTarget.scrollLeft += e.deltaY }}
+    >
       {FORMAT_TOOLBAR_ITEMS.map((item, i) =>
         item === null ? (
           <div key={i} className="w-px h-4 bg-border mx-1" />
