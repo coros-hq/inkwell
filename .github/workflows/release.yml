@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   release:
@@ -20,12 +20,12 @@ jobs:
             rust-targets: aarch64-apple-darwin,x86_64-apple-darwin
 
           - platform: windows-latest
-            args: ''
-            rust-targets: ''
+            args: ""
+            rust-targets: ""
 
           - platform: ubuntu-22.04
-            args: ''
-            rust-targets: ''
+            args: ""
+            rust-targets: ""
 
     runs-on: ${{ matrix.platform }}
 
@@ -89,7 +89,7 @@ jobs:
       - name: Debug release token
         shell: bash
         env:
-          TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          TOKEN: ${{ secrets.RELEASE_TOKEN }}
           HAS_RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN != '' }}
         run: |
           echo "RELEASE_TOKEN set: $HAS_RELEASE_TOKEN, length: ${#TOKEN}, prefix: ${TOKEN:0:11}"
@@ -106,7 +106,7 @@ jobs:
           # RELEASE_TOKEN (optional): a fine-grained PAT with Contents: read & write
           # on this repo. Used when the org caps the built-in token at read-only,
           # which makes release creation fail with "Resource not accessible by integration".
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
