@@ -4,7 +4,7 @@
   <h1>inkwell</h1>
   <p>A focused, beautiful markdown note-taking app.</p>
 
-  ![Version](https://img.shields.io/badge/version-0.8.5-orange?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-2.1.1-orange?style=flat-square)
   ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-black?style=flat-square)
   ![License](https://img.shields.io/badge/license-MIT-orange?style=flat-square&color=c47d2e)
 </div>
@@ -13,9 +13,9 @@
 
 ## Overview
 
-inkwell is a local-first markdown editor built as a native desktop app for macOS, Windows, and Linux. Notes are stored as plain `.md` files in a vault folder you own — no cloud, no accounts, no lock-in.
+inkwell is a local-first markdown editor built as a native desktop app for macOS, Windows, and Linux. Notes are stored as plain `.md` files in a vault folder you own — no lock-in, and everything works offline with no account. Signing in is optional and only needed to share a vault with teammates.
 
-It pairs a distraction-free writing environment with a rich live preview, charts, a Kanban board, a canvas drawing tool, a suite of themes, and deep integrations: a native MCP server so Claude can read and write your notes, and built-in GitHub sync to push your docs to any repository.
+It pairs a distraction-free writing environment with a rich live preview, charts, a Kanban board, a calendar, an optional canvas and brainstorm outliner, 15 themes, and deep integrations: a native MCP server so Claude can read and write your notes, and built-in GitHub sync to push your docs to any repository.
 
 ---
 
@@ -28,6 +28,10 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 - LaTeX math via KaTeX *(new in v0.7.8)* — inline `$…$`, display `$$…$$`, and fenced ` ```math ` / ` ```latex ` blocks, rendered live in the editor and preview
 - GFM tables rendered as styled tables right in the editor *(new in v0.8.5)*
 - Charts *(new in v0.8.2)* — bar, line, area, pie, and donut charts from a ` ```chart ` JSON block, rendered live in the editor and preview; build them visually with the chart builder or edit the source directly
+- `/` command menu — headings, lists, todos, tables, tabs, charts, video embeds (YouTube, Vimeo, Loom), board and task embeds, and more; type `@` to link another note
+- Notion-style data tables and tab groups with their own content
+- Optional Vim mode (Settings → Editor)
+- Find inside the current note (⌘F) and open a standalone `.md` file (⌘O)
 - Inline code, blockquotes, ==highlights==, and embedded images
 - Attach files to any note — images, PDFs, and documents stored alongside your vault
 - Embed attachments inline with `![[filename]]` syntax
@@ -46,9 +50,28 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 - Two ways to browse notes *(new in v0.8.3)*: the classic note list column, or open notes as tabs across the top of the editor
 - Live vault watcher picks up changes made on disk by iCloud/Dropbox/Syncthing, git, or an external editor
 - Conflict banner when the open note changed outside inkwell — choose "Keep mine" or "Reload from disk" without losing work
-- Pinned notes and trash with soft-delete
+- Pinned notes
+- Trash with restore — deleted notes and folders land in `{vault}/.inkwell/trash/` and can be put back or erased for good
+- Safer file writes — atomic saves and data backup so a crash mid-write doesn't corrupt a note
 
-**Canvas** *(new in v0.4)*
+**Folder tags** *(new in v2.0)*
+- Create colored tags and assign them to folders (⌘/Ctrl-click to select several)
+- Click a tag in the sidebar to filter, or group a folder's contents by tag
+- Search `#tagname` in ⌘K to jump to tagged folders
+- Reorganized sidebar: Quick links, Folders, Tags, Open Files
+
+**Calendar** *(new in v2.1)*
+- Calendar view for color-coded events, with drag-and-drop to move them between days
+
+**Quick capture**
+- A global ⌘N / Ctrl+N popup captures a note even when inkwell isn't focused
+
+**Collaboration** *(optional)*
+- Sign in to share a vault with teammates by email invite or invite link
+- Roles: owner, can edit, can view — with live presence avatars
+- Backed by Supabase; vaults you don't share never leave your disk
+
+**Canvas** *(optional, new in v0.4)*
 - Custom HTML5 canvas drawing engine — no third-party drawing libraries
 - Tools: select, pen, rectangle, ellipse, line, arrow, text
 - Shape styling: 12-colour palette, fill toggle, three stroke widths, corner radius, font family/size/bold/italic
@@ -56,11 +79,14 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 - Resize handles on selected shapes, drag-move single and multi-selection
 - Duplicate (⌘D), undo/redo (⌘Z / ⌘⇧Z), zoom and pan (scroll or pinch)
 - Diagram notes — a slide-in half-panel with a full CodeMirror markdown editor and Edit/Preview tabs, saved to `{vault}/.inkwell/canvas-notes.md`
+- Optional **Brainstorm** outline / mind-map view — off by default, enable it in Settings → Features
 - Diagram templates — Flowchart and Mind Map starters with one click
+- Paste images and Excalidraw drawings straight onto the canvas
+- Hand-written font by default; adapts to light and dark themes
 - Canvas state auto-saved to `{vault}/.inkwell/canvas.json`
 
 **Themes & Typography**
-- 8 built-in themes: Midnight, Parchment, Ink, Dusk, Forest, Sepia, Gruvbox, Fog
+- 15 built-in themes: Midnight, Solarized Osaka, Noir Ember, Ivory Ember, Parchment, Ink, Dusk, Forest, Gruvbox, Catppuccin Mocha, Catppuccin Latte, Sepia, Fog, Graphite, Onyx
 - Custom theme builder with live preview
 - Syntax highlight colours automatically follow the active theme
 - Use any font installed on your computer as the editor font *(new in v0.8.5)* — searchable picker in Settings → Editor
@@ -85,7 +111,7 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 
 **macOS**
 - Native window with overlay title bar
-- Optional frosted-glass sidebar (Settings → Appearance → Glass sidebar)
+- Optional frosted-glass sidebar (Settings → Appearance → Glass sidebar), tuned for contrast on light themes
 - Smooth scrolling, native vibrancy, system font stack
 
 ---
@@ -102,6 +128,7 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 | State | Zustand |
 | Markdown | react-markdown + remark-gfm + rehype-highlight + remark-math / rehype-katex (KaTeX) |
 | Drag & drop | @dnd-kit/core |
+| Backend (optional collab) | Supabase (auth + Postgres with RLS) |
 | MCP server | Rust (stdio JSON-RPC 2.0) |
 | Build | Vite |
 
@@ -135,6 +162,8 @@ pnpm tauri dev
 ```bash
 pnpm tauri build
 ```
+
+Pushing a `v*` tag runs the GitHub Actions release workflow, which builds macOS (universal), Windows (installer + portable zip) and Linux (`.deb`, AppImage) bundles and attaches them to a draft release. It needs the `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` repository secrets, plus an optional `RELEASE_TOKEN` PAT (Contents: read & write) if the org restricts the built-in token. Installed apps check for updates through the Tauri updater.
 
 The output bundles are written to `src-tauri/target/release/bundle/` (`.app`/`.dmg` on macOS, `.deb`/`.rpm`/`.AppImage` on Linux, `.exe`/`.msi` on Windows).
 
@@ -171,12 +200,17 @@ inkwell/
 │   ├── components/
 │   │   ├── editor/       # MarkdownEditor, RichPreview, MarkdownChart, ChartInsertDialog, AttachmentsBar, MediaPanel, ShareDialog, ConflictBanner
 │   │   ├── layout/       # AppShell, Sidebar, NoteList, EditorPane
+│   │   ├── calendar/     # CalendarView
+│   │   ├── brainstorm/   # BrainstormView, MindMap
+│   │   ├── collab/       # ShareVaultDialog, PresenceAvatars
+│   │   ├── trash/        # TrashView
+│   │   ├── quicknote/    # QuickNoteCapture, QuickNoteEditor
 │   │   ├── board/        # Kanban BoardView, KanbanColumn, TaskCard, TaskDrawer
 │   │   ├── canvas/       # CanvasView, CanvasToolbar, CanvasNotesSheet, canvasTypes, canvasTemplates
 │   │   ├── settings/     # SettingsDialog, ThemeEditor, FontPicker
 │   │   └── shared/       # Search, ContextMenu, DatePicker, GitHubSyncDialog, VaultPicker
 │   ├── store/            # Zustand store (useAppStore)
-│   ├── lib/              # vault.ts, vaultWatcher.ts, github.ts, export.ts, editorExtensions, systemFonts, themes, attachments, utils
+│   ├── lib/              # vault.ts, safeFs.ts, calendar.ts, auth.ts, team.ts, sync/, updateCheck.ts, vaultWatcher.ts, github.ts, export.ts, editorExtensions, systemFonts, themes, attachments, utils
 │   ├── styles/           # globals.css — CSS variables & theme definitions
 │   └── types/            # TypeScript interfaces
 └── src-tauri/
