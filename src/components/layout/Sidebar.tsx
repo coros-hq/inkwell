@@ -14,6 +14,7 @@ import {
   ArrowUpCircle,
   ArrowRight,
   MoreHorizontal,
+  Tag as TagIcon,
   Lightbulb,
   CalendarDays,
 } from "lucide-react";
@@ -66,6 +67,7 @@ const collisionDetection: CollisionDetection = (args) => {
 import { useAppStore } from "../../store/useAppStore";
 import { ThemeToggle } from "../shared/ThemeToggle";
 import { ContextMenu } from "../shared/ContextMenu";
+import { TagPopover } from "../shared/TagPicker";
 import { FolderIcon } from "../shared/FolderIcon";
 import { FolderIconPicker } from "../shared/FolderIconPicker";
 import type { Folder as FolderType, Note } from "../../types";
@@ -191,6 +193,12 @@ function NoteRow({
   const dndId = `note:${note.id}`;
   const isRenaming = renamingId === note.id;
   const tagDefs = useAppStore((s) => s.tagDefs);
+  const [tagMenu, setTagMenu] = useState<{ x: number; y: number } | null>(null);
+  // Tags apply to the whole selection when this note is part of it, else just to this note.
+  const targetNotes = () => {
+    const st = useAppStore.getState();
+    return st.selectedNoteIds.includes(note.id) ? st.notes.filter((n) => st.selectedNoteIds.includes(n.id)) : [st.notes.find((n) => n.id === note.id) ?? note];
+  };
   const inputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -286,6 +294,15 @@ function NoteRow({
           <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 flex items-center gap-0.5">
             <button
               className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-muted"
+              onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagMenu({ x: r.left, y: r.bottom + 4 }); }}
+              onPointerDown={(e) => e.stopPropagation()}
+              tabIndex={-1}
+              title="Tags"
+            >
+              <TagIcon className="w-3 h-3" />
+            </button>
+            <button
+              className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-muted"
               onClick={(e) => { e.stopPropagation(); onContextMenu(e); }}
               onPointerDown={(e) => e.stopPropagation()}
               tabIndex={-1}
@@ -306,6 +323,15 @@ function NoteRow({
         )}
       </div>
       {dropAfter && <DropLine pos="bottom" />}
+      {tagMenu && (
+        <TagPopover
+          x={tagMenu.x}
+          y={tagMenu.y}
+          onClose={() => setTagMenu(null)}
+          isOn={(t) => targetNotes().every((n) => n.tags.includes(t))}
+          onToggle={(t, on) => useAppStore.getState().setNotesTag(targetNotes().map((n) => n.id), t, on)}
+        />
+      )}
     </div>
   );
 }
@@ -343,9 +369,24 @@ function FolderRow({
   const allFolderMeta = useAppStore((s) => s.folderMeta);
   const tagDefs = useAppStore((s) => s.tagDefs);
   const isTicked = useAppStore((s) => s.selectedFolderIds.includes(folder.id));
+  const isRevealed = useAppStore((s) => s.revealedFolderId === folder.id);
   const [collapsedTags, setCollapsedTags] = useState<Set<string>>(new Set());
+  const [tagMenu, setTagMenu] = useState<{ x: number; y: number } | null>(null);
+  // Tags apply to every ticked folder when this one is ticked, else just to this folder.
+  const targetFolderIds = () => {
+    const ids = useAppStore.getState().selectedFolderIds;
+    return ids.includes(folder.id) ? ids : [folder.id];
+  };
   const isRenamingThis = renamingId === folder.id;
   const folderInputRef = useRef<HTMLInputElement>(null);
+
+  // Opened from a tag result: bring the row into view; the highlight below fades on its own.
+  useEffect(() => {
+    if (!isRevealed) return;
+    document
+      .querySelector(`[data-nav-id="folder:${CSS.escape(folder.id)}"]`)
+      ?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [isRevealed, folder.id]);
 
   useLayoutEffect(() => {
     if (isRenamingThis && folderInputRef.current) {
@@ -469,9 +510,10 @@ function FolderRow({
           ref={setDragRef}
           className={cn(
             treeRowClass,
-            "relative cursor-pointer",
+            "relative cursor-pointer transition-colors duration-500",
             !dropInto && !isTicked && "hover:bg-surface",
             isTicked && !dropInto && "bg-active",
+            isRevealed && !dropInto && "bg-accent/20 ring-1 ring-accent/60",
             dropInto && "ring-2 ring-accent bg-accent/15",
             isDragging && "opacity-20 pointer-events-none",
           )}
@@ -566,6 +608,15 @@ function FolderRow({
               </button>
               <button
                 className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-muted"
+                onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setTagMenu({ x: r.left, y: r.bottom + 4 }); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                tabIndex={-1}
+                title="Tags"
+              >
+                <TagIcon className="w-3 h-3" />
+              </button>
+              <button
+                className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground/60 hover:text-foreground hover:bg-muted"
                 onClick={(e) => { e.stopPropagation(); onFolderContextMenu(e, folder); }}
                 onPointerDown={(e) => e.stopPropagation()}
                 tabIndex={-1}
@@ -577,6 +628,18 @@ function FolderRow({
           )}
         </div>
         {dropAfter && <DropLine pos="bottom" />}
+        {tagMenu && (
+          <TagPopover
+            x={tagMenu.x}
+            y={tagMenu.y}
+            onClose={() => setTagMenu(null)}
+            isOn={(t) => {
+              const meta = useAppStore.getState().folderMeta;
+              return targetFolderIds().every((id) => meta[id]?.tags?.includes(t));
+            }}
+            onToggle={(t, on) => useAppStore.getState().setFoldersTag(targetFolderIds(), t, on)}
+          />
+        )}
       </div>
 
       {folder.expanded && (
@@ -714,7 +777,6 @@ export function Sidebar() {
   const [iconPickerFolderId, setIconPickerFolderId] = useState<string | null>(null);
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const openFolderInTree = (folder: FolderType) => {
-    setActiveTag(null);
     const chain: string[] = [];
     let cur: FolderType | null = folder;
     while (cur) { chain.unshift(cur.id); cur = cur.parentId ? findFolderById(folders, cur.parentId) : null; }
@@ -722,6 +784,7 @@ export function Sidebar() {
       const f = findFolderById(useAppStore.getState().folders, id);
       if (f && !f.expanded) toggleFolder(id);
     }
+    useAppStore.getState().revealFolder(folder.id);
   };
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -1264,12 +1327,13 @@ export function Sidebar() {
           {activeTag && (
             <TagFolderResults
               tag={activeTag}
+              onClear={() => setActiveTag(null)}
               onFolderContextMenu={openFolderContextMenu}
               onOpenFolder={openFolderInTree}
               onNoteContextMenu={(e, n) => openNoteContextMenu(e, n.id, n.title, n.external)}
             />
           )}
-          {!activeTag && pinnedNotes.length > 0 && (
+          {pinnedNotes.length > 0 && (
             <div>
               <p className={sectionHeading}>
                 Pinned
@@ -1298,7 +1362,6 @@ export function Sidebar() {
             </div>
           )}
 
-          {!activeTag && (
           <div>
             {/* Library heading — click to deselect folder, DnD root drop zone */}
             <div
@@ -1382,7 +1445,6 @@ export function Sidebar() {
               )}
             />
           </div>
-          )}
 
           </div>
 
