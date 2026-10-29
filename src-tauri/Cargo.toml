@@ -27,7 +27,8 @@ tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 tauri-plugin-deep-link = "2"
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde_json = { version = "1", features = ["preserve_order"] }
+inkwell-mcp = { path = "mcp-server" }
 time = "=0.3.36"
 fontdb = "0.23"
 

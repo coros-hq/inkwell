@@ -104,8 +104,8 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 - Works with any repo — great for keeping project READMEs and docs in sync
 
 **Claude MCP Integration** *(new in v0.3)*
-- A native Rust MCP server ships inside the app (`inkwell-mcp`)
-- Exposes `list_notes`, `read_note`, `create_note`, `update_note`, `search_notes`, `get_vault_info` tools
+- A native Rust MCP server ships inside the app and registers itself with Claude Desktop (Settings → Claude)
+- Exposes `list_notes`, `read_note`, `create_note`, `update_note`, `search_notes`, `get_vault_info` tools for notes, and `list_calendar_events`, `create_calendar_event`, `update_calendar_event`, `delete_calendar_event` for the calendar (changes appear live in the app)
 - Claude can read, write, and search your vault directly — no copy-paste
 - Notes written by Claude land as proper `.md` files with YAML frontmatter
 
@@ -169,26 +169,13 @@ The output bundles are written to `src-tauri/target/release/bundle/` (`.app`/`.d
 
 On macOS, to update an existing installation, drag the new `.app` onto the old one in `/Applications` and click **Replace**.
 
-### Build the MCP server
+### Claude Desktop (MCP)
 
-```bash
-cd src-tauri
-cargo build --release -p inkwell-mcp
-```
+The MCP server is built into the app: Claude Desktop launches `inkwell --mcp` on demand and talks to it over stdio. On launch, release builds add an `inkwell` entry to Claude Desktop's config (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS, `%APPDATA%\Claude\` on Windows) pointing at the installed app, and refresh it if the app moves. Restart Claude Desktop once to pick it up. Turn it off any time in **Settings → Claude**.
 
-Then add it to your Claude Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+The server reads the active vault from `~/.inkwell/active-vault`, which inkwell writes whenever you open a vault. Dev builds (`pnpm tauri dev`) never touch the config; use the Settings toggle to register one deliberately.
 
-```json
-{
-  "mcpServers": {
-    "inkwell": {
-      "command": "/path/to/inkwell-mcp"
-    }
-  }
-}
-```
-
-The MCP server reads the active vault path from `~/.inkwell/active-vault`, which inkwell writes automatically when you open a vault.
+A standalone binary is still available for other MCP clients: `cargo build --release -p inkwell-mcp`.
 
 ---
 

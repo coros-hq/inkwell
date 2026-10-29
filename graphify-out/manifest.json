@@ -10,8 +10,8 @@
     "semantic_hash": "a4038619f5414c01f04abbbdd4730820"
   },
   "package.json": {
-    "mtime": 1792442587.1935844,
-    "ast_hash": "5fb55a60d79fc8044f52dc0c8aa86ad5",
+    "mtime": 1793014151.059908,
+    "ast_hash": "ed4e887f0af3e159ff33b7aa43532b74",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -60,23 +60,23 @@
     "semantic_hash": "d8ac8ac6c3196c7cbf57bdbfc2006fe6"
   },
   "src-tauri/mcp-server/src/main.rs": {
-    "mtime": 1782980448.8092306,
-    "ast_hash": "2cc12cbb6c5dbad453b341908954fecb",
-    "semantic_hash": "2cc12cbb6c5dbad453b341908954fecb"
+    "mtime": 1793045423.4346023,
+    "ast_hash": "2d6d388e0a9b19d8b91370cd000eb37c",
+    "semantic_hash": ""
   },
   "src-tauri/src/lib.rs": {
-    "mtime": 1792575040.8119626,
-    "ast_hash": "dc283abb02d7526d810d14655fc86870",
+    "mtime": 1793045446.155905,
+    "ast_hash": "bd5cbbc3e31ad329c6c1a8a16878f575",
     "semantic_hash": ""
   },
   "src-tauri/src/main.rs": {
-    "mtime": 1782980448.809384,
-    "ast_hash": "e8af9fdce60f99420547f58d511820e3",
-    "semantic_hash": "e8af9fdce60f99420547f58d511820e3"
+    "mtime": 1793045423.4353135,
+    "ast_hash": "ec8b290500784e9bfd0eae2767fe5eb5",
+    "semantic_hash": ""
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1792442587.193882,
-    "ast_hash": "1f5465280b1a6968620d2c07e5705c62",
+    "mtime": 1793014151.0654526,
+    "ast_hash": "4d6b760d7f817faf525e5b2a2790338e",
     "semantic_hash": ""
   },
   "src/App.tsx": {
@@ -200,8 +200,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/EditorPane.tsx": {
-    "mtime": 1792846204.131482,
-    "ast_hash": "8736e70ebe64c8c82a4ae97122773669",
+    "mtime": 1793118834.7592106,
+    "ast_hash": "7f52b88c5f88658f85664a1a952080e2",
     "semantic_hash": ""
   },
   "src/components/layout/NoteList.tsx": {
@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/settings/SettingsDialog.tsx": {
-    "mtime": 1792516028.64648,
-    "ast_hash": "56602a9aa3b93259a27d3258349fa704",
+    "mtime": 1793046031.834365,
+    "ast_hash": "036e911ff7c55e8fdfd1b72a1fcead66",
     "semantic_hash": ""
   },
   "src/components/settings/ThemeEditor.tsx": {
@@ -360,8 +360,8 @@
     "semantic_hash": ""
   },
   "src/lib/vault.ts": {
-    "mtime": 1792962391.4853692,
-    "ast_hash": "566864b91fb414d2597fe8b70ce1e588",
+    "mtime": 1793046022.529624,
+    "ast_hash": "1df46ee6c756856cad6d5a83067a3853",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -370,8 +370,8 @@
     "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1792962391.4859073,
-    "ast_hash": "12e0dad9e45026c8d40faeb047bc1035",
+    "mtime": 1793046022.5300407,
+    "ast_hash": "371534bd8f3d955545525a020dd1891a",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
@@ -405,13 +405,13 @@
     "semantic_hash": "eb50d0d81f864da866775970c3d69592"
   },
   ".github/workflows/release.yml": {
-    "mtime": 1792575040.8115473,
-    "ast_hash": "20fba28a81bb6b6bfb7aa6784c4c0506",
+    "mtime": 1793016020.8874533,
+    "ast_hash": "306e422e3b8a5f44fc1b0910e386d0db",
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1790286467.9594197,
-    "ast_hash": "378dc722eedaa0e7aa31813238773eac",
+    "mtime": 1793046031.8348184,
+    "ast_hash": "8551ecd816f2bf22f8c8cd2e44281a90",
     "semantic_hash": ""
   },
   "canvas-feature-design.md": {
@@ -1010,8 +1010,8 @@
     "semantic_hash": ""
   },
   "src/components/calendar/CalendarView.tsx": {
-    "mtime": 1792536488.272324,
-    "ast_hash": "0d850e7e21646ae58e853847a5889bec",
+    "mtime": 1793100619.7387576,
+    "ast_hash": "2046abec6975f444c5cfd016bc07b9fc",
     "semantic_hash": ""
   },
   "src/lib/calendar.ts": {
@@ -1047,6 +1047,26 @@
   ".github/FUNDING.yml": {
     "mtime": 1792576053.018429,
     "ast_hash": "fc5717ab9843f0d12b65e6356751cbee",
+    "semantic_hash": ""
+  },
+  "src-tauri/mcp-server/src/lib.rs": {
+    "mtime": 1793045989.455313,
+    "ast_hash": "bb58bc336b0b927afb2f2645512789b7",
+    "semantic_hash": ""
+  },
+  "src-tauri/src/claude_mcp.rs": {
+    "mtime": 1793045515.9886446,
+    "ast_hash": "2eb5ae6a3737768475567096b1def216",
+    "semantic_hash": ""
+  },
+  "src-tauri/mcp-server/src/calendar.rs": {
+    "mtime": 1793045989.4356294,
+    "ast_hash": "a7c9761b1f065447e975bbed65696364",
+    "semantic_hash": ""
+  },
+  "src/components/editor/NoteTagsMenu.tsx": {
+    "mtime": 1793118834.6554892,
+    "ast_hash": "fcd2e5a945825a93f6d80af60f46ab33",
     "semantic_hash": ""
   }
 }

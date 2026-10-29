@@ -4,6 +4,10 @@ version = "0.1.0"
 edition = "2021"
 description = "MCP server for inkwell — exposes vault notes to Claude"
 
+[lib]
+name = "inkwell_mcp"
+path = "src/lib.rs"
+
 [[bin]]
 name = "inkwell-mcp"
 path = "src/main.rs"

@@ -658,7 +658,8 @@ function EventCardBody({ event, active, lifted, contLeft, contRight, fill, compa
   const update = useAppStore(s => s.updateCalendarEvent)
   const color = event.color ?? EVENT_COLORS[0]
   const tint = `color-mix(in srgb, ${color} 20%, transparent)`
-  const ink = '#ffffff'
+  // Follows the theme's foreground (dark on light, light on dark), tinted toward the event color.
+  const ink = `color-mix(in srgb, ${color} 30%, hsl(var(--foreground)))`
   const time = event.startTime ? `${event.startTime}${event.endTime ? ` – ${event.endTime}` : ''}` : null
 
   return (

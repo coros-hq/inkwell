@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { getVersion } from '@tauri-apps/api/app'
-import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail } from 'lucide-react'
+import { invoke } from '@tauri-apps/api/core'
+import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail, Bot } from 'lucide-react'
 import { useAppStore, type Abbreviation } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { THEMES, DARK_THEMES, LIGHT_THEMES, type CustomTheme } from '../../lib/themes'
@@ -28,7 +29,7 @@ import { isGitRepo, gitRemoteUrl as gitGetRemoteUrl } from '../../lib/gitSync'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'github' | 'sync' | 'team' | 'about'
+type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'github' | 'claude' | 'sync' | 'team' | 'about'
 
 // ─── Font options ─────────────────────────────────────────────────────────────
 
@@ -72,6 +73,7 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ className?
   { id: 'abbreviations', label: 'Abbreviations', icon: List },
   { id: 'vault', label: 'Vaults', icon: Folder },
   { id: 'github', label: 'GitHub', icon: GitBranch },
+  { id: 'claude', label: 'Claude', icon: Bot },
   { id: 'team', label: 'Team', icon: Users },
   { id: 'about', label: 'About', icon: Info },
 ]
@@ -537,6 +539,11 @@ export function SettingsDialog() {
               {/* ── GitHub ── */}
               {section === 'github' && (
                 <GitBranchSection />
+              )}
+
+              {/* ── Claude Desktop (MCP) ── */}
+              {section === 'claude' && (
+                <ClaudeSection />
               )}
 
               {/* ── Sync (git) ── */}
@@ -1190,6 +1197,84 @@ function VaultSection({ onClose }: { onClose: () => void }) {
 }
 
 // ─── GitBranchSection ───────────────────────────────────────────────────────────
+
+interface ClaudeMcpStatus {
+  installed: boolean
+  enabled: boolean
+  registered: boolean
+  configPath: string | null
+  command: string | null
+}
+
+function ClaudeSection() {
+  const [status, setStatus] = useState<ClaudeMcpStatus | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+
+  useEffect(() => {
+    invoke<ClaudeMcpStatus>('claude_mcp_status').then(setStatus).catch((e) => setError(String(e)))
+  }, [])
+
+  const setEnabled = async (enabled: boolean) => {
+    setBusy(true)
+    setError(null)
+    try {
+      setStatus(await invoke<ClaudeMcpStatus>('claude_mcp_set_enabled', { enabled }))
+    } catch (e) {
+      setError(String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const connected = !!status?.enabled && status.registered
+
+  return (
+    <div className="space-y-5">
+      <p className="text-xs text-muted-foreground">
+        Let Claude Desktop read, search and write the notes in your open vault, and manage your calendar. inkwell adds itself to
+        Claude Desktop's config and Claude starts a local server on demand — nothing leaves your machine.
+      </p>
+
+      <SettingRow
+        label="Connect to Claude Desktop"
+        description={
+          status && !status.installed
+            ? 'Claude Desktop was not found on this computer.'
+            : connected
+              ? 'Connected. Restart Claude Desktop if it was already running.'
+              : 'Adds an "inkwell" server to Claude Desktop.'
+        }
+      >
+        <div className={cn(busy && 'opacity-50 pointer-events-none')}>
+          <ToggleSwitch checked={connected} onChange={setEnabled} />
+        </div>
+      </SettingRow>
+
+      {error && (
+        <p className="text-xs text-red-500 flex items-start gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 mt-px shrink-0" />
+          {error}
+        </p>
+      )}
+
+      {status?.configPath && (
+        <div className="space-y-1">
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Config file</p>
+          <p className="text-xs text-muted-foreground font-mono break-all">{status.configPath}</p>
+        </div>
+      )}
+
+      <div className="space-y-1">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Tools Claude gets</p>
+        <p className="text-xs text-muted-foreground font-mono">
+          get_vault_info, list_notes, read_note, create_note, update_note, search_notes,
+          list_calendar_events, create_calendar_event, update_calendar_event, delete_calendar_event
+        </p>
+      </div>
+    </div>
+  )
+}
 
 function GitBranchSection() {
   const [token, setToken] = useState(() => getGithubToken())

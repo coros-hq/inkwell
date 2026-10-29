@@ -36,6 +36,7 @@ import {
   writeBrainstormsFile,
   readCalendarFile,
   writeCalendarFile,
+  watchCalendarFile,
   pickExternalMarkdownFile,
   loadExternalNote,
   addExternalFileToVault,
@@ -883,6 +884,21 @@ function loadCalendarOnce(legacyVaultPath: string) {
     .catch(console.error);
   return calendarLoad;
 }
+// The Claude MCP server edits calendar.json directly; fold those edits in. A
+// pending local save wins (it already includes everything in memory).
+let calendarWatching = false;
+function watchCalendarOnce() {
+  if (calendarWatching) return;
+  calendarWatching = true;
+  watchCalendarFile(() => {
+    if (calendarSaveTimer) return;
+    readCalendarFile()
+      .then((data) => {
+        if (data?.events && !calendarSaveTimer) useAppStore.setState({ calendarEvents: data.events });
+      })
+      .catch(console.error);
+  });
+}
 function saveCalendar(immediate = false) {
   if (calendarSaveTimer) clearTimeout(calendarSaveTimer);
   const run = () => {
@@ -1108,7 +1124,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ brainstorms, activeBrainstormId: brainstorms[0]?.id ?? null });
     }).catch(console.error);
 
-    loadCalendarOnce(path);
+    loadCalendarOnce(path).then(watchCalendarOnce);
 
     set({ folderMeta: {}, tagDefs: [], selectedFolderIds: [] });
     readFoldersFile(path).then(({ folders: folderMeta, tags: tagDefs }) => {

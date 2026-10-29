@@ -28,6 +28,7 @@ import { BoardRefDialog } from "../editor/BoardRefDialog";
 import { BrainstormRefDialog } from "../editor/BrainstormRefDialog";
 import { NoteSearchBar } from "../editor/NoteSearchBar";
 import { LinksPanel } from "../editor/LinksPanel";
+import { NoteTagsMenu } from "../editor/NoteTagsMenu";
 import { MediaPanel } from "../editor/MediaPanel";
 import { EditorViewProvider } from "../editor/EditorViewContext";
 import { StructureRail } from "../editor/StructureRail";
@@ -377,6 +378,8 @@ export function EditorPane() {
             >
               <Columns2 className="w-3.5 h-3.5" />
             </button>
+
+            <NoteTagsMenu noteId={note.id} tags={note.tags} />
 
             <button
               className={cn(

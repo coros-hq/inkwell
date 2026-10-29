@@ -33,7 +33,7 @@
 import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, LinkedItem, Brainstorm, CalendarEvent } from '../types'
 import { slugifyTitle } from './utils'
 import { genId } from './id'
-import { markSelfWrite } from './selfWriteRegistry'
+import { markSelfWrite, isSelfWrite } from './selfWriteRegistry'
 import { writeFileAtomic, writeJsonAtomic, readJsonResilient, moveToTrash } from './safeFs'
 
 const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
@@ -655,6 +655,29 @@ export async function readCalendarFile(legacyVaultPath?: string): Promise<Calend
     if (legacy?.events?.length) await writeCalendarFile(legacy)
     return legacy
   } catch { return null }
+}
+
+/**
+ * Call `onChange` when calendar.json is modified by something other than this
+ * app (the Claude MCP server edits it directly). Returns a function that stops watching.
+ */
+export async function watchCalendarFile(onChange: () => void): Promise<() => void> {
+  if (!isTauri) return () => {}
+  try {
+    const path = await calendarPath()
+    const { watch } = await import('@tauri-apps/plugin-fs')
+    return await watch(
+      path.slice(0, path.lastIndexOf('/')),
+      (event: { paths?: string[] }) => {
+        const touched = (event?.paths ?? []).some(p => p.endsWith(`/${CALENDAR_FILE}`) && !isSelfWrite(p))
+        if (touched) onChange()
+      },
+      { delayMs: 300 },
+    )
+  } catch (e) {
+    console.warn('[inkwell] calendar watcher failed to start:', e)
+    return () => {}
+  }
 }
 
 // ── Canvas data (~/.inkwell/canvas.json) ───────────────────────────────────────

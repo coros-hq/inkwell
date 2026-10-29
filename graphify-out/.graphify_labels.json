@@ -141,5 +141,10 @@
   "139": "ShellScopeEntryAllowedArg",
   "140": "remarkChartCodeBlocks",
   "141": "ShellScopeEntryAllowedArg",
-  "143": "description"
+  "142": "description",
+  "143": "description",
+  "144": "ShellScopeEntryAllowedArg",
+  "145": "description",
+  "146": "local",
+  "147": "ShellScopeEntryAllowedArg"
 }

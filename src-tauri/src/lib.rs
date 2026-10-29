@@ -1,6 +1,8 @@
 #[cfg(target_os = "macos")]
 use window_vibrancy::{apply_vibrancy, clear_vibrancy, NSVisualEffectMaterial, NSVisualEffectState};
 
+mod claude_mcp;
+
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 const MAIN_LABEL: &str = "main";
@@ -101,6 +103,21 @@ async fn list_system_fonts() -> Vec<String> {
     families
 }
 
+#[tauri::command]
+fn claude_mcp_status() -> claude_mcp::ClaudeMcpStatus {
+    claude_mcp::status()
+}
+
+#[tauri::command]
+fn claude_mcp_set_enabled(enabled: bool) -> Result<claude_mcp::ClaudeMcpStatus, String> {
+    claude_mcp::set_enabled(enabled)
+}
+
+/// Serve inkwell's MCP tools over stdio (launched by Claude Desktop as `inkwell --mcp`).
+pub fn run_mcp() {
+    inkwell_mcp::run()
+}
+
 fn show_quick_note_window(app: &tauri::AppHandle) {
     if let Some(win) = app.get_webview_window(QUICK_NOTE_LABEL) {
         let _ = win.center();
@@ -183,8 +200,10 @@ pub fn run() {
     }
 
     builder
-        .invoke_handler(tauri::generate_handler![set_vibrancy, list_system_fonts, is_portable])
+        .invoke_handler(tauri::generate_handler![set_vibrancy, list_system_fonts, is_portable, claude_mcp_status, claude_mcp_set_enabled])
         .setup(|app| {
+            claude_mcp::sync_on_startup();
+
             #[cfg(desktop)]
             {
                 use tauri::menu::{MenuBuilder, MenuItemBuilder, PredefinedMenuItem};
