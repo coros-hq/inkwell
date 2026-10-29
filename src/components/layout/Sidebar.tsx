@@ -16,6 +16,7 @@ import {
   MoreHorizontal,
   Lightbulb,
   CalendarDays,
+  ChevronsUpDown,
 } from "lucide-react";
 import { TagsSection, TagFolderResults } from './TagsView'
 import { SettingsDialog } from '../settings/SettingsDialog'
@@ -64,8 +65,9 @@ const collisionDetection: CollisionDetection = (args) => {
   return pointer.length > 0 ? pointer : rectIntersection(args);
 };
 import { useAppStore } from "../../store/useAppStore";
-import { ThemeToggle } from "../shared/ThemeToggle";
-import { ContextMenu } from "../shared/ContextMenu";
+import { ContextMenu, type ContextMenuItem } from "../shared/ContextMenu";
+import { getRecentVaults, pickVaultDirectory } from "../../lib/vault";
+import { switchVault } from "../../lib/switchVault";
 import { FolderIcon } from "../shared/FolderIcon";
 import { FolderIconPicker } from "../shared/FolderIconPicker";
 import type { Folder as FolderType, Note } from "../../types";
@@ -656,6 +658,7 @@ export function Sidebar() {
     updateInstallState,
     installUpdate,
     isPortable,
+    vaultPath,
     // dismissUpdateNotice,
   } = useAppStore();
 
@@ -726,8 +729,33 @@ export function Sidebar() {
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
-    items: { label: string; destructive?: boolean; onClick: () => void }[];
+    items: ContextMenuItem[];
   } | null>(null);
+
+  // ── Vault switcher (top-left) ───────────────────────────────────────────────
+  const openVaultMenu = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const open = async (path: string | null, empty = false) => {
+      if (!path || path === vaultPath) return;
+      try {
+        await switchVault(path, empty);
+      } catch (err) {
+        console.error(err);
+        useAppStore.getState().setSaveError("Couldn't open that vault. The folder may have moved or been deleted.");
+      }
+    };
+    const recents = getRecentVaults();
+    const items: ContextMenuItem[] = recents.map((v) => ({
+      label: v.name,
+      checked: v.path === vaultPath,
+      onClick: () => open(v.path),
+    }));
+    items.push(
+      { label: "Open folder…", separator: items.length > 0, onClick: async () => open(await pickVaultDirectory()) },
+      { label: "New vault…", onClick: async () => open(await pickVaultDirectory(), true) },
+    );
+    setContextMenu({ x: rect.left, y: rect.bottom + 4, items });
+  };
 
   const [activeItem, setActiveItem] = useState<{
     type: "note" | "folder";
@@ -1185,11 +1213,17 @@ export function Sidebar() {
         <div className="h-8 shrink-0" data-tauri-drag-region />
 
         <div className="flex items-center justify-between px-3 pb-3.5">
-          <span className="font-sans text-[17px] font-bold text-foreground tracking-tight">
-            Inkwell
-          </span>
+          <button
+            className="flex items-center gap-1 min-w-0 -ml-1.5 pl-1.5 pr-1 py-0.5 rounded-md hover:bg-surface transition-colors"
+            onClick={openVaultMenu}
+            title={`Switch vault — ${vaultPath ?? ""}`}
+          >
+            <span className="font-sans text-[17px] font-bold text-foreground tracking-tight truncate">
+              {vaultPath?.split("/").pop() || "Inkwell"}
+            </span>
+            <ChevronsUpDown className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+          </button>
           <div className="flex items-center gap-1">
-            <ThemeToggle />
             <button
               className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
               onClick={handleNewFolder}

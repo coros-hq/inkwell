@@ -410,8 +410,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793046031.8348184,
-    "ast_hash": "8551ecd816f2bf22f8c8cd2e44281a90",
+    "mtime": 1793270375.8259535,
+    "ast_hash": "c6648bc4d45b2d63cecc3c3eb1ab6431",
     "semantic_hash": ""
   },
   "canvas-feature-design.md": {
@@ -1050,8 +1050,8 @@
     "semantic_hash": ""
   },
   "src-tauri/mcp-server/src/lib.rs": {
-    "mtime": 1793045989.455313,
-    "ast_hash": "bb58bc336b0b927afb2f2645512789b7",
+    "mtime": 1793270348.5743575,
+    "ast_hash": "6a2ee50f0bb4a4413940b146d25dcdac",
     "semantic_hash": ""
   },
   "src-tauri/src/claude_mcp.rs": {
@@ -1067,6 +1067,11 @@
   "src/components/editor/NoteTagsMenu.tsx": {
     "mtime": 1793118834.6554892,
     "ast_hash": "fcd2e5a945825a93f6d80af60f46ab33",
+    "semantic_hash": ""
+  },
+  "src-tauri/mcp-server/src/boards.rs": {
+    "mtime": 1793270341.6301582,
+    "ast_hash": "150ab6af3a95054c5952a0f47dfa30f2",
     "semantic_hash": ""
   }
 }
