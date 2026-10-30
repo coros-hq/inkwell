@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import * as Dialog from '@radix-ui/react-dialog'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
-import { Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail, Bot } from 'lucide-react'
+import { RefreshCw, Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail, Bot } from 'lucide-react'
 import { useAppStore, type Abbreviation } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { THEMES, DARK_THEMES, LIGHT_THEMES, type CustomTheme } from '../../lib/themes'
@@ -25,6 +25,7 @@ import { SignInDialog } from '../shared/SignInDialog'
 import { JoinVaultDialog } from './JoinVaultDialog'
 import { switchVault } from '../../lib/switchVault'
 import { ShareVaultDialog } from '../collab/ShareVaultDialog'
+import { macCalendarSupported } from '../../lib/macCalendar'
 import { isGitRepo, gitRemoteUrl as gitGetRemoteUrl } from '../../lib/gitSync'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -495,6 +496,8 @@ export function SettingsDialog() {
                   >
                     <ToggleSwitch checked={calendarEnabled} onChange={setCalendarEnabled} />
                   </SettingRow>
+
+                  {calendarEnabled && macCalendarSupported && <MacCalendarSync />}
 
                   {canvasEnabled && (
                     <SettingRow
@@ -1966,6 +1969,93 @@ function CustomThemeCard({
 }
 
 // ─── Helper components ────────────────────────────────────────────────────────
+
+function MacCalendarSync() {
+  const {
+    macCalendar, macCalendars, macCalendarSyncing, macCalendarError, macCalendarLastSync,
+    setMacCalendarEnabled, setMacCalendarHidden, refreshMacCalendars, syncMacCalendar,
+  } = useAppStore()
+
+  useEffect(() => {
+    if (macCalendar.enabled) refreshMacCalendars()
+  }, [macCalendar.enabled, refreshMacCalendars])
+
+  const pickable = macCalendars.filter(c => c.id !== macCalendar.inkwellId)
+  const bySource = pickable.reduce<Record<string, typeof pickable>>((acc, c) => {
+    (acc[c.source || 'Other'] ??= []).push(c)
+    return acc
+  }, {})
+  const hidden = new Set(macCalendar.hiddenIds)
+  const flip = (id: string) =>
+    setMacCalendarHidden(hidden.has(id) ? macCalendar.hiddenIds.filter(x => x !== id) : [...macCalendar.hiddenIds, id])
+
+  return (
+    <div className="space-y-3 pl-3 border-l border-border">
+      <SettingRow
+        label="macOS Calendar"
+        description={macCalendar.enabled
+          ? 'Synced with your Mac\'s calendars. Use the Sync button at the top of the Calendar to refresh. Events you create in inkwell go to an “Inkwell” calendar.'
+          : 'Not connected. Click Sync at the top of the Calendar page to connect and choose calendars.'}
+      >
+        {macCalendar.enabled && (
+          <button
+            onClick={() => setMacCalendarEnabled(false)}
+            className="text-xs px-2.5 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+          >
+            Disconnect
+          </button>
+        )}
+      </SettingRow>
+
+      {macCalendarError && (
+        <p className="text-xs text-red-500 flex items-start gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 mt-px shrink-0" />
+          {macCalendarError}
+        </p>
+      )}
+
+      {macCalendar.enabled && (
+        <>
+          <div className="space-y-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Calendars to show</p>
+            {Object.entries(bySource).map(([source, cals]) => (
+              <div key={source} className="space-y-1">
+                <p className="text-[11px] text-muted-foreground">{source}</p>
+                {cals.map(c => (
+                  <label key={c.id} className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+                    <input type="checkbox" checked={!hidden.has(c.id)} onChange={() => flip(c.id)} className="accent-[hsl(var(--accent))]" />
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: c.color }} />
+                    <span className="truncate">{c.title}</span>
+                    {!c.writable && <span className="text-[10px] text-tertiary">read-only</span>}
+                  </label>
+                ))}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => syncMacCalendar()}
+              disabled={macCalendarSyncing}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors disabled:opacity-50"
+            >
+              <RefreshCw className={cn('w-3 h-3', macCalendarSyncing && 'animate-spin')} />
+              Sync now
+            </button>
+            {macCalendarLastSync && (
+              <span className="text-[11px] text-tertiary">
+                Last synced {new Date(macCalendarLastSync).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}
+              </span>
+            )}
+          </div>
+          <p className="text-[11px] text-tertiary">
+            Repeating events are shown but can only be changed in Calendar. If both sides change an event, Calendar wins.
+          </p>
+        </>
+      )}
+    </div>
+  )
+}
 
 function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (checked: boolean) => void }) {
   return (

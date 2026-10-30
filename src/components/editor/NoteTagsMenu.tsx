@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { Tag } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAppStore } from "../../store/useAppStore";
 import { TagPicker } from "../shared/TagPicker";
-import { cn } from "../../lib/utils";
 
-/** Header dropdown to tag the open note: pick an existing tag or type a new name to create one. */
+/** Tag pills for the open note (dot + name); the "+" opens a picker to add, remove or create tags. */
 export function NoteTagsMenu({ noteId, tags }: { noteId: string; tags: string[] }) {
   const setNotesTag = useAppStore((s) => s.setNotesTag);
+  const tagDefs = useAppStore((s) => s.tagDefs);
+  const editorWidth = useAppStore((s) => s.editorWidth);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -27,25 +28,41 @@ export function NoteTagsMenu({ noteId, tags }: { noteId: string; tags: string[] 
   }, [open]);
 
   return (
-    <div ref={ref} className="relative">
-      <button
-        className={cn(
-          "h-7 flex items-center gap-1 rounded-md px-1.5 transition-colors",
-          open || tags.length
-            ? "text-accent bg-active"
-            : "text-muted-foreground hover:text-foreground hover:bg-surface",
+    // Same column as the editor text (see .cm-content in MarkdownEditor).
+    <div className="shrink-0 px-10 pt-4 -mb-10 relative z-10" style={{ maxWidth: editorWidth, marginLeft: "auto", marginRight: "auto", width: "100%" }}>
+      <div ref={ref} className="relative flex flex-wrap items-center gap-1.5">
+        {tags.map((t) => {
+          const color = tagDefs.find((d) => d.name === t)?.color ?? "hsl(var(--accent))";
+          return (
+            <button
+              key={t}
+              onClick={() => setOpen(true)}
+              title="Edit tags"
+              className="flex items-center gap-1.5 rounded-md bg-surface px-2 py-0.5 text-[12px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span className="w-2 h-2 rounded-full" style={{ background: color }} />
+              {t}
+            </button>
+          );
+        })}
+        <button
+          onClick={() => setOpen((v) => !v)}
+          title="Tags"
+          className={
+            tags.length
+              ? "w-5 h-5 flex items-center justify-center rounded text-tertiary hover:text-foreground hover:bg-surface"
+              : "flex items-center gap-1 rounded-md px-2 py-0.5 text-[12px] text-tertiary hover:text-foreground hover:bg-surface transition-colors"
+          }
+        >
+          <Plus className="w-3 h-3" />
+          {!tags.length && "Add tag"}
+        </button>
+        {open && (
+          <div className="absolute left-0 top-full mt-1 z-50 w-56 rounded-lg border border-border-strong bg-surface p-1 shadow-lg">
+            <TagPicker isOn={(t) => tags.includes(t)} onToggle={(t, on) => setNotesTag([noteId], t, on)} />
+          </div>
         )}
-        onClick={() => setOpen((v) => !v)}
-        title="Tags"
-      >
-        <Tag className="w-3.5 h-3.5" />
-        {tags.length > 0 && <span className="text-[11px] font-medium">{tags.length}</span>}
-      </button>
-      {open && (
-        <div className="absolute right-0 top-8 z-50 w-56 rounded-lg border border-border-strong bg-surface p-1 shadow-lg">
-          <TagPicker isOn={(t) => tags.includes(t)} onToggle={(t, on) => setNotesTag([noteId], t, on)} />
-        </div>
-      )}
+      </div>
     </div>
   );
 }

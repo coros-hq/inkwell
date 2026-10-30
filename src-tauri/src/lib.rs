@@ -2,6 +2,7 @@
 use window_vibrancy::{apply_vibrancy, clear_vibrancy, NSVisualEffectMaterial, NSVisualEffectState};
 
 mod claude_mcp;
+mod mac_calendar;
 
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
@@ -200,7 +201,7 @@ pub fn run() {
     }
 
     builder
-        .invoke_handler(tauri::generate_handler![set_vibrancy, list_system_fonts, is_portable, claude_mcp_status, claude_mcp_set_enabled])
+        .invoke_handler(tauri::generate_handler![set_vibrancy, list_system_fonts, is_portable, claude_mcp_status, claude_mcp_set_enabled, mac_calendar::mac_calendar_status, mac_calendar::mac_calendar_request_access, mac_calendar::mac_calendar_list, mac_calendar::mac_calendar_ensure_inkwell, mac_calendar::mac_calendar_fetch, mac_calendar::mac_calendar_upsert, mac_calendar::mac_calendar_delete])
         .setup(|app| {
             claude_mcp::sync_on_startup();
 

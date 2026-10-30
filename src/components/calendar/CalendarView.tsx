@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronLeft, ChevronRight, Plus, Trash2, Check, CalendarDays, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, Trash2, Check, CalendarDays, X, RefreshCw } from 'lucide-react'
 import {
   DndContext,
   DragOverlay,
@@ -19,6 +19,7 @@ import { useAppStore } from '../../store/useAppStore'
 import * as Dialog from '@radix-ui/react-dialog'
 import { cn, glassBg } from '../../lib/utils'
 import { DatePicker } from '../ui/DatePicker'
+import { macCalendarSupported } from '../../lib/macCalendar'
 import { Select, type SelectOption } from '../ui/Select'
 import {
   DEFAULT_DURATION_MIN,
@@ -322,6 +323,7 @@ export function CalendarView() {
             <span className="text-[12px] text-tertiary">{doneCount}/{weekEvents.length} done</span>
           )}
           <div className="ml-auto flex items-center gap-1">
+            {macCalendarSupported && <MacSyncButton />}
             <button
               onClick={() => setWeekStart(startOfWeek(new Date()))}
               className="px-2.5 py-1 rounded-md text-[12px] font-medium text-foreground hover:bg-surface"
@@ -463,6 +465,49 @@ export function CalendarView() {
       )}
       {sheetEvent && <EventSheet key={sheetEvent.id} event={sheetEvent} onClose={() => setSheetId(null)} />}
     </div>
+  )
+}
+
+/** Connects to the macOS Calendar app on first click (asking for access), then syncs on every click. */
+function MacSyncButton() {
+  const enabled = useAppStore(s => s.macCalendar.enabled)
+  const syncing = useAppStore(s => s.macCalendarSyncing)
+  const error = useAppStore(s => s.macCalendarError)
+  const lastSync = useAppStore(s => s.macCalendarLastSync)
+  const summary = useAppStore(s => s.macCalendarSummary)
+  const connect = useAppStore(s => s.setMacCalendarEnabled)
+  const sync = useAppStore(s => s.syncMacCalendar)
+  const [connecting, setConnecting] = useState(false)
+  const busy = syncing || connecting
+
+  const click = async () => {
+    if (enabled) return sync()
+    setConnecting(true)
+    try { await connect(true) } finally { setConnecting(false) }
+  }
+
+  const title = error
+    ? error
+    : !enabled
+      ? 'Sync with macOS Calendar'
+      : lastSync
+        ? `Synced ${new Date(lastSync).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}${summary ? `\n${summary}` : ''}\nClick to sync again`
+        : 'Sync with macOS Calendar'
+
+  return (
+    <button
+      onClick={click}
+      disabled={busy}
+      title={title}
+      className={cn(
+        'relative mr-1 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-medium hover:bg-surface disabled:opacity-60',
+        enabled ? 'text-foreground' : 'text-muted-foreground hover:text-foreground',
+      )}
+    >
+      <RefreshCw className={cn('w-3.5 h-3.5', busy && 'animate-spin')} />
+      Sync
+      {error && !busy && <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-red-500" />}
+    </button>
   )
 }
 
@@ -983,6 +1028,11 @@ function EventSheet({ event, onClose }: { event: CalendarEvent; onClose: () => v
             className={cn(fieldCls, 'resize-none')}
           />
         </div>
+        {event.mac?.readOnly && (
+          <p className="text-[11px] text-tertiary">
+            From macOS Calendar — repeating, overnight or read-only events can only be changed there.
+          </p>
+        )}
         <div>
           <Label>Color</Label>
           <ColorPicker value={color} onChange={c => update(event.id, { color: c })} />
