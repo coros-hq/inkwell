@@ -66,6 +66,21 @@ import {
   gitHasRemoteBranch,
   describeError,
 } from "../lib/gitSync";
+import {
+  isImported,
+  macCalendarSupported,
+  macDeleteEvent,
+  macEnsureInkwellCalendar,
+  macListCalendars,
+  macRequestAccess,
+  macStatus,
+  planSync,
+  signature,
+  type SyncUpdate,
+  type MacAccess,
+  type MacCalendarConfig,
+  type MacCalendarInfo,
+} from "../lib/macCalendar";
 import { saveNote } from "../lib/fs";
 import { openExternalUrl } from "../lib/openExternal";
 import { loadShortcuts, saveShortcuts, DEFAULT_SHORTCUTS } from "../lib/shortcuts";
@@ -295,6 +310,18 @@ interface AppState {
   setBrainstormEnabled: (enabled: boolean) => void;
   calendarEnabled: boolean;
   setCalendarEnabled: (enabled: boolean) => void;
+  /** Two-way sync with the macOS Calendar app (macOS desktop only). */
+  macCalendar: MacCalendarConfig;
+  macCalendarAccess: MacAccess;
+  macCalendars: MacCalendarInfo[];
+  macCalendarSyncing: boolean;
+  macCalendarError: string | null;
+  macCalendarLastSync: number | null;
+  macCalendarSummary: string | null;
+  setMacCalendarEnabled: (enabled: boolean) => Promise<void>;
+  setMacCalendarHidden: (ids: string[]) => void;
+  refreshMacCalendars: () => Promise<void>;
+  syncMacCalendar: () => Promise<void>;
   // Canvas data is stored globally (independent of whichever vault is open) by
   // default. If set, canvas data instead reads/writes to this specific vault's
   // .inkwell/canvas.json regardless of the open vault.
@@ -922,6 +949,47 @@ function saveCalendar(immediate = false) {
   else calendarSaveTimer = setTimeout(run, 400);
 }
 
+// Sync with the macOS Calendar app. Config lives in localStorage like the other
+// feature toggles; the events themselves (with their link to Calendar) live in
+// calendar.json. One sync runs at a time; a request that arrives mid-sync re-runs after.
+const MAC_CALENDAR_KEY = "inkwell-mac-calendar";
+function loadMacCalendarConfig(): MacCalendarConfig {
+  const off: MacCalendarConfig = { enabled: false, hiddenIds: [], inkwellId: null };
+  try {
+    const raw = JSON.parse(localStorage.getItem(MAC_CALENDAR_KEY) ?? "null");
+    return raw && macCalendarSupported ? { ...off, ...raw, hiddenIds: raw.hiddenIds ?? [] } : off;
+  } catch {
+    return off;
+  }
+}
+function saveMacCalendarConfig(cfg: MacCalendarConfig) {
+  localStorage.setItem(MAC_CALENDAR_KEY, JSON.stringify(cfg));
+}
+// A sync that never answers (Calendar not responding) must not block every later one.
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([p, new Promise<never>((_, rej) => setTimeout(() => rej(new Error("Calendar didn't respond — try Sync again.")), ms))]);
+}
+let macSyncRunning = false;
+let macSyncAgain = false;
+let macSyncTimer: ReturnType<typeof setTimeout> | null = null;
+function scheduleMacSync(delay = 1500) {
+  if (!useAppStore.getState().macCalendar.enabled) return;
+  if (macSyncTimer) clearTimeout(macSyncTimer);
+  macSyncTimer = setTimeout(() => {
+    macSyncTimer = null;
+    useAppStore.getState().syncMacCalendar();
+  }, delay);
+}
+let macAutoSyncStarted = false;
+function startMacAutoSync() {
+  if (macAutoSyncStarted || !macCalendarSupported) return;
+  macAutoSyncStarted = true;
+  macStatus().then((macCalendarAccess) => useAppStore.setState({ macCalendarAccess })).catch(console.error);
+  scheduleMacSync(0);
+  setInterval(() => scheduleMacSync(0), 5 * 60_000);
+  window.addEventListener("focus", () => scheduleMacSync(500));
+}
+
 // Write boards immediately after any board mutation.
 // localStorage write is synchronous (survives Tauri WebView reloads and app restarts).
 // Disk write is async but also completes quickly for normal close/reopen.
@@ -1003,6 +1071,13 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeBrainstormId: null,
   brainstormRefRequest: null,
   calendarEvents: [],
+  macCalendar: loadMacCalendarConfig(),
+  macCalendarAccess: macCalendarSupported ? "notDetermined" : "unsupported",
+  macCalendars: [],
+  macCalendarSyncing: false,
+  macCalendarError: null,
+  macCalendarLastSync: null,
+  macCalendarSummary: null,
   calendarFocusId: null,
   boardColumns: [],
   boardTasks: [],
@@ -1137,7 +1212,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       set({ brainstorms, activeBrainstormId: brainstorms[0]?.id ?? null });
     }).catch(console.error);
 
-    loadCalendarOnce(path).then(watchCalendarOnce);
+    loadCalendarOnce(path).then(watchCalendarOnce).then(startMacAutoSync);
 
     set({ folderMeta: {}, tagDefs: [], selectedFolderIds: [] });
     readFoldersFile(path).then(({ folders: folderMeta, tags: tagDefs }) => {
@@ -2288,6 +2363,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     const id = genId("cal");
     set((s) => ({ calendarEvents: [...s.calendarEvents, { done: false, ...event, id }] }));
     saveCalendar();
+    scheduleMacSync();
     return id;
   },
   updateCalendarEvent: (id, patch) => {
@@ -2295,10 +2371,122 @@ export const useAppStore = create<AppState>((set, get) => ({
       calendarEvents: s.calendarEvents.map((e) => (e.id === id ? { ...e, ...patch } : e)),
     }));
     saveCalendar();
+    // Ticking off, reordering and recolouring never leave the planner.
+    if (Object.keys(patch).some((k) => k !== "done" && k !== "order" && k !== "color")) scheduleMacSync();
   },
   deleteCalendarEvent: (id) => {
+    const link = get().calendarEvents.find((e) => e.id === id)?.mac;
     set((s) => ({ calendarEvents: s.calendarEvents.filter((e) => e.id !== id) }));
     saveCalendar(true);
+    if (link && !link.readOnly && get().macCalendar.enabled) {
+      macDeleteEvent(link.id).catch((e) => set({ macCalendarError: String(e) }));
+    }
+  },
+
+  setMacCalendarEnabled: async (enabled) => {
+    const cfg = get().macCalendar;
+    if (!enabled) {
+      const next = { ...cfg, enabled: false };
+      saveMacCalendarConfig(next);
+      // Events mirrored from other calendars go; the ones in the "Inkwell" calendar stay.
+      set((s) => ({
+        macCalendar: next,
+        macCalendarError: null,
+        calendarEvents: s.calendarEvents.filter((e) => !isImported(e, cfg.inkwellId)),
+      }));
+      saveCalendar();
+      return;
+    }
+    if (!macCalendarSupported) {
+      set({ macCalendarError: "Syncing with Calendar is only available in the macOS app." });
+      return;
+    }
+    try {
+      let access = await macStatus();
+      if (access === "notDetermined") {
+        await macRequestAccess();
+        access = await macStatus();
+      }
+      set({ macCalendarAccess: access });
+      if (access !== "authorized") {
+        set({ macCalendarError: "Calendar access wasn't granted. Allow inkwell in System Settings › Privacy & Security › Calendars." });
+        return;
+      }
+      const [calendars, mine] = await Promise.all([macListCalendars(), macEnsureInkwellCalendar()]);
+      const next = { enabled: true, hiddenIds: cfg.hiddenIds, inkwellId: mine.id };
+      saveMacCalendarConfig(next);
+      set({ macCalendar: next, macCalendars: calendars, macCalendarError: null });
+      await get().syncMacCalendar();
+    } catch (e) {
+      set({ macCalendarError: String(e) });
+    }
+  },
+  setMacCalendarHidden: (ids) => {
+    const next = { ...get().macCalendar, hiddenIds: ids };
+    saveMacCalendarConfig(next);
+    set({ macCalendar: next });
+    scheduleMacSync(300);
+  },
+  refreshMacCalendars: async () => {
+    try {
+      set({ macCalendars: await macListCalendars() });
+    } catch (e) {
+      set({ macCalendarError: String(e) });
+    }
+  },
+  syncMacCalendar: async () => {
+    const cfg = get().macCalendar;
+    if (!cfg.enabled || !macCalendarSupported) return;
+    if (macSyncRunning) {
+      macSyncAgain = true;
+      return;
+    }
+    macSyncRunning = true;
+    set({ macCalendarSyncing: true });
+    try {
+      await calendarLoad;
+      // Saved as soon as an event reaches Calendar, so an interrupted sync never recreates it.
+      const applyUpdate = (e: CalendarEvent, u: SyncUpdate): CalendarEvent => {
+        // Edited since the plan was made: keep the edit and let the next sync send it.
+        const untouched = signature(e) === u.base;
+        return { ...e, ...(untouched && { ...u.fields, ...(u.color && { color: u.color }) }), mac: u.mac };
+      };
+      const plan = await withTimeout(planSync(get().calendarEvents, cfg, (id, u) => {
+        set((s) => ({ calendarEvents: s.calendarEvents.map((e) => (e.id === id ? applyUpdate(e, u) : e)) }));
+        saveCalendar(true);
+      }), 60_000);
+      // Turned off while syncing: still record the links of events just pushed, but import nothing.
+      if (!get().macCalendar.enabled) {
+        plan.add = [];
+        plan.remove.clear();
+      }
+      if (plan.remove.size || plan.update.size || plan.add.length) {
+        set((s) => {
+          const kept = s.calendarEvents.flatMap((e) => {
+            if (plan.remove.has(e.id)) return [];
+            const u = plan.update.get(e.id);
+            return [u ? applyUpdate(e, u) : e];
+          });
+          return { calendarEvents: [...kept, ...plan.add.map((a) => ({ ...a, id: genId("cal") }))] };
+        });
+        saveCalendar(true);
+      }
+      if (plan.inkwellId !== cfg.inkwellId && get().macCalendar.enabled) {
+        const next = { ...get().macCalendar, inkwellId: plan.inkwellId };
+        saveMacCalendarConfig(next);
+        set({ macCalendar: next });
+      }
+      set({ macCalendarError: plan.error, macCalendarLastSync: Date.now(), macCalendarSummary: `${plan.summary}; added ${plan.add.length}, removed ${plan.remove.size}` });
+    } catch (e) {
+      set({ macCalendarError: String(e) });
+    } finally {
+      macSyncRunning = false;
+      set({ macCalendarSyncing: false });
+      if (macSyncAgain) {
+        macSyncAgain = false;
+        scheduleMacSync(300);
+      }
+    }
   },
   openBrainstormRefDialog: (pos) => set({ brainstormRefRequest: { pos } }),
   closeBrainstormRefDialog: () => set({ brainstormRefRequest: null }),

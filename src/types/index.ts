@@ -152,4 +152,13 @@ export interface CalendarEvent {
   notes?: string
   done: boolean
   order?: number      // position among a day's all-day cards (lower first)
+  mac?: MacLink       // set when the event is mirrored in the macOS Calendar app
+}
+
+/** Link between a CalendarEvent and its EventKit counterpart. */
+export interface MacLink {
+  id: string          // EventKit identifier
+  calendarId: string
+  sig: string         // content at the last sync; tells which side changed since
+  readOnly?: boolean  // recurring / spans midnight / read-only calendar: never written back
 }

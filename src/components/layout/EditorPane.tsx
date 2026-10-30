@@ -394,8 +394,6 @@ export function EditorPane() {
               <Columns2 className="w-3.5 h-3.5" />
             </button>
 
-            <NoteTagsMenu noteId={note.id} tags={note.tags} />
-
             {!note.external && (
               <button
                 className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
@@ -495,6 +493,7 @@ export function EditorPane() {
               onPrev={goPrev}
             />
           )}
+          {editorMode === "normal" && !focusMode && <NoteTagsMenu noteId={note.id} tags={note.tags} />}
           <div className="flex-1 overflow-hidden relative">
             {editorMode === "normal" && (
               <MarkdownEditor noteId={note.id} content={note.content} onScrollerReady={setScrollerEl} />
