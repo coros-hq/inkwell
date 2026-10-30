@@ -424,6 +424,9 @@ interface AppState {
   setFoldersTag: (folderIds: string[], tag: string, on: boolean) => void;
   /** Add (on) or remove (off) a tag on each of the given notes (stored in their frontmatter). */
   setNotesTag: (noteIds: string[], tag: string, on: boolean) => void;
+  /** Folder briefly highlighted (and scrolled to) after being opened from a tag result. */
+  revealedFolderId: string | null;
+  revealFolder: (id: string) => void;
   /** Folders ticked with ⌘/Ctrl-click, the target of tag assignment. */
   selectedFolderIds: string[];
   toggleFolderSelected: (id: string) => void;
@@ -555,6 +558,8 @@ function dropFolderMeta(meta: Record<string, FolderMeta>, id: string): Record<st
 function isMetaEmpty(e: FolderMeta): boolean {
   return !e.icon && !e.groupByTags && !e.tags?.length
 }
+
+let revealTimer: ReturnType<typeof setTimeout> | null = null;
 
 function persistFolderMeta(vaultPath: string | null, meta: Record<string, FolderMeta>, tags: TagDef[] = useAppStore.getState().tagDefs) {
   if (vaultPath) writeFoldersFile(vaultPath, meta, tags)
@@ -997,6 +1002,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeBoardId: null,
   folderMeta: {},
   tagDefs: [],
+  revealedFolderId: null,
   selectedFolderIds: [],
   activeBoardTaskId: null,
   sharedVault: null,
@@ -2006,6 +2012,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     }
     set({ folderMeta: next })
     persistFolderMeta(vaultPath, next)
+  },
+
+  revealFolder: (id) => {
+    set({ revealedFolderId: id });
+    if (revealTimer) clearTimeout(revealTimer);
+    revealTimer = setTimeout(() => {
+      if (get().revealedFolderId === id) set({ revealedFolderId: null });
+    }, 2500);
   },
 
   toggleFolderSelected: (id) =>

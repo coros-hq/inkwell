@@ -121,46 +121,104 @@ export function TagsSection({ active, onSelect }: SectionProps) {
 
 interface ResultsProps {
   tag: string
+  onClear: () => void
   onFolderContextMenu: (e: React.MouseEvent, folder: Folder) => void
   onOpenFolder: (folder: Folder) => void
   onNoteContextMenu?: (e: React.MouseEvent, note: Note) => void
 }
 
-/** Flat list of every folder carrying the active tag (replaces the tree while a tag is active). */
-export function TagFolderResults({ tag, onFolderContextMenu, onOpenFolder, onNoteContextMenu }: ResultsProps) {
+interface TagNode {
+  folder: Folder
+  /** The folder itself carries the tag (vs. just containing something that does). */
+  matched: boolean
+  notes: Note[]
+  kids: TagNode[]
+}
+
+/** The folder tree pruned to branches that lead to something carrying `tag`. */
+function pruneTree(folders: Folder[], tag: string, meta: Record<string, { tags?: string[] }>): TagNode[] {
+  const out: TagNode[] = []
+  for (const folder of folders) {
+    const kids = pruneTree(folder.children, tag, meta)
+    const notes = folder.notes.filter((n) => n.tags.includes(tag))
+    const matched = !!meta[folder.id]?.tags?.includes(tag)
+    if (matched || notes.length || kids.length) out.push({ folder, matched, notes, kids })
+  }
+  return out
+}
+
+/**
+ * Everything carrying the active tag, shown above the folder tree as a pruned copy
+ * of that tree: each match sits under its full folder chain, so identically named
+ * notes in different folders stay distinguishable. The real tree stays visible below.
+ */
+export function TagFolderResults({ tag, onClear, onFolderContextMenu, onOpenFolder, onNoteContextMenu }: ResultsProps) {
   const folders = useAppStore((s) => s.folders)
   const folderMeta = useAppStore((s) => s.folderMeta)
-  const matches = flattenFolders(folders).filter((f) => folderMeta[f.id]?.tags?.includes(tag))
-  const taggedNotes = useAppStore((s) => s.notes).filter((n) => n.tags.includes(tag))
+  const notes = useAppStore((s) => s.notes)
   const selectNote = useAppStore((s) => s.selectNote)
-  if (matches.length === 0 && taggedNotes.length === 0) return <p className="text-xs text-muted-foreground px-2 py-1">Nothing has this tag</p>
+  const selectedNoteIds = useAppStore((s) => s.selectedNoteIds)
+  const color = useAppStore((s) => s.tagDefs.find((d) => d.name === tag)?.color)
+
+  const tree = useMemo(() => pruneTree(folders, tag, folderMeta), [folders, tag, folderMeta])
+  // Tagged notes that live outside every folder (e.g. at the library root).
+  const looseNotes = useMemo(() => {
+    const inTree = new Set(flattenFolders(folders).flatMap((f) => f.notes.map((n) => n.id)))
+    return notes.filter((n) => n.tags.includes(tag) && !inTree.has(n.id))
+  }, [folders, notes, tag])
+
+  const noteRow = (n: Note, depth: number) => (
+    <div
+      key={n.id}
+      className={cn(
+        'flex items-center gap-1.5 h-[28px] pr-2 rounded-md text-[13px] text-foreground hover:bg-surface cursor-pointer',
+        selectedNoteIds.includes(n.id) && 'bg-active',
+      )}
+      style={{ paddingLeft: 8 + depth * 14 }}
+      onClick={() => selectNote(n.id)}
+      onContextMenu={(e) => onNoteContextMenu?.(e, n)}
+      title={n.path}
+    >
+      <FileText className="w-3.5 h-3.5 shrink-0 text-accent" />
+      <span className="truncate font-medium">{n.title}</span>
+    </div>
+  )
+
+  const renderNode = ({ folder, matched, notes: hits, kids }: TagNode, depth: number): React.ReactNode => (
+    <div key={folder.id}>
+      <div
+        className="flex items-center gap-1.5 h-[28px] pr-2 rounded-md text-[13px] hover:bg-surface cursor-pointer"
+        style={{ paddingLeft: 8 + depth * 14 }}
+        onClick={() => onOpenFolder(folder)}
+        onContextMenu={(e) => onFolderContextMenu(e, folder)}
+        title={folder.path}
+      >
+        <FolderIcon icon={folderMeta[folder.id]?.icon} className={cn('w-3.5 h-3.5 shrink-0', matched ? 'text-accent' : 'text-muted-foreground')} />
+        <span className={cn('truncate', matched ? 'font-medium text-foreground' : 'text-muted-foreground')}>{folder.name}</span>
+        {matched && <span className="w-2 h-2 rounded-full shrink-0 ml-auto" style={{ background: color }} />}
+      </div>
+      {kids.map((k) => renderNode(k, depth + 1))}
+      {hits.map((n) => noteRow(n, depth + 1))}
+    </div>
+  )
+
+  const empty = tree.length === 0 && looseNotes.length === 0
   return (
-    <div>
-      {taggedNotes.map((n) => (
-        <div
-          key={n.id}
-          className="flex items-center gap-1.5 h-[30px] px-2 rounded-md text-[13px] font-medium text-foreground hover:bg-surface cursor-pointer"
-          onClick={() => selectNote(n.id)}
-          onContextMenu={(e) => onNoteContextMenu?.(e, n)}
-          title={n.path}
+    <div className="rounded-lg border border-border bg-surface/40 p-1">
+      <div className="flex items-center gap-1.5 px-1.5 pt-0.5 pb-1">
+        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: color }} />
+        <span className="text-[12px] font-semibold text-foreground truncate flex-1">Tagged “{tag}”</span>
+        <button
+          className="w-5 h-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface"
+          onClick={onClear}
+          title="Clear tag filter"
         >
-          <FileText className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-          <span className="truncate">{n.title}</span>
-        </div>
-      ))}
-      {matches.map((f) => (
-        <div
-          key={f.id}
-          className="flex items-center gap-1.5 h-[30px] px-2 rounded-md text-[13px] font-medium text-foreground hover:bg-surface cursor-pointer"
-          onClick={() => onOpenFolder(f)}
-          onContextMenu={(e) => onFolderContextMenu(e, f)}
-          title={f.id}
-        >
-          <FolderIcon icon={folderMeta[f.id]?.icon} className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-          <span className="truncate">{f.name}</span>
-          {f.parentId && <span className="truncate text-[10px] font-normal text-tertiary">{f.parentId}</span>}
-        </div>
-      ))}
+          <X className="w-3 h-3" />
+        </button>
+      </div>
+      {empty && <p className="text-xs text-muted-foreground px-2 py-1">Nothing has this tag yet</p>}
+      {looseNotes.map((n) => noteRow(n, 0))}
+      {tree.map((node) => renderNode(node, 0))}
     </div>
   )
 }
