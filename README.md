@@ -106,6 +106,7 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 **Claude MCP Integration** *(new in v0.3)*
 - A native Rust MCP server ships inside the app and registers itself with Claude Desktop (Settings → Claude)
 - Exposes `list_notes`, `read_note`, `create_note`, `update_note`, `search_notes`, `get_vault_info` tools for notes, and `list_calendar_events`, `create_calendar_event`, `update_calendar_event`, `delete_calendar_event` for the calendar (changes appear live in the app)
+- Claude can manage Kanban boards and tickets: `list_boards`, `create_board`, `rename_board`, `delete_board`, `list_board_tasks`, `read_board_task`, `create_board_task`, `update_board_task` (edit fields, tick subtasks, move between columns), `comment_on_board_task`, `delete_board_task` — also live in the app
 - Claude can read, write, and search your vault directly — no copy-paste
 - Notes written by Claude land as proper `.md` files with YAML frontmatter
 

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { FolderOpen, Plus, Clock, X, ChevronRight } from 'lucide-react'
 import {
   pickVaultDirectory,
+  getSuggestedVaultPath,
+  ensureVaultDirectory,
+  isEmptyVault,
   readVaultFS,
   addRecentVault,
   getRecentVaults,
@@ -17,10 +20,41 @@ export function VaultPicker() {
   const [recentVaults, setRecentVaults] = useState<RecentVault[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // First launch (no recent vaults): offer a ready-made vault location the user
+  // can accept or change.
+  const [suggestedPath, setSuggestedPath] = useState<string | null>(null)
 
   useEffect(() => {
-    setRecentVaults(getRecentVaults())
+    const recent = getRecentVaults()
+    setRecentVaults(recent)
+    if (recent.length === 0) getSuggestedVaultPath().then(setSuggestedPath)
   }, [])
+
+  const createAt = async (path: string) => {
+    setError(null)
+    setLoading(true)
+    try {
+      await ensureVaultDirectory(path)
+      const data = await readVaultFS(path)
+      addRecentVault(path)
+      // null seeds the welcome note, so a brand-new or empty folder starts with it
+      openVault(path, isEmptyVault(data) ? null : data)
+    } catch (e) {
+      setError('Could not create the vault there. Please choose another location.')
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleChangeSuggested = async () => {
+    try {
+      const path = await pickVaultDirectory()
+      if (path) setSuggestedPath(path)
+    } catch (e) {
+      console.error(e)
+    }
+  }
 
   const handleOpen = async () => {
     setError(null)
@@ -104,6 +138,39 @@ export function VaultPicker() {
             Choose a folder to store your notes
           </p>
         </div>
+
+        {/* First-launch suggestion */}
+        {suggestedPath && (
+          <div className="w-full mb-6 rounded-xl border border-accent/40 bg-surface p-4">
+            <p className="text-sm font-medium text-foreground">Create your vault</p>
+            <p className="mt-1 text-[11px] text-muted-foreground leading-tight">
+              Your notes will be stored in this folder. You can change it now or move it later.
+            </p>
+            <p className="mt-3 px-2.5 py-2 rounded-md bg-background border border-border text-xs text-foreground break-all select-text">
+              {suggestedPath}
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <button
+                className={cn(
+                  'px-3.5 py-1.5 rounded-md bg-accent text-accent-foreground text-xs font-medium hover:opacity-90 transition-opacity',
+                  loading && 'opacity-50 pointer-events-none',
+                )}
+                onClick={() => createAt(suggestedPath)}
+              >
+                Create vault
+              </button>
+              <button
+                className={cn(
+                  'px-3 py-1.5 rounded-md text-xs text-muted-foreground hover:text-foreground hover:bg-background transition-colors',
+                  loading && 'opacity-50 pointer-events-none',
+                )}
+                onClick={handleChangeSuggested}
+              >
+                Change location…
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Action buttons */}
         <div className="flex gap-3 w-full mb-6">

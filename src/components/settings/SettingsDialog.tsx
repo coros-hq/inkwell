@@ -9,8 +9,8 @@ import { THEMES, DARK_THEMES, LIGHT_THEMES, type CustomTheme } from '../../lib/t
 import { ThemeEditor } from './ThemeEditor'
 import { FontPicker } from './FontPicker'
 import {
-  pickVaultDirectory, readVaultFS, addRecentVault,
-  getRecentVaults, removeRecentVault, writeBoardsFile, type RecentVault,
+  pickVaultDirectory,
+  getRecentVaults, removeRecentVault, type RecentVault,
 } from '../../lib/vault'
 import {
   getGithubToken, setGithubToken, getGithubOwner, setGithubOwner, listRepos, type GhRepo,
@@ -23,7 +23,7 @@ import {
 } from '../../lib/team'
 import { SignInDialog } from '../shared/SignInDialog'
 import { JoinVaultDialog } from './JoinVaultDialog'
-import { stopVaultSync } from '../../lib/sync/vaultSession'
+import { switchVault } from '../../lib/switchVault'
 import { ShareVaultDialog } from '../collab/ShareVaultDialog'
 import { isGitRepo, gitRemoteUrl as gitGetRemoteUrl } from '../../lib/gitSync'
 
@@ -983,7 +983,7 @@ function formatVaultDate(iso: string | Date): string {
 }
 
 function VaultSection({ onClose }: { onClose: () => void }) {
-  const { vaultPath, openVault, sharedVault, syncStatus, syncProgress } = useAppStore()
+  const { vaultPath, sharedVault, syncStatus, syncProgress } = useAppStore()
   const [recents, setRecents] = useState<RecentVault[]>([])
   const [switching, setSwitching] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -1000,15 +1000,7 @@ function VaultSection({ onClose }: { onClose: () => void }) {
     setError(null)
     setSwitching(path)
     try {
-      // Flush current vault's boards to disk BEFORE reading the new vault
-      const { vaultPath: currentPath, boards, boardColumns, boardTasks } = useAppStore.getState()
-      if (currentPath && currentPath !== path) {
-        await writeBoardsFile(currentPath, { version: 1, boards, boardColumns, boardTasks })
-        await stopVaultSync()
-      }
-      const data = empty ? null : await readVaultFS(path)
-      addRecentVault(path)
-      openVault(path, data) // AppShell starts syncing it if it's a shared vault
+      await switchVault(path, empty)
       onClose()
     } catch {
       setError("Couldn't open this vault. The folder may have moved or been deleted.")

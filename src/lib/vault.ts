@@ -851,6 +851,28 @@ export async function pickVaultDirectory(): Promise<string | null> {
   return null
 }
 
+/** Where a first-time user's vault goes by default: ~/Documents/Inkwell/Vault. */
+export async function getSuggestedVaultPath(): Promise<string | null> {
+  if (!isTauri) return null
+  try {
+    const { documentDir, homeDir, join } = await import('@tauri-apps/api/path')
+    const docs = await documentDir().catch(async () => join(await homeDir(), 'Documents'))
+    return await join(docs, 'Inkwell', 'Vault')
+  } catch { return null }
+}
+
+/** Creates the vault folder (and any missing parents) if it doesn't exist yet. */
+export async function ensureVaultDirectory(path: string): Promise<void> {
+  if (!isTauri) return
+  const { mkdir, exists } = await import('@tauri-apps/plugin-fs')
+  if (!await exists(path)) await mkdir(path, { recursive: true })
+}
+
+/** True when the vault has no notes and no boards yet, so it should get the welcome note. */
+export function isEmptyVault(data: VaultData | null): boolean {
+  return !data || (data.notes.length === 0 && data.boards.length === 0)
+}
+
 export function getRecentVaults(): RecentVault[] {
   try {
     const raw = localStorage.getItem(RECENT_KEY)
