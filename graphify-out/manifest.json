@@ -10,8 +10,8 @@
     "semantic_hash": "a4038619f5414c01f04abbbdd4730820"
   },
   "package.json": {
-    "mtime": 1793014151.059908,
-    "ast_hash": "ed4e887f0af3e159ff33b7aa43532b74",
+    "mtime": 1793352910.5692616,
+    "ast_hash": "acc9ac0b4834552cd6b3a1f6504ed0ae",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -85,8 +85,8 @@
     "semantic_hash": ""
   },
   "src/components/board/BoardView.tsx": {
-    "mtime": 1792846204.131146,
-    "ast_hash": "cb70ca763d2a9605be23121bac7f5334",
+    "mtime": 1793351264.1072602,
+    "ast_hash": "43d7b7e8c11d733805a7197ca10bc094",
     "semantic_hash": ""
   },
   "src/components/board/KanbanColumn.tsx": {
@@ -200,18 +200,18 @@
     "semantic_hash": ""
   },
   "src/components/layout/EditorPane.tsx": {
-    "mtime": 1793118834.7592106,
-    "ast_hash": "7f52b88c5f88658f85664a1a952080e2",
+    "mtime": 1793351578.0932353,
+    "ast_hash": "555733e0b99e1d2f160ccccccd1327d1",
     "semantic_hash": ""
   },
   "src/components/layout/NoteList.tsx": {
-    "mtime": 1792790238.9786499,
-    "ast_hash": "f0a02a3ded2762fb66b3949d24d66756",
+    "mtime": 1793351578.0934489,
+    "ast_hash": "919e6b9aba67a6c8f7fccdde2142a478",
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
-    "mtime": 1792772300.6495984,
-    "ast_hash": "28950a4c859f38aafa8ed0f9ddf0cb93",
+    "mtime": 1793351264.109726,
+    "ast_hash": "bf16866bc4dc11b8390ceafc458c6adc",
     "semantic_hash": ""
   },
   "src/components/quicknote/QuickNoteCapture.tsx": {
@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/settings/SettingsDialog.tsx": {
-    "mtime": 1793046031.834365,
-    "ast_hash": "036e911ff7c55e8fdfd1b72a1fcead66",
+    "mtime": 1793351264.1107087,
+    "ast_hash": "395fdefb254bfdee18eaceefe07b0d19",
     "semantic_hash": ""
   },
   "src/components/settings/ThemeEditor.tsx": {
@@ -245,8 +245,8 @@
     "semantic_hash": "176f0fe5f5ac7e7bd31165a8de42be34"
   },
   "src/components/shared/ContextMenu.tsx": {
-    "mtime": 1792404617.192991,
-    "ast_hash": "f4018dde4bec51051d7195e7d80b1e10",
+    "mtime": 1793351898.0950248,
+    "ast_hash": "7b88ac893e8c33ac24414b0b91185e6f",
     "semantic_hash": ""
   },
   "src/components/shared/GitHubSyncDialog.tsx": {
@@ -269,15 +269,10 @@
     "ast_hash": "45b92ddef4fc4a741649fa9514dbe03e",
     "semantic_hash": ""
   },
-  "src/components/shared/ThemeToggle.tsx": {
-    "mtime": 1782980448.8132513,
-    "ast_hash": "56c2ea4008ebd09ca7e3352e2ca114ae",
-    "semantic_hash": "56c2ea4008ebd09ca7e3352e2ca114ae"
-  },
   "src/components/shared/VaultPicker.tsx": {
-    "mtime": 1782980448.8133368,
-    "ast_hash": "ad7ebf0a025c912998bde03b637bf77f",
-    "semantic_hash": "ad7ebf0a025c912998bde03b637bf77f"
+    "mtime": 1793351264.1113515,
+    "ast_hash": "190a4795b494097dde5dd3ad4b07645a",
+    "semantic_hash": ""
   },
   "src/components/ui/DatePicker.tsx": {
     "mtime": 1782980448.8134515,
@@ -295,8 +290,8 @@
     "semantic_hash": "1fb56d8339400dee147ada4b14edf4fc"
   },
   "src/lib/deleteActions.ts": {
-    "mtime": 1783419838.712125,
-    "ast_hash": "6f63105b3cb59507e8853f99455b7ef6",
+    "mtime": 1793351578.0936284,
+    "ast_hash": "8c838e146282b1b4537dcdcb315d87e1",
     "semantic_hash": ""
   },
   "src/lib/editorExtensions.ts": {
@@ -360,8 +355,8 @@
     "semantic_hash": ""
   },
   "src/lib/vault.ts": {
-    "mtime": 1793046022.529624,
-    "ast_hash": "1df46ee6c756856cad6d5a83067a3853",
+    "mtime": 1793351578.0940442,
+    "ast_hash": "a12ceb54b31e96b31404398f5ca55964",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -370,13 +365,13 @@
     "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1793046022.5300407,
-    "ast_hash": "371534bd8f3d955545525a020dd1891a",
+    "mtime": 1793352952.3064501,
+    "ast_hash": "c69c1f68e2965795c9b6ebe8f33a4454",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
-    "mtime": 1792536006.1460097,
-    "ast_hash": "c3e445e32f0fbdb5b29ebe6a5d0ba333",
+    "mtime": 1793352936.166086,
+    "ast_hash": "284b36ea99c22a649a2e60612d894586",
     "semantic_hash": ""
   },
   "src/vite-env.d.ts": {
@@ -410,7 +405,7 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793270375.8259535,
+    "mtime": 1793351264.0925384,
     "ast_hash": "c6648bc4d45b2d63cecc3c3eb1ab6431",
     "semantic_hash": ""
   },
@@ -865,8 +860,8 @@
     "semantic_hash": ""
   },
   "src/lib/sync/manifest.ts": {
-    "mtime": 1792441600.2865145,
-    "ast_hash": "ee179b556c996acb28f575b63ac79d35",
+    "mtime": 1793351578.0938344,
+    "ast_hash": "4a9de52f3ead1e691fde8ce1409b102e",
     "semantic_hash": ""
   },
   "src/lib/sync/vaultSession.ts": {
@@ -925,8 +920,8 @@
     "semantic_hash": ""
   },
   "src/components/brainstorm/BrainstormView.tsx": {
-    "mtime": 1791457411.2828815,
-    "ast_hash": "f852ca9c04deb0237c433c37c6cb6556",
+    "mtime": 1793352971.3589253,
+    "ast_hash": "26e37aff09b79d63d710b59bdb223f4d",
     "semantic_hash": ""
   },
   "src/components/editor/BrainstormEmbed.tsx": {
@@ -940,13 +935,13 @@
     "semantic_hash": ""
   },
   "src/lib/brainstorm.ts": {
-    "mtime": 1791458265.9101152,
-    "ast_hash": "8bfea1a3e2809fcd76c81b73ea01212a",
+    "mtime": 1793353057.2809153,
+    "ast_hash": "c810d3a9d4cdd32869f4e3fc5071c185",
     "semantic_hash": ""
   },
   "src/components/brainstorm/MindMap.tsx": {
-    "mtime": 1791458265.9106143,
-    "ast_hash": "32b0fa10b51186fcf5b9ca2217ffac81",
+    "mtime": 1793353057.3042383,
+    "ast_hash": "3acf55ceefe6d10db05112f636ec3078",
     "semantic_hash": ""
   },
   "src/components/shared/FolderIcon.tsx": {
@@ -985,8 +980,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/TagsView.tsx": {
-    "mtime": 1792772070.928453,
-    "ast_hash": "7a6a36b88dc4f9ff78661d031beb4bb1",
+    "mtime": 1793351264.110173,
+    "ast_hash": "f6ed688a7393166aa11fc19f98c165af",
     "semantic_hash": ""
   },
   "src/components/shared/TagDialog.tsx": {
@@ -1050,7 +1045,7 @@
     "semantic_hash": ""
   },
   "src-tauri/mcp-server/src/lib.rs": {
-    "mtime": 1793270348.5743575,
+    "mtime": 1793351264.106966,
     "ast_hash": "6a2ee50f0bb4a4413940b146d25dcdac",
     "semantic_hash": ""
   },
@@ -1065,13 +1060,38 @@
     "semantic_hash": ""
   },
   "src/components/editor/NoteTagsMenu.tsx": {
-    "mtime": 1793118834.6554892,
-    "ast_hash": "fcd2e5a945825a93f6d80af60f46ab33",
+    "mtime": 1793351264.1094453,
+    "ast_hash": "f58542f418d77488b4357d6a7d6ad5a2",
     "semantic_hash": ""
   },
   "src-tauri/mcp-server/src/boards.rs": {
-    "mtime": 1793270341.6301582,
+    "mtime": 1793351264.1065938,
     "ast_hash": "150ab6af3a95054c5952a0f47dfa30f2",
+    "semantic_hash": ""
+  },
+  "src/components/shared/TagPicker.tsx": {
+    "mtime": 1793351264.111038,
+    "ast_hash": "0e92329621df9d9b816f469b55053d65",
+    "semantic_hash": ""
+  },
+  "src/lib/noteTree.ts": {
+    "mtime": 1793351509.5675378,
+    "ast_hash": "c9db823410984e68ae7a6500c43332dc",
+    "semantic_hash": ""
+  },
+  "src/lib/switchVault.ts": {
+    "mtime": 1793351264.1116693,
+    "ast_hash": "50e902957804551ea7e5c6abdea80861",
+    "semantic_hash": ""
+  },
+  "src/lib/brainstormFiles.ts": {
+    "mtime": 1793352952.1733809,
+    "ast_hash": "d1d9631d3c98514a0b4a04d16a33256b",
+    "semantic_hash": ""
+  },
+  "src/lib/xmind.ts": {
+    "mtime": 1793352936.1847007,
+    "ast_hash": "e873f3d1986b4dc468c29e014e893a71",
     "semantic_hash": ""
   }
 }

@@ -27,6 +27,7 @@ export interface NoteEntry {
   folder: string | null
   file: string
   pinned: boolean
+  parentId?: string | null
   tags: string[]
   createdAt: string
   attachments: Attachment[]
@@ -71,6 +72,7 @@ export function noteToEntry(n: Note): NoteEntry {
     folder: n.folder,
     file: basename(n.path),
     pinned: n.pinned,
+    parentId: n.parentId ?? null,
     tags: [...n.tags],
     createdAt: (n.createdAt instanceof Date ? n.createdAt : new Date(n.createdAt)).toISOString(),
     attachments: (n.attachments ?? []).map(a => ({ id: a.id, name: a.name, path: a.path, size: a.size, type: a.type })),
@@ -239,8 +241,8 @@ export async function applyManifestToDisk(ctx: ApplyContext): Promise<boolean> {
         await renameItem(n.path, target)
         changed = true
       }
-      if (n.pinned !== e.pinned || JSON.stringify(n.tags) !== JSON.stringify(e.tags)) {
-        await writeNoteFile({ ...n, path: target, pinned: e.pinned, tags: [...e.tags] })
+      if (n.pinned !== e.pinned || (n.parentId ?? null) !== (e.parentId ?? null) || JSON.stringify(n.tags) !== JSON.stringify(e.tags)) {
+        await writeNoteFile({ ...n, path: target, pinned: e.pinned, parentId: e.parentId ?? null, tags: [...e.tags] })
         changed = true
       }
       const local = noteToEntry(n)
@@ -285,6 +287,7 @@ function entryToNote(id: string, e: NoteEntry, path: string, content: string): N
     folder: e.folder,
     tags: [...e.tags],
     pinned: e.pinned,
+    parentId: e.parentId ?? null,
     createdAt: new Date(e.createdAt),
     updatedAt: new Date(),
     wordCount: 0,

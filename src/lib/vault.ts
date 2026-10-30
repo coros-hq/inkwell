@@ -20,6 +20,7 @@
  *   updated: 2024-01-15T11:00:00.000Z
  *   pinned: false
  *   tags: []
+ *   parent: note-0987654321   (optional: id of the note this one is nested under)
  *   ---
  *
  *   # Note Title
@@ -103,6 +104,7 @@ interface FrontmatterMeta {
   updated: string
   pinned: boolean
   tags: string[]
+  parent?: string | null
 }
 
 function parseFrontmatter(raw: string): { meta: Partial<FrontmatterMeta>; body: string } {
@@ -127,6 +129,7 @@ function parseFrontmatter(raw: string): { meta: Partial<FrontmatterMeta>; body: 
       case 'created': meta.created = val; break
       case 'updated': meta.updated = val; break
       case 'pinned':  meta.pinned  = val === 'true'; break
+      case 'parent':  meta.parent  = val || null; break
       case 'tags':
         meta.tags = val === '[]' ? [] : val.replace(/[\[\]]/g, '').split(',').map(t => t.trim()).filter(Boolean)
         break
@@ -137,7 +140,8 @@ function parseFrontmatter(raw: string): { meta: Partial<FrontmatterMeta>; body: 
 
 function serializeFrontmatter(meta: FrontmatterMeta, body: string): string {
   const tagStr = meta.tags.length === 0 ? '[]' : `[${meta.tags.join(', ')}]`
-  return `---\nid: ${meta.id}\ncreated: ${meta.created}\nupdated: ${meta.updated}\npinned: ${meta.pinned}\ntags: ${tagStr}\n---\n\n${body}`
+  const parentLine = meta.parent ? `parent: ${meta.parent}\n` : ''
+  return `---\nid: ${meta.id}\ncreated: ${meta.created}\nupdated: ${meta.updated}\npinned: ${meta.pinned}\ntags: ${tagStr}\n${parentLine}---\n\n${body}`
 }
 
 // Notes read from a file without an `id:` in its frontmatter get a fresh
@@ -282,6 +286,7 @@ async function readDirectory(
         folder: folderRelPath,
         tags: meta.tags ?? [],
         pinned: meta.pinned ?? false,
+        parentId: meta.parent ?? null,
         createdAt: meta.created ? new Date(meta.created) : new Date(),
         updatedAt: meta.updated ? new Date(meta.updated) : new Date(),
         wordCount: body.trim().split(/\s+/).filter(Boolean).length,
@@ -352,6 +357,7 @@ export async function readVaultFS(vaultPath: string): Promise<VaultData | null> 
         folder: null,
         tags: meta.tags ?? [],
         pinned: meta.pinned ?? false,
+        parentId: meta.parent ?? null,
         createdAt: meta.created ? new Date(meta.created) : new Date(),
         updatedAt: meta.updated ? new Date(meta.updated) : new Date(),
         wordCount: body.trim().split(/\s+/).filter(Boolean).length,
@@ -414,6 +420,7 @@ export async function writeNoteFile(note: Note): Promise<void> {
     updated: note.updatedAt.toISOString(),
     pinned: note.pinned,
     tags: note.tags,
+    parent: note.parentId ?? null,
   }
   await writeFileAtomic(note.path, serializeFrontmatter(meta, note.content))
   ephemeralNoteIds.delete(note.id)

@@ -11,6 +11,8 @@ export interface Note {
   folder: string | null
   tags: string[]
   pinned: boolean
+  /** Id of the parent note when this note is nested under another; null/undefined for top-level notes. */
+  parentId?: string | null
   createdAt: Date
   updatedAt: Date
   wordCount: number
@@ -120,12 +122,21 @@ export interface BrainstormNode {
   children: BrainstormNode[]
 }
 
+/** A cross-link between two nodes that aren't (necessarily) parent and child, like an XMind relationship. */
+export interface BrainstormRelation {
+  id: string
+  from: string
+  to: string
+  label?: string
+}
+
 export interface Brainstorm {
   id: string
   title: string
   createdAt: string
   updatedAt: string
   root: BrainstormNode[]
+  relations?: BrainstormRelation[]
 }
 
 // ─── Calendar (personal weekly planner) ───────────────────────────────────────
