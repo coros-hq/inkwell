@@ -1262,7 +1262,7 @@ export function Sidebar() {
     >
       <div
         className={cn(
-          "shrink-0 flex flex-col h-full overflow-hidden relative border-r border-border-strong",
+          "shrink-0 flex flex-col h-full overflow-hidden relative",
           // glass = translucent tint over the native macOS blur (see set_vibrancy); no CSS blur
           sidebarGlass ? "glass-pane" : "bg-sidebar",
         )}
@@ -1343,7 +1343,7 @@ export function Sidebar() {
         <div className="flex-1 overflow-y-auto px-2 space-y-5">
           <div>
             <p className={sectionHeading}>Quick links</p>
-            <QuickLink icon={FileText} label="Notes" active={activeView === "notes"} onClick={() => setActiveView("notes")} />
+            <QuickLink icon={FileText} label="Notes" active={activeView === "notes"} onClick={() => { clearFolderSelection(); setActiveView("notes"); }} />
             <QuickLink icon={LayoutGrid} label="Board" active={activeView === "board"} onClick={() => setActiveView("board")} />
             {brainstormEnabled && (
               <QuickLink icon={Lightbulb} label="Brainstorm" active={activeView === "brainstorm"} onClick={() => setActiveView("brainstorm")} />
@@ -1549,7 +1549,7 @@ export function Sidebar() {
         )}
 
         {/* Settings button */}
-        <div className={cn("px-2 py-2 border-t border-border shrink-0", !updateInfo && "mt-auto")}>
+        <div className={cn("px-2 py-2 shrink-0", !updateInfo && "mt-auto")}>
           <SettingsDialog />
         </div>
 

@@ -51,7 +51,7 @@ export function NoteList() {
 
   let displayNotes = folder
     ? folder.notes
-    : notes.filter(n => n.folder === null)
+    : notes
   displayNotes = [...displayNotes].sort((a, b) =>
     sortBy === 'date'
       ? b.updatedAt.getTime() - a.updatedAt.getTime()
@@ -74,7 +74,7 @@ export function NoteList() {
   return (
     <div
       className={cn(
-        'w-[272px] shrink-0 flex flex-col h-full overflow-hidden border-r border-border-strong',
+        'w-[272px] shrink-0 flex flex-col h-full overflow-hidden',
         bodyGlass ? 'glass-pane' : 'bg-sidebar',
       )}
       style={bodyGlass ? glassBg('sidebar', glassOpacity, theme) : undefined}

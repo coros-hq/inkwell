@@ -1,16 +1,16 @@
 # Graph Report - inkwell  (2026-10-30)
 
 ## Corpus Check
-- 162 files · ~267,012 words
+- 162 files · ~268,147 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1906 nodes · 4545 edges · 147 communities (101 shown, 46 thin omitted)
-- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 115 edges (avg confidence: 0.67)
+- 1914 nodes · 4568 edges · 143 communities (97 shown, 46 thin omitted)
+- Extraction: 97% EXTRACTED · 3% INFERRED · 0% AMBIGUOUS · INFERRED: 116 edges (avg confidence: 0.67)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `f6272f9d`
+- Built from commit: `f343fc62`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -147,19 +147,15 @@
 - [[_COMMUNITY_manifest.ts|manifest.ts]]
 - [[_COMMUNITY_.scheduleSave|.scheduleSave]]
 - [[_COMMUNITY_BoardView.tsx|BoardView.tsx]]
-- [[_COMMUNITY_remarkChartCodeBlocks|remarkChartCodeBlocks]]
 - [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
 - [[_COMMUNITY_calendar.rs|calendar.rs]]
 - [[_COMMUNITY_main.tsx|main.tsx]]
 - [[_COMMUNITY_VaultPicker.tsx|VaultPicker.tsx]]
-- [[_COMMUNITY_BrainstormEmbed.tsx|BrainstormEmbed.tsx]]
-- [[_COMMUNITY_remarkChartCodeBlocks|remarkChartCodeBlocks]]
-- [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
 - [[_COMMUNITY_ShellScopeEntryAllowedArg|ShellScopeEntryAllowedArg]]
 
 ## God Nodes (most connected - your core abstractions)
-1. `cn()` - 149 edges
-2. `useAppStore` - 112 edges
+1. `cn()` - 148 edges
+2. `useAppStore` - 113 edges
 3. `CanvasView()` - 49 edges
 4. `Json` - 48 edges
 5. `VaultSession` - 39 edges
@@ -187,19 +183,19 @@
 ## Hyperedges (group relationships)
 - **Excalidraw Iframe Bridge Data Flow** — public_excalidraw_frame_html, public_excalidraw_frame_html_postmessage_protocol, public_excalidraw_frame_html_schedulechange, canvas_feature_design_data_flow, canvas_feature_design_storage_model [INFERRED 0.85]
 
-## Communities (147 total, 46 thin omitted)
+## Communities (143 total, 46 thin omitted)
 
 ### Community 0 - "App Shell & Note Editing"
 Cohesion: 0.08
-Nodes (64): addChild(), BrainstormView(), FocusRequest, Mode, Outline(), OutlineRow(), readMode(), RowProps (+56 more)
+Nodes (61): addChild(), BrainstormView(), FocusRequest, Mode, Outline(), OutlineRow(), readMode(), RowProps (+53 more)
 
 ### Community 1 - "Board/Task Card Components"
-Cohesion: 0.16
-Nodes (23): LinksPanel(), LinksPanelProps, EditorPane(), NoteList(), NoteListEmpty(), confirmDeleteFolder(), confirmDeleteFolderById(), confirmDeleteFolderItem() (+15 more)
+Cohesion: 0.19
+Nodes (19): EditorPane(), NoteList(), NoteListEmpty(), confirmDeleteFolder(), confirmDeleteFolderById(), confirmDeleteFolderItem(), confirmDeleteNote(), confirmDeleteNotes() (+11 more)
 
 ### Community 2 - "Editor Toolbar & Attachments"
-Cohesion: 0.10
-Nodes (25): react, ContentSegment, EMBED_IMAGE_EXTS, EMBED_VIDEO_EXTS, embedFileType(), ExportModeContext, extractText(), getVideoEmbed() (+17 more)
+Cohesion: 0.05
+Nodes (48): react, BoardEmbed(), COLUMN_DOT, formatDue(), PRIORITY_DOT, TaskCardMini(), TaskEmbed(), ContentSegment (+40 more)
 
 ### Community 3 - "NPM Dependencies (runtime)"
 Cohesion: 0.04
@@ -210,12 +206,12 @@ Cohesion: 0.26
 Nodes (22): error_content(), GhClient, handle(), handle_get_file(), handle_get_readme(), handle_list_repos(), handle_push_file(), handle_update_readme() (+14 more)
 
 ### Community 6 - "Canvas Template Previews"
-Cohesion: 0.09
-Nodes (4): TEMPLATES, CanvasTemplatesPicker(), PREVIEWS, Props
+Cohesion: 0.08
+Nodes (5): DiagramTemplate, TEMPLATES, CanvasTemplatesPicker(), PREVIEWS, Props
 
 ### Community 7 - "Canvas Geometry & Rendering"
-Cohesion: 0.08
-Nodes (54): distToPolyline(), distToSegment(), hitTest(), recolorTemplateShapes(), shapeBounds(), unrotatePoint(), adaptInk(), adaptShape() (+46 more)
+Cohesion: 0.10
+Nodes (47): recolorTemplateShapes(), shapeBounds(), adaptInk(), adaptShape(), applyBoundsToShape(), applyRotation(), boundFont(), cachedRoughDraw() (+39 more)
 
 ### Community 8 - "GitHub Sync Settings UI"
 Cohesion: 0.18
@@ -238,12 +234,12 @@ Cohesion: 0.11
 Nodes (18): compilerOptions, allowImportingTsExtensions, isolatedModules, jsx, lib, module, moduleResolution, noEmit (+10 more)
 
 ### Community 13 - "Canvas Category Elements"
-Cohesion: 0.18
-Nodes (15): ARCH_ELEMENTS, CATEGORY_ELEMENTS, CategoryElement, DB_ELEMENTS, DESIGN_ELEMENTS, DIAGRAM_ELEMENTS, s(), txt() (+7 more)
+Cohesion: 0.20
+Nodes (14): ARCH_ELEMENTS, CATEGORY_ELEMENTS, CategoryElement, DB_ELEMENTS, DESIGN_ELEMENTS, DIAGRAM_ELEMENTS, s(), txt() (+6 more)
 
 ### Community 14 - "Export & Share Preview"
-Cohesion: 0.11
-Nodes (38): LocalImage(), slugifyTitle(), addExternalFileToVault(), emptyAppData(), ephemeralNoteIds, errText(), externalNoteId(), ExternalNoteResult (+30 more)
+Cohesion: 0.10
+Nodes (39): addExternalFileToVault(), emptyAppData(), ephemeralNoteIds, errText(), externalNoteId(), ExternalNoteResult, extractTitle(), fileSearchCache (+31 more)
 
 ### Community 15 - "Sidebar Drag-and-Drop"
 Cohesion: 0.36
@@ -251,11 +247,11 @@ Nodes (8): baseName(), getFilteredNotes(), navigateToNote(), navigateToWikiLink(
 
 ### Community 16 - "Tauri Desktop Capability Schema"
 Cohesion: 0.12
-Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArgs, Target (+8 more)
+Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArg, Target (+8 more)
 
 ### Community 17 - "Tauri macOS Capability Schema"
-Cohesion: 0.12
-Nodes (16): anyOf, description, definitions, Application, Number, PermissionEntry, ShellScopeEntryAllowedArgs, Target (+8 more)
+Cohesion: 0.13
+Nodes (15): anyOf, description, definitions, Application, Identifier, Number, PermissionEntry, Target (+7 more)
 
 ### Community 18 - "Project README & Build Config"
 Cohesion: 0.33
@@ -270,12 +266,12 @@ Cohesion: 0.06
 Nodes (39): activeLineSet(), buildChartDecorations(), buildDataTableDecorations(), buildFileEmbedDecorations(), buildLiveMarkdownDecorations(), buildMathDecorations(), buildRefEmbedDecorations(), buildTableDecorations() (+31 more)
 
 ### Community 21 - "macOS Schema Property Defs"
-Cohesion: 0.15
-Nodes (13): properties, Identifier, description, oneOf, type, default, description, type (+5 more)
+Cohesion: 0.18
+Nodes (11): properties, default, description, type, description, type, description, identifier (+3 more)
 
 ### Community 23 - "Tauri Desktop Schema Properties"
-Cohesion: 0.15
-Nodes (13): properties, Identifier, description, oneOf, type, default, description, type (+5 more)
+Cohesion: 0.14
+Nodes (14): properties, default, description, type, type, default, description, type (+6 more)
 
 ### Community 24 - "NPM Dev Dependencies"
 Cohesion: 0.15
@@ -298,16 +294,16 @@ Cohesion: 0.20
 Nodes (9): name, private, scripts, build, dev, preview, tauri, type (+1 more)
 
 ### Community 29 - "Note List & Deletion"
-Cohesion: 0.20
-Nodes (11): BoardRefDialog(), BrainstormRefDialog(), EditorViewContext, EditorViewProvider(), useEditorViewRef(), ViewRef, NoteSearchBar(), NoteSearchBarProps (+3 more)
+Cohesion: 0.13
+Nodes (17): BoardRefDialog(), EditorViewContext, EditorViewProvider(), useEditorViewRef(), ViewRef, NoteSearchBar(), NoteSearchBarProps, HeadingTick (+9 more)
 
 ### Community 30 - "Date Picker Component"
-Cohesion: 0.19
-Nodes (17): PreloadContext, Format, FORMATS, MIME_MAP, mimeFor(), parseLocalPaths(), preloadAssets(), ShareDialog() (+9 more)
+Cohesion: 0.16
+Nodes (19): SyncSection(), describeError(), git(), gitAddAll(), GitCommandError, gitCommit(), gitCurrentBranch(), gitHasRemoteBranch() (+11 more)
 
 ### Community 31 - "File Embed Widget (Editor)"
-Cohesion: 0.28
-Nodes (12): ArrowShape, Base, EllipseShape, hitTopmost(), ImageShape, isHollowContainer(), LineShape, nearOutline() (+4 more)
+Cohesion: 0.24
+Nodes (16): ArrowShape, Base, distToPolyline(), distToSegment(), EllipseShape, hitTest(), hitTopmost(), ImageShape (+8 more)
 
 ### Community 32 - "Desktop Schema Array Defs"
 Cohesion: 0.20
@@ -330,12 +326,12 @@ Cohesion: 0.50
 Nodes (4): Kanban Board View, table-test.html (Task Table Test Page), dueInfo() Function, Task Status Badges (Not Started/In Progress/Complete/Blocked)
 
 ### Community 37 - "Canvas Shape Type Definitions"
-Cohesion: 0.21
-Nodes (19): GitBranchSection(), GitHubSyncDialog(), Props, PushResult, getFile(), getGithubOwner(), getGithubToken(), ghFetch() (+11 more)
+Cohesion: 0.20
+Nodes (20): GitBranchSection(), GitHubSyncDialog(), Props, PushResult, getFile(), getGithubOwner(), getGithubToken(), ghFetch() (+12 more)
 
 ### Community 38 - "GitHubSyncDialog.tsx"
-Cohesion: 0.09
-Nodes (25): ColumnHeader(), CommitInput(), DataTable(), DataTableProps, MenuItem(), OptionColorButton(), SelectCell(), TYPE_ICONS (+17 more)
+Cohesion: 0.11
+Nodes (26): ColumnHeader(), CommitInput(), DataTable(), DataTableProps, MenuItem(), OptionColorButton(), SelectCell(), TYPE_ICONS (+18 more)
 
 ### Community 40 - "Kanban Column Context Menu"
 Cohesion: 0.18
@@ -346,8 +342,8 @@ Cohesion: 0.32
 Nodes (21): app_executable(), ClaudeMcpStatus, config_path(), desired_entry(), disabled_marker(), home_dir(), is_registered(), read_config() (+13 more)
 
 ### Community 42 - "BoardView.tsx"
-Cohesion: 0.05
-Nodes (39): describeError(), git(), gitAddAll(), GitCommandError, gitCommit(), gitCurrentBranch(), gitHasRemoteBranch(), gitInit() (+31 more)
+Cohesion: 0.06
+Nodes (25): macStatus(), VaultRole, checkForAppUpdate(), calendarPath(), readCalendarFile(), watchCalendarFile(), writeCalendarFile(), applyNoteTags() (+17 more)
 
 ### Community 43 - "Desktop Schema Remote Capability"
 Cohesion: 0.25
@@ -366,8 +362,8 @@ Cohesion: 0.17
 Nodes (14): AppHandle, ClaudeMcpStatus, claude_mcp_set_enabled(), claude_mcp_status(), list_system_fonts(), Result, String, Vec (+6 more)
 
 ### Community 47 - "attachments.ts"
-Cohesion: 0.11
-Nodes (26): EventCardBody(), CanvasNotesSheet(), PresenceAvatars(), STATUS_DOT, STATUS_LABEL, AttachmentsBar(), BoardEmbed(), ConflictBanner() (+18 more)
+Cohesion: 0.06
+Nodes (51): BoardTaskDrawer(), OldTaskDrawer(), PRIORITY_COLORS, PRIORITY_DOT, PRIORITY_TEXT, STATUS_COLORS, STATUS_LABELS, TaskDrawer() (+43 more)
 
 ### Community 48 - "JoinVaultDialog.tsx"
 Cohesion: 0.24
@@ -382,8 +378,8 @@ Cohesion: 0.33
 Nodes (5): description, identifier, permissions, $schema, windows
 
 ### Community 52 - "CanvasNotesSheet.tsx"
-Cohesion: 0.16
-Nodes (41): EKCalendar, EKEvent, EKEventStore, FnOnce, NSDate, NSString, Retained, Send (+33 more)
+Cohesion: 0.15
+Nodes (46): EKCalendar, EKEvent, EKEventStore, FnOnce, Job, NSDate, NSString, Receiver (+38 more)
 
 ### Community 53 - "Desktop Schema Root"
 Cohesion: 0.40
@@ -398,36 +394,36 @@ Cohesion: 0.50
 Nodes (4): description, required, type, Capability
 
 ### Community 56 - "FileEmbedWidget"
-Cohesion: 0.25
-Nodes (7): activeDeco, matchDeco, searchHighlightExtension, searchHighlightField, SearchHighlightSpec, searchHighlightTheme, setSearchHighlights
+Cohesion: 0.18
+Nodes (14): ColorRow(), DARK_DEFAULTS, LIGHT_DEFAULTS, normalizeHex(), ThemeEditor(), ThemeEditorProps, ALL_VAR_NAMES, clamp() (+6 more)
 
 ### Community 57 - "macOS Schema Capability Type"
 Cohesion: 0.50
 Nodes (4): description, required, type, Capability
 
 ### Community 58 - "Desktop Shell Scope Args"
-Cohesion: 0.19
-Nodes (19): downloadAttachment(), objectPath(), uploadAttachment(), clearSyncData(), Structure, AwarenessState, DocEntry, joinVaultInto() (+11 more)
+Cohesion: 0.20
+Nodes (18): JoinVaultDialog(), linkedVaultIds(), Props, getSession(), clearSyncData(), folderHasContent(), joinVaultInto(), leaveVaultOnThisDevice() (+10 more)
 
 ### Community 59 - "gitSync.ts"
-Cohesion: 0.19
-Nodes (12): flattenFolders(), pruneTree(), ResultsProps, SectionProps, TagFolderResults(), TagNode, TagsSection(), ALL_ICONS (+4 more)
+Cohesion: 0.23
+Nodes (14): Content, contentOf(), isImported(), linkOf(), macDeleteEvent(), macEnsureInkwellCalendar(), MacEventDto, macListCalendars() (+6 more)
 
 ### Community 60 - "macOS Schema Identifier Type"
 Cohesion: 0.40
 Nodes (4): A few tips, Markdown basics, Welcome to inkwell ✒️, What you can do
 
 ### Community 61 - "NoteSearchBar.tsx"
-Cohesion: 0.10
-Nodes (22): Props, MarkdownEditorProps, QuickNoteEditor, QuickNoteEditorHandle, QuickNoteEditorProps, autocompleteTheme, chartPreviewField, codeHighlighting (+14 more)
+Cohesion: 0.09
+Nodes (33): CanvasNotesSheet(), Props, MarkdownEditor(), MarkdownEditorProps, QuickNoteEditor, QuickNoteEditorHandle, QuickNoteEditorProps, MarkdownField() (+25 more)
 
 ### Community 62 - "macOS Schema Value Type"
 Cohesion: 0.67
 Nodes (3): Value, anyOf, description
 
 ### Community 69 - "Vite Config"
-Cohesion: 0.15
-Nodes (25): EditorToolbar(), MarkdownEditor(), MarkdownField(), MarkdownFieldProps, makeAttachmentMarkdown(), pickAndCopyAttachment(), createFileEmbedPlugin(), applyBlockFormat() (+17 more)
+Cohesion: 0.19
+Nodes (17): EditorToolbar(), SplitViewProps, applyBlockFormat(), applyBulletColorFormat(), applyColorFormat(), applyFormatAction(), changeListIndent(), COLOR_TAGS (+9 more)
 
 ### Community 71 - "index.ts"
 Cohesion: 0.29
@@ -458,88 +454,80 @@ Cohesion: 0.26
 Nodes (9): CollabGlobals(), Props, SignInDialog(), completeAuthCallback(), signIn(), signOut(), signUp(), isSupabaseConfigured (+1 more)
 
 ### Community 112 - "ShellScopeEntryAllowedArgs"
-Cohesion: 0.09
-Nodes (25): DragItemData, DropIndicator, DropLine(), DropPosition, findFolderById(), findFolderChildren(), findNotesInFolder(), flatFolders() (+17 more)
+Cohesion: 0.08
+Nodes (29): DragItemData, DropIndicator, DropLine(), DropPosition, findFolderById(), findFolderChildren(), findNotesInFolder(), flatFolders() (+21 more)
 
 ### Community 113 - "FontPicker.tsx"
-Cohesion: 0.12
-Nodes (17): BoardTaskDrawer(), OldTaskDrawer(), PRIORITY_COLORS, PRIORITY_DOT, PRIORITY_TEXT, STATUS_COLORS, STATUS_LABELS, TaskDrawer() (+9 more)
+Cohesion: 0.27
+Nodes (9): Calendar(), CalendarProps, DatePicker(), DatePickerProps, DAYS, getDaysInMonth(), getFirstDayOfMonth(), isSameDay() (+1 more)
 
 ### Community 115 - "vaultWatcher.ts"
-Cohesion: 0.08
-Nodes (25): attachmentExistsLocally(), base64ToBytes(), bytesToBase64, bytesToPgHex(), hashText(), pgHexToBytes(), decodeOutbox(), docFile() (+17 more)
+Cohesion: 0.06
+Nodes (53): attachmentExistsLocally(), downloadAttachment(), objectPath(), uploadAttachment(), base64ToBytes(), bytesToBase64, bytesToPgHex(), hashText() (+45 more)
 
 ### Community 116 - "description"
-Cohesion: 0.19
-Nodes (18): KanbanColumnProps, patchYMapFromArray(), Peer, SyncStatus, AppData, BoardsData, FolderMeta, TagDef (+10 more)
+Cohesion: 0.08
+Nodes (39): ActiveDrag, BoardView(), ColGap(), DropIndicator, COLOR_DOT, KanbanColumn(), KanbanColumnProps, formatDue() (+31 more)
 
 ### Community 117 - "ShellScopeEntryAllowedArg"
-Cohesion: 0.07
-Nodes (58): AllDayCell(), CalendarView(), ColorPicker(), CreateEventDialog(), CreateSeed, DateField(), DayHeader(), EndDateField() (+50 more)
+Cohesion: 0.14
+Nodes (34): CalendarView(), CreateEventDialog(), CreateSeed, DateField(), EndDateField(), EventSheet(), GRID_COLS, GridColumn() (+26 more)
 
 ### Community 118 - "TabsBlock.tsx"
 Cohesion: 0.10
-Nodes (22): AbbreviationsSection(), ClaudeMcpStatus, ClaudeSection(), CustomThemeCard(), EDITOR_WIDTH_OPTIONS, FONT_OPTIONS, FONT_SIZE_OPTIONS, formatVaultDate() (+14 more)
+Nodes (22): ClaudeMcpStatus, ClaudeSection(), CustomThemeCard(), EDITOR_WIDTH_OPTIONS, FONT_OPTIONS, FONT_SIZE_OPTIONS, formatVaultDate(), LINE_HEIGHT_OPTIONS (+14 more)
 
 ### Community 119 - "useAppStore"
-Cohesion: 0.18
-Nodes (12): Props, TabsBlock(), defaultTableSpec(), slashCompletion(), TabsWidget, defaultTabsSpec(), newTabId(), NoteTab (+4 more)
+Cohesion: 0.35
+Nodes (10): Props, TabsBlock(), slashCompletion(), defaultTabsSpec(), newTabId(), NoteTab, parseTabsSpec(), serializeTabsSpec() (+2 more)
 
 ### Community 120 - "searchHighlightExtension.ts"
-Cohesion: 0.18
-Nodes (14): AttachmentCard(), AttachmentsBarProps, AttachmentChip(), AttachmentChipProps, deleteAttachmentFile(), detectType(), fileIcon(), formatFileSize() (+6 more)
+Cohesion: 0.15
+Nodes (18): AttachmentCard(), AttachmentsBarProps, MediaItem(), MediaPanel(), MediaPanelProps, PreviewFileEmbed(), AttachmentChip(), AttachmentChipProps (+10 more)
 
 ### Community 121 - "MarkdownChart"
-Cohesion: 0.25
-Nodes (7): COLUMN_DOT, formatDue(), PRIORITY_DOT, TaskCardMini(), TaskEmbed(), openBoard(), openTask()
+Cohesion: 0.38
+Nodes (10): VaultSection(), VaultPicker(), addRecentVault(), ensureVaultDirectory(), getRecentVaults(), getSuggestedVaultPath(), isEmptyVault(), pickVaultDirectory() (+2 more)
 
 ### Community 122 - "writeNoteFile"
 Cohesion: 0.27
 Nodes (12): BoundText, Point, absPoints(), base(), ExcalidrawScene, excalidrawToShapes(), ExEl, fillOf() (+4 more)
 
-### Community 123 - "noteReferences.tsx"
-Cohesion: 0.67
-Nodes (5): focusEditor(), focusFileNav(), focusNavList(), getNavRows(), handleListKeyNav()
-
-### Community 125 - "DataTableWidget"
-Cohesion: 0.50
-Nodes (4): default, description, type, description
-
 ### Community 127 - ".scheduleSave"
 Cohesion: 0.60
 Nodes (5): imageFilesToShapes(), loadImage(), readAsDataUrl(), toEmbeddedImage(), uid()
+
+### Community 128 - "description"
+Cohesion: 0.50
+Nodes (4): default, description, type, local
 
 ### Community 129 - "ShellScopeEntryAllowedArg"
 Cohesion: 0.60
 Nodes (5): adopt(), fulfilled(), rejected(), step(), verb()
 
 ### Community 130 - "ShellScopeEntryAllowedArgs"
-Cohesion: 0.50
-Nodes (4): default, description, type, description
+Cohesion: 0.67
+Nodes (3): Identifier, description, oneOf
 
 ### Community 131 - "main.tsx"
-Cohesion: 0.10
-Nodes (41): AppShell(), closeThisWindow(), QuickNoteCapture(), VaultSection(), ColorRow(), DARK_DEFAULTS, LIGHT_DEFAULTS, normalizeHex() (+33 more)
+Cohesion: 0.15
+Nodes (23): App(), AppShell(), closeThisWindow(), QuickNoteCapture(), onAuthStateChange(), focusEditor(), focusFileNav(), focusNavList() (+15 more)
 
 ### Community 132 - "SplitView.tsx"
 Cohesion: 0.57
 Nodes (5): FontPicker(), FontPickerProps, listSystemFonts(), localFontStack(), primaryFamily()
 
 ### Community 133 - "manifest.ts"
-Cohesion: 0.19
-Nodes (18): ApplyContext, applyManifestToDisk(), basename(), entryToNote(), flattenFolderIds(), FolderEntry, isUnder(), ManifestMaps (+10 more)
+Cohesion: 0.67
+Nodes (3): ShellScopeEntryAllowedArgs, anyOf, description
 
 ### Community 136 - ".scheduleSave"
-Cohesion: 0.18
-Nodes (12): isSelfWrite(), recentWrites, calendarPath(), readCalendarFile(), watchCalendarFile(), writeCalendarFile(), FsWatchEvent, NOOP_HANDLE (+4 more)
+Cohesion: 0.32
+Nodes (6): isSelfWrite(), recentWrites, FsWatchEvent, NOOP_HANDLE, startVaultWatcher(), VaultWatcherHandle
 
 ### Community 137 - "BoardView.tsx"
-Cohesion: 0.15
-Nodes (12): ActiveDrag, BoardView(), ColGap(), DropIndicator, COLOR_DOT, KanbanColumn(), formatDue(), PRIORITY_DOT (+4 more)
-
-### Community 138 - "remarkChartCodeBlocks"
-Cohesion: 0.39
-Nodes (8): JoinVaultDialog(), linkedVaultIds(), Props, getSession(), folderHasContent(), getMyVaultRole(), listSharedVaults(), getInitials()
+Cohesion: 0.67
+Nodes (3): ShellScopeEntryAllowedArgs, anyOf, description
 
 ### Community 139 - "ShellScopeEntryAllowedArg"
 Cohesion: 0.17
@@ -550,20 +538,12 @@ Cohesion: 0.27
 Nodes (17): apply_fields(), calendar_path(), call(), describe(), is_date(), load(), new_id(), Map (+9 more)
 
 ### Community 141 - "main.tsx"
-Cohesion: 0.43
-Nodes (5): App(), installExternalLinkHandler(), isExternalUrl(), openExternalUrl(), isQuickNote
+Cohesion: 1.00
+Nodes (3): installExternalLinkHandler(), isExternalUrl(), openExternalUrl()
 
 ### Community 142 - "VaultPicker.tsx"
-Cohesion: 0.16
-Nodes (16): writeJsonAtomic(), switchVault(), getVaultSession(), getGlobalCanvasPath(), readGlobalCanvasFile(), writeBoardsFile(), writeBrainstormsFile(), writeFoldersFile() (+8 more)
-
-### Community 143 - "BrainstormEmbed.tsx"
-Cohesion: 0.67
-Nodes (3): BrainstormEmbed(), openBrainstorm(), Row()
-
-### Community 145 - "ShellScopeEntryAllowedArg"
-Cohesion: 0.67
-Nodes (3): ShellScopeEntryAllowedArg, anyOf, description
+Cohesion: 0.14
+Nodes (19): AbbreviationsSection(), writeJsonAtomic(), switchVault(), getVaultSession(), patchYMapFromArray(), getGlobalCanvasPath(), readGlobalCanvasFile(), writeBoardsFile() (+11 more)
 
 ### Community 146 - "ShellScopeEntryAllowedArg"
 Cohesion: 0.67
@@ -583,10 +563,10 @@ _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `CanvasView Component` and `excalidraw-frame.html (Iframe Bridge)`?**
   _Edge tagged AMBIGUOUS (relation: conceptually_related_to) - confidence is low._
-- **Why does `useAppStore` connect `attachments.ts` to `App Shell & Note Editing`, `Board/Task Card Components`, `Editor Toolbar & Attachments`, `main.tsx`, `manifest.ts`, `Canvas Geometry & Rendering`, `BoardView.tsx`, `Board Drag & Attachments UI`, `remarkChartCodeBlocks`, `ShellScopeEntryAllowedArg`, `VaultPicker.tsx`, `BrainstormEmbed.tsx`, `Sidebar Drag-and-Drop`, `CodeMirror Editor Decorations`, `Weekly Planner View`, `Note List & Deletion`, `Canvas Shape Type Definitions`, `BoardView.tsx`, `Desktop Shell Scope Args`, `gitSync.ts`, `NoteSearchBar.tsx`, `Vite Config`, `local`, `JoinVaultDialog.tsx`, `ShellScopeEntryAllowedArgs`, `FontPicker.tsx`, `vaultWatcher.ts`, `ShellScopeEntryAllowedArg`, `TabsBlock.tsx`, `searchHighlightExtension.ts`, `MarkdownChart`?**
-  _High betweenness centrality (0.078) - this node is a cross-community bridge._
-- **Why does `cn()` connect `attachments.ts` to `App Shell & Note Editing`, `Board/Task Card Components`, `Editor Toolbar & Attachments`, `main.tsx`, `SplitView.tsx`, `Canvas Template Previews`, `Canvas Geometry & Rendering`, `BoardView.tsx`, `Board Drag & Attachments UI`, `remarkChartCodeBlocks`, `ShellScopeEntryAllowedArg`, `Canvas Category Elements`, `BrainstormEmbed.tsx`, `Weekly Planner View`, `Canvas Toolbar UI`, `Note List & Deletion`, `Date Picker Component`, `Canvas Shape Type Definitions`, `GitHubSyncDialog.tsx`, `gitSync.ts`, `NoteSearchBar.tsx`, `Vite Config`, `local`, `JoinVaultDialog.tsx`, `ShellScopeEntryAllowedArgs`, `FontPicker.tsx`, `ShellScopeEntryAllowedArg`, `TabsBlock.tsx`, `useAppStore`, `searchHighlightExtension.ts`, `MarkdownChart`?**
-  _High betweenness centrality (0.078) - this node is a cross-community bridge._
+- **Why does `cn()` connect `attachments.ts` to `App Shell & Note Editing`, `Board/Task Card Components`, `Editor Toolbar & Attachments`, `main.tsx`, `SplitView.tsx`, `Canvas Template Previews`, `Canvas Geometry & Rendering`, `Board Drag & Attachments UI`, `ShellScopeEntryAllowedArg`, `Canvas Category Elements`, `Weekly Planner View`, `Canvas Toolbar UI`, `Note List & Deletion`, `Date Picker Component`, `Canvas Shape Type Definitions`, `GitHubSyncDialog.tsx`, `FileEmbedWidget`, `Desktop Shell Scope Args`, `NoteSearchBar.tsx`, `Vite Config`, `local`, `JoinVaultDialog.tsx`, `ShellScopeEntryAllowedArgs`, `FontPicker.tsx`, `description`, `ShellScopeEntryAllowedArg`, `TabsBlock.tsx`, `useAppStore`, `searchHighlightExtension.ts`, `MarkdownChart`?**
+  _High betweenness centrality (0.083) - this node is a cross-community bridge._
+- **Why does `useAppStore` connect `attachments.ts` to `App Shell & Note Editing`, `Board/Task Card Components`, `Editor Toolbar & Attachments`, `main.tsx`, `Canvas Geometry & Rendering`, `Board Drag & Attachments UI`, `ShellScopeEntryAllowedArg`, `VaultPicker.tsx`, `Sidebar Drag-and-Drop`, `CodeMirror Editor Decorations`, `Weekly Planner View`, `Note List & Deletion`, `Date Picker Component`, `Canvas Shape Type Definitions`, `BoardView.tsx`, `Desktop Shell Scope Args`, `NoteSearchBar.tsx`, `Vite Config`, `local`, `JoinVaultDialog.tsx`, `ShellScopeEntryAllowedArgs`, `vaultWatcher.ts`, `description`, `ShellScopeEntryAllowedArg`, `TabsBlock.tsx`, `searchHighlightExtension.ts`, `MarkdownChart`?**
+  _High betweenness centrality (0.076) - this node is a cross-community bridge._
 - **Why does `dependencies` connect `NPM Dependencies (runtime)` to `Editor Toolbar & Attachments`, `package.json Scripts`?**
   _High betweenness centrality (0.064) - this node is a cross-community bridge._
 - **Are the 7 inferred relationships involving `CanvasView()` (e.g. with `s()` and `shapeBounds()`) actually correct?**
@@ -594,4 +574,4 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `name`, `private`, `version` to the rest of the system?**
   _502 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `App Shell & Note Editing` be split into smaller, more focused modules?**
-  _Cohesion score 0.07885968159940762 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08209255533199195 - nodes in this community are weakly interconnected._

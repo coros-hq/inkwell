@@ -65,7 +65,7 @@
     "semantic_hash": ""
   },
   "src-tauri/src/lib.rs": {
-    "mtime": 1793372176.3360682,
+    "mtime": 1793377881.826803,
     "ast_hash": "f21aed336c002bd6fe465dd836c5f049",
     "semantic_hash": ""
   },
@@ -75,7 +75,7 @@
     "semantic_hash": ""
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1793372218.467406,
+    "mtime": 1793377881.8273501,
     "ast_hash": "4d73e9c71506ffbacab46e997cd0e1bb",
     "semantic_hash": ""
   },
@@ -200,18 +200,18 @@
     "semantic_hash": ""
   },
   "src/components/layout/EditorPane.tsx": {
-    "mtime": 1793353896.4575353,
-    "ast_hash": "555733e0b99e1d2f160ccccccd1327d1",
+    "mtime": 1793377881.8282318,
+    "ast_hash": "02ef103d9265e91b93a32d0aa84fb51d",
     "semantic_hash": ""
   },
   "src/components/layout/NoteList.tsx": {
-    "mtime": 1793353896.4577997,
-    "ast_hash": "919e6b9aba67a6c8f7fccdde2142a478",
+    "mtime": 1793398220.3024402,
+    "ast_hash": "9cad5af875b7ac4e15602aeb337283ad",
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
-    "mtime": 1793357680.4735358,
-    "ast_hash": "0f2615739144cde371e74dcd66b8e69b",
+    "mtime": 1793398220.3028262,
+    "ast_hash": "29808cbe3f7bdbf0926c6ac7f9276f40",
     "semantic_hash": ""
   },
   "src/components/quicknote/QuickNoteCapture.tsx": {
@@ -225,8 +225,8 @@
     "semantic_hash": ""
   },
   "src/components/settings/SettingsDialog.tsx": {
-    "mtime": 1793372338.1631327,
-    "ast_hash": "0d54edfd63e74912a61feb99df3d23e2",
+    "mtime": 1793377881.8287146,
+    "ast_hash": "c4abd2850c20c6dfb85108181fea5814",
     "semantic_hash": ""
   },
   "src/components/settings/ThemeEditor.tsx": {
@@ -365,12 +365,12 @@
     "semantic_hash": ""
   },
   "src/store/useAppStore.ts": {
-    "mtime": 1793372318.3205535,
-    "ast_hash": "1a8bbcc0abbe6b16afe7a616b1f6a379",
+    "mtime": 1793377881.82976,
+    "ast_hash": "3b658d8a8a6fc2afc77615ee43388528",
     "semantic_hash": ""
   },
   "src/types/index.ts": {
-    "mtime": 1793372226.0124736,
+    "mtime": 1793377881.8300323,
     "ast_hash": "a0fb6f2a9406e734745839609dc95fde",
     "semantic_hash": ""
   },
@@ -1005,8 +1005,8 @@
     "semantic_hash": ""
   },
   "src/components/calendar/CalendarView.tsx": {
-    "mtime": 1793372351.1757727,
-    "ast_hash": "8eff0e616003b589d73fa5e5018881c8",
+    "mtime": 1793377881.8276854,
+    "ast_hash": "c6421a5bc1aaf520928ad06b2df41c03",
     "semantic_hash": ""
   },
   "src/lib/calendar.ts": {
@@ -1060,8 +1060,8 @@
     "semantic_hash": ""
   },
   "src/components/editor/NoteTagsMenu.tsx": {
-    "mtime": 1793351264.1094453,
-    "ast_hash": "f58542f418d77488b4357d6a7d6ad5a2",
+    "mtime": 1793377881.827949,
+    "ast_hash": "9809a3b535c195fed8d37394681863ec",
     "semantic_hash": ""
   },
   "src-tauri/mcp-server/src/boards.rs": {
@@ -1095,13 +1095,13 @@
     "semantic_hash": ""
   },
   "src-tauri/src/mac_calendar.rs": {
-    "mtime": 1793372218.4444516,
-    "ast_hash": "0db9f0591a05b3ed05ec71285ae58ef3",
+    "mtime": 1793377881.8270738,
+    "ast_hash": "4226b132688c2502674054ac5b4f12d1",
     "semantic_hash": ""
   },
   "src/lib/macCalendar.ts": {
-    "mtime": 1793372269.546166,
-    "ast_hash": "089093f66540e70411b0a11e0fdf95f3",
+    "mtime": 1793377881.8290546,
+    "ast_hash": "96a370149e4f5126c87af04a31158726",
     "semantic_hash": ""
   }
 }
