@@ -12,6 +12,7 @@ import type {
   BoardComment,
   Brainstorm,
   BrainstormNode,
+  BrainstormRelation,
   CalendarEvent,
   LinkedItem,
   Attachment,
@@ -23,6 +24,7 @@ import {
   slugifyTitle,
 } from "../lib/utils";
 import { genId } from "../lib/id";
+import { canNestUnder, collectDescendantIds } from "../lib/noteTree";
 import { getVaultSession, type Peer, type SyncStatus, type VaultRole } from "../lib/sync/vaultSession";
 import {
   writeNoteFile,
@@ -342,7 +344,9 @@ interface AppState {
   setSearchOpen: (open: boolean) => void;
   setSearchQuery: (q: string) => void;
   pinNote: (id: string) => void;
-  createNote: (folderId: string | null) => void;
+  createNote: (folderId: string | null, parentId?: string | null) => void;
+  /** Nests `noteId` under `parentId` (or back to top level with null). Descendants follow. */
+  setNoteParent: (noteId: string, parentId: string | null) => void;
   renameNote: (id: string, title: string) => void;
   renameFolder: (id: string, newName: string) => void;
   createFolder: (name: string, parentId?: string | null) => void;
@@ -390,7 +394,10 @@ interface AppState {
   createBrainstorm: (title?: string) => string;
   renameBrainstorm: (id: string, title: string) => void;
   deleteBrainstorm: (id: string) => void;
-  setBrainstormRoot: (id: string, root: BrainstormNode[]) => void;
+  /** `relations` is left untouched when omitted. */
+  setBrainstormRoot: (id: string, root: BrainstormNode[], relations?: BrainstormRelation[]) => void;
+  /** Adds imported brainstorms and opens the first one. */
+  addBrainstorms: (items: Brainstorm[]) => void;
   brainstormRefRequest: { pos: number } | null;
   // ─── Calendar (personal weekly planner, local-only) ─────────────────────────
   calendarEvents: CalendarEvent[];
@@ -1537,7 +1544,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     }));
   },
 
-  createNote: (folderId) => {
+  createNote: (folderId, parentId = null) => {
     const id = genId("note");
     const { vaultPath } = get();
     const folderAbsPath = folderId
@@ -1551,6 +1558,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       folder: folderId,
       tags: [],
       pinned: false,
+      parentId,
       createdAt: new Date(),
       updatedAt: new Date(),
       wordCount: 0,
@@ -1650,15 +1658,23 @@ export const useAppStore = create<AppState>((set, get) => ({
       : (vaultPath ?? ".");
     const filename = note.path.split("/").pop() ?? `note-${Date.now()}.md`;
     const newAbsPath = `${folderAbsPath}/${filename}`;
+    // A nested note moved away from its parent's folder is detached from it.
+    const parent = note.parentId ? notes.find((n) => n.id === note.parentId) : null;
+    const detach = !!note.parentId && (!parent || parent.folder !== targetFolderId);
     const updatedNote: Note = {
       ...note,
       folder: targetFolderId,
       path: newAbsPath,
+      parentId: detach ? null : note.parentId,
       updatedAt: new Date(),
     };
 
     // Move file on disk
-    renameItem(note.path, newAbsPath).catch(console.error);
+    renameItem(note.path, newAbsPath)
+      .then(() => {
+        if (detach) return writeNoteFile(updatedNote);
+      })
+      .catch(console.error);
 
     set((s) => {
       const withoutOld = removeNoteFromFolderTree(s.folders, noteId);
@@ -1670,6 +1686,36 @@ export const useAppStore = create<AppState>((set, get) => ({
         selectedFolderId: targetFolderId,
       };
     });
+
+    // Children travel with their parent.
+    for (const childId of collectDescendantIds(get().notes, noteId)) {
+      get().moveNote(childId, targetFolderId);
+    }
+  },
+
+  setNoteParent: (noteId, parentId) => {
+    const { notes } = get();
+    const note = notes.find((n) => n.id === noteId);
+    if (!note || note.external) return;
+    if ((note.parentId ?? null) === parentId) return;
+
+    let parent: Note | undefined;
+    if (parentId) {
+      parent = notes.find((n) => n.id === parentId);
+      if (!parent || parent.external || !canNestUnder(notes, noteId, parentId)) return;
+    }
+
+    const updated: Note = { ...note, parentId, updatedAt: new Date() };
+    set((s) => ({
+      notes: s.notes.map((n) => (n.id === noteId ? updated : n)),
+      folders: updateFolderNotes(s.folders, noteId, () => updated),
+    }));
+    persistNote(updated);
+
+    // Nesting under a note in another folder pulls the note (and its children) there.
+    if (parent && parent.folder !== note.folder) {
+      get().moveNote(noteId, parent.folder);
+    }
   },
 
   reorderNote: (noteId, targetFolderId, insertBeforeNoteId) => {
@@ -1710,13 +1756,20 @@ export const useAppStore = create<AppState>((set, get) => ({
       : (vaultPath ?? ".");
     const filename = note.path.split("/").pop()!;
     const newAbsPath = `${folderAbsPath}/${filename}`;
+    const parent = note.parentId ? notes.find((n) => n.id === note.parentId) : null;
+    const detach = !!note.parentId && (!parent || parent.folder !== targetFolderId);
     const updated = {
       ...note,
       folder: targetFolderId,
       path: newAbsPath,
+      parentId: detach ? null : note.parentId,
       updatedAt: new Date(),
     };
-    renameItem(note.path, newAbsPath).catch(console.error);
+    renameItem(note.path, newAbsPath)
+      .then(() => {
+        if (detach) return writeNoteFile(updated);
+      })
+      .catch(console.error);
 
     set((s) => {
       let foldersNew = removeNoteFromFolderTree(s.folders, noteId);
@@ -1740,6 +1793,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       return { folders: foldersNew, notes: notesNew };
     });
+
+    // Children travel with their parent.
+    for (const childId of collectDescendantIds(get().notes, noteId)) {
+      get().moveNote(childId, targetFolderId);
+    }
   },
 
   moveFolder: (folderId, targetParentId, insertBeforeFolderId) => {
@@ -2054,9 +2112,14 @@ export const useAppStore = create<AppState>((set, get) => ({
     persistFolderMeta(vaultPath, get().folderMeta)
   },
 
-  deleteNotes: (ids) => {
-    if (ids.length === 0) return;
-    const idSet = new Set(ids);
+  deleteNotes: (requestedIds) => {
+    if (requestedIds.length === 0) return;
+    // Deleting a parent deletes everything nested under it.
+    const idSet = new Set(requestedIds);
+    for (const id of requestedIds) {
+      for (const childId of collectDescendantIds(get().notes, id)) idSet.add(childId);
+    }
+    const ids = [...idSet];
 
     // Delete files from disk — except external files, which inkwell doesn't own.
     // Removing one from the sidebar only untracks it; the file itself is untouched.
@@ -2201,13 +2264,23 @@ export const useAppStore = create<AppState>((set, get) => ({
     });
     saveBrainstorms(true);
   },
-  setBrainstormRoot: (id, root) => {
+  setBrainstormRoot: (id, root, relations) => {
     set((s) => ({
       brainstorms: s.brainstorms.map((b) =>
-        b.id === id ? { ...b, root, updatedAt: new Date().toISOString() } : b,
+        b.id === id
+          ? { ...b, root, ...(relations ? { relations } : {}), updatedAt: new Date().toISOString() }
+          : b,
       ),
     }));
     saveBrainstorms();
+  },
+  addBrainstorms: (items) => {
+    if (items.length === 0) return;
+    set((s) => ({
+      brainstorms: [...s.brainstorms, ...items],
+      activeBrainstormId: items[0].id,
+    }));
+    saveBrainstorms(true);
   },
   openCalendarEvent: (id) => set({ calendarFocusId: id, activeView: "calendar" }),
   clearCalendarFocus: () => set({ calendarFocusId: null }),

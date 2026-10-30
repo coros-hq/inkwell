@@ -1,5 +1,6 @@
 import { useAppStore } from '../store/useAppStore'
 import type { Folder } from '../types'
+import { collectDescendantIds } from './noteTree'
 
 function findFolderById(folders: Folder[], id: string): Folder | null {
   for (const f of folders) {
@@ -35,10 +36,20 @@ export function confirmDeleteNote(noteId: string, noteTitle: string, external = 
 export function confirmDeleteNotes(notes: { id: string; title: string }[]) {
   if (notes.length === 0) return
 
+  const all = useAppStore.getState().notes
+  const picked = new Set(notes.map(n => n.id))
+  const nestedIds = new Set<string>()
+  for (const n of notes) {
+    for (const id of collectDescendantIds(all, n.id)) if (!picked.has(id)) nestedIds.add(id)
+  }
+  const nested = nestedIds.size
+
   if (notes.length === 1) {
     useAppStore.getState().openConfirm({
       title: 'Delete note',
-      description: `Are you sure you want to delete "${notes[0].title}"? This cannot be undone.`,
+      description: nested > 0
+        ? `Delete "${notes[0].title}" and the ${nested === 1 ? '1 note' : `${nested} notes`} nested under it? This cannot be undone.`
+        : `Are you sure you want to delete "${notes[0].title}"? This cannot be undone.`,
       confirmLabel: 'Delete',
       destructive: true,
       onConfirm: () => useAppStore.getState().deleteNotes([notes[0].id]),
@@ -48,7 +59,9 @@ export function confirmDeleteNotes(notes: { id: string; title: string }[]) {
 
   useAppStore.getState().openConfirm({
     title: `Delete ${notes.length} notes`,
-    description: `Are you sure you want to delete ${notes.length} notes? This cannot be undone.`,
+    description: nested > 0
+      ? `Delete ${notes.length} notes and the ${nested === 1 ? '1 note' : `${nested} notes`} nested under them? This cannot be undone.`
+      : `Are you sure you want to delete ${notes.length} notes? This cannot be undone.`,
     confirmLabel: 'Delete',
     destructive: true,
     onConfirm: () => useAppStore.getState().deleteNotes(notes.map(n => n.id)),

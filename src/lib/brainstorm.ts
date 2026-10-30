@@ -1,4 +1,4 @@
-import type { BrainstormNode } from '../types'
+import type { BrainstormNode, BrainstormRelation } from '../types'
 import { genId } from './id'
 
 // Pure, immutable tree operations for the Brainstorm outliner.
@@ -180,6 +180,63 @@ export function addChildTo(root: BrainstormNode[], parentId: string, child: Brai
       ? { ...n, collapsed: false, children: [...n.children, child] }
       : n.children.length ? { ...n, children: addChildTo(n.children, parentId, child) } : n,
   )
+}
+
+/** Every node id in the tree, collapsed branches included. */
+export function allIds(list: BrainstormNode[], out = new Set<string>()): Set<string> {
+  for (const n of list) {
+    out.add(n.id)
+    allIds(n.children, out)
+  }
+  return out
+}
+
+/** Drops relations whose endpoints no longer exist (e.g. after a delete). Returns the same array when nothing changed. */
+export function pruneRelations(relations: BrainstormRelation[], root: BrainstormNode[]): BrainstormRelation[] {
+  if (relations.length === 0) return relations
+  const ids = allIds(root)
+  const kept = relations.filter((r) => ids.has(r.from) && ids.has(r.to))
+  return kept.length === relations.length ? relations : kept
+}
+
+/** Id -> parent id (null for top-level points). */
+export function parentMap(root: BrainstormNode[]): Map<string, string | null> {
+  const out = new Map<string, string | null>()
+  const walk = (list: BrainstormNode[], parent: string | null) => {
+    for (const n of list) {
+      out.set(n.id, parent)
+      walk(n.children, n.id)
+    }
+  }
+  walk(root, null)
+  return out
+}
+
+/** Add a new empty point directly after `id`, as a sibling (never as a child, unlike addAfter). */
+export function addSiblingAfter(root: BrainstormNode[], id: string, text = ''): { root: BrainstormNode[]; newId: string } {
+  const created = newNode(text)
+  const hit = locate(root, id)
+  if (!hit) return { root: [...root, created], newId: created.id }
+  return {
+    root: withList(root, hit.parentId, (list) => {
+      const next = list.slice()
+      next.splice(hit.index + 1, 0, created)
+      return next
+    }),
+    newId: created.id,
+  }
+}
+
+/**
+ * Re-parent: make `id` the last child of `parentId` (null = a new top-level point).
+ * Refuses to drop a node into itself or its own subtree. Re-dropping on the current parent moves it to the end.
+ */
+export function reparent(root: BrainstormNode[], id: string, parentId: string | null): BrainstormNode[] {
+  const node = findNode(root, id)
+  if (!node) return root
+  if (parentId === id || (parentId && findNode(node.children, parentId))) return root
+  const without = removeNode(root, id)
+  return parentId === null ? [...without, node] : addChildTo(without, parentId, node)
 }
 
 // ── Mind-map layout ───────────────────────────────────────────────────────────

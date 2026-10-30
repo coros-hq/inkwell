@@ -7,6 +7,7 @@ import {
   Paperclip,
   Plus,
   GitBranch,
+  FilePlus2,
   Columns2,
   List,
   X,
@@ -35,6 +36,7 @@ import { StructureRail } from "../editor/StructureRail";
 import { cn, glassBg } from "../../lib/utils";
 import { formatDate } from "../../lib/utils";
 import { comboMatches } from "../../lib/shortcuts";
+import { collectAncestors } from "../../lib/noteTree";
 
 /** VSCode/Obsidian-style tab strip — shown instead of the NoteList column
  *  when noteSidebarMode is 'tabs'. The leading button switches back. */
@@ -103,6 +105,7 @@ export function EditorPane() {
     saveStatus,
     saveError,
     createNote,
+    selectNote,
     createFolder,
     openPrompt,
     renameNote,
@@ -327,6 +330,18 @@ export function EditorPane() {
                 <span className="text-tertiary">›</span>
               </>
             )}
+            {note && collectAncestors(notes, note.id).reverse().map((ancestor) => (
+              <span key={ancestor.id} className="flex items-center gap-1.5 min-w-0">
+                <button
+                  className="hover:text-foreground transition-colors truncate max-w-[120px]"
+                  onClick={() => selectNote(ancestor.id)}
+                  title={ancestor.title}
+                >
+                  {ancestor.title}
+                </button>
+                <span className="text-tertiary">›</span>
+              </span>
+            ))}
             <input
               type="text"
               value={editingTitle}
@@ -380,6 +395,16 @@ export function EditorPane() {
             </button>
 
             <NoteTagsMenu noteId={note.id} tags={note.tags} />
+
+            {!note.external && (
+              <button
+                className="w-7 h-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+                onClick={() => createNote(note.folder, note.id)}
+                title="New sub-note"
+              >
+                <FilePlus2 className="w-3.5 h-3.5" />
+              </button>
+            )}
 
             <button
               className={cn(

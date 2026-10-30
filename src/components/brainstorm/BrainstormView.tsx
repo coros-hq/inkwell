@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Plus, Trash2, Lightbulb, ChevronRight, ChevronDown, GripVertical, List, Network, Undo2, Redo2 } from 'lucide-react'
+import { Plus, Trash2, Lightbulb, ChevronRight, ChevronDown, GripVertical, List, Network, Undo2, Redo2, Download, Upload } from 'lucide-react'
 import {
   DndContext,
   PointerSensor,
@@ -12,7 +12,8 @@ import {
 import { useAppStore } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { MindMap } from './MindMap'
-import type { BrainstormNode } from '../../types'
+import type { BrainstormNode, BrainstormRelation } from '../../types'
+import { exportBrainstormToXmind, pickXmindFile } from '../../lib/brainstormFiles'
 import {
   addAfter,
   countNodes,
@@ -25,6 +26,7 @@ import {
   outdent,
   parentIdOf,
   pathTo,
+  pruneRelations,
   removeNode,
   setText,
   toggleCollapsed,
@@ -34,6 +36,7 @@ import {
 // Stored locally in .inkwell/brainstorms.json and never synced to a team vault.
 
 interface FocusRequest { id: string; caret: 'start' | 'end'; nonce: number }
+interface Snapshot { root: BrainstormNode[]; relations: BrainstormRelation[] }
 
 export function BrainstormView() {
   const brainstorms = useAppStore(s => s.brainstorms)
@@ -41,6 +44,7 @@ export function BrainstormView() {
   const setActiveId = useAppStore(s => s.setActiveBrainstormId)
   const createBrainstorm = useAppStore(s => s.createBrainstorm)
   const deleteBrainstorm = useAppStore(s => s.deleteBrainstorm)
+  const addBrainstorms = useAppStore(s => s.addBrainstorms)
   const openConfirm = useAppStore(s => s.openConfirm)
 
   const active = brainstorms.find(b => b.id === activeId) ?? null
@@ -56,18 +60,42 @@ export function BrainstormView() {
     })
   }
 
+  const handleImport = async () => {
+    try {
+      const imported = await pickXmindFile()
+      if (imported) addBrainstorms(imported)
+    } catch (e) {
+      openConfirm({
+        title: "Couldn't import file",
+        description: e instanceof Error ? e.message : String(e),
+        confirmLabel: 'OK',
+        cancelLabel: 'Close',
+        onConfirm: () => {},
+      })
+    }
+  }
+
   return (
     <div className="flex-1 flex min-w-0 bg-background">
       <aside className="w-[220px] shrink-0 border-r border-border flex flex-col">
         <div className="flex items-center justify-between px-3 py-3">
           <span className="uppercase text-[10.5px] font-semibold tracking-wider text-tertiary">Brainstorms</span>
-          <button
-            onClick={() => createBrainstorm()}
-            title="New brainstorm"
-            className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
+          <div className="flex items-center">
+            <button
+              onClick={handleImport}
+              title="Import XMind file"
+              className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface"
+            >
+              <Upload className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={() => createBrainstorm()}
+              title="New brainstorm"
+              className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto px-2 pb-3 space-y-0.5">
           {brainstorms.map(b => (
@@ -118,6 +146,7 @@ function Outline({ brainstormId, onDelete }: { brainstormId: string; onDelete: (
   const brainstorm = useAppStore(s => s.brainstorms.find(b => b.id === brainstormId))
   const setRoot = useAppStore(s => s.setBrainstormRoot)
   const renameBrainstorm = useAppStore(s => s.renameBrainstorm)
+  const openConfirm = useAppStore(s => s.openConfirm)
 
   const [mode, setMode] = useState<Mode>(readMode)
   const changeMode = (m: Mode) => {
@@ -166,42 +195,62 @@ function Outline({ brainstormId, onDelete }: { brainstormId: string; onDelete: (
 
   if (!brainstorm) return null
 
-  const currentRoot = () => useAppStore.getState().brainstorms.find(b => b.id === brainstormId)?.root ?? []
+  const currentSnapshot = (): Snapshot => {
+    const b = useAppStore.getState().brainstorms.find(x => x.id === brainstormId)
+    return { root: b?.root ?? [], relations: b?.relations ?? [] }
+  }
+  const relations = brainstorm.relations ?? []
 
-  // Undo/redo: snapshots of the whole tree (cheap, trees are small). Consecutive
+  // Undo/redo: snapshots of the whole tree + links (cheap, trees are small). Consecutive
   // edits sharing a `key` (typing in one point) within a second merge into one step.
-  const past = useRef<BrainstormNode[][]>([])
-  const future = useRef<BrainstormNode[][]>([])
+  const past = useRef<Snapshot[]>([])
+  const future = useRef<Snapshot[]>([])
   const last = useRef<{ key: string | null; at: number }>({ key: null, at: 0 })
   const [, bump] = useState(0)
 
-  const commit = (next: BrainstormNode[], key?: string) => {
+  /** `nextRelations` replaces the links; links pointing at removed points are dropped either way. */
+  const commit = (next: BrainstormNode[], key?: string, nextRelations?: BrainstormRelation[]) => {
     const now = Date.now()
     const merge = key && last.current.key === key && now - last.current.at < 1000
+    const before = currentSnapshot()
     if (!merge) {
-      past.current.push(currentRoot())
+      past.current.push(before)
       if (past.current.length > 200) past.current.shift()
     }
     last.current = { key: key ?? null, at: now }
     future.current = []
-    setRoot(brainstormId, next)
+    setRoot(brainstormId, next, pruneRelations(nextRelations ?? before.relations, next))
     bump(n => n + 1)
   }
   const undo = () => {
     const prev = past.current.pop()
     if (!prev) return
-    future.current.push(currentRoot())
+    future.current.push(currentSnapshot())
     last.current = { key: null, at: 0 }
-    setRoot(brainstormId, prev)
+    setRoot(brainstormId, prev.root, prev.relations)
     bump(n => n + 1)
   }
   const redo = () => {
     const next = future.current.pop()
     if (!next) return
-    past.current.push(currentRoot())
+    past.current.push(currentSnapshot())
     last.current = { key: null, at: 0 }
-    setRoot(brainstormId, next)
+    setRoot(brainstormId, next.root, next.relations)
     bump(n => n + 1)
+  }
+
+  const handleExport = async () => {
+    try {
+      await exportBrainstormToXmind(brainstorm)
+    } catch (e) {
+      openConfirm({
+        title: "Couldn't export",
+        description: e instanceof Error ? e.message : String(e),
+        confirmLabel: 'OK',
+        cancelLabel: 'Close',
+        onConfirm: () => {},
+      })
+    }
   }
 
   const undoRef = useRef({ undo, redo })
@@ -330,6 +379,13 @@ function Outline({ brainstormId, onDelete }: { brainstormId: string; onDelete: (
           ))}
         </div>
         <button
+          onClick={handleExport}
+          title="Export as XMind file"
+          className="p-1.5 rounded text-muted-foreground hover:text-foreground hover:bg-surface"
+        >
+          <Download className="w-4 h-4" />
+        </button>
+        <button
           onClick={onDelete}
           title="Delete brainstorm"
           className="p-1.5 rounded text-muted-foreground hover:text-destructive hover:bg-surface"
@@ -339,7 +395,7 @@ function Outline({ brainstormId, onDelete }: { brainstormId: string; onDelete: (
       </div>
 
       {mode === 'map' && (
-        <MindMap title={brainstorm.title} root={root} commit={commit} />
+        <MindMap title={brainstorm.title} root={root} relations={relations} commit={commit} />
       )}
 
       {mode === 'list' && crumbs.length > 0 && (
@@ -377,7 +433,17 @@ function Outline({ brainstormId, onDelete }: { brainstormId: string; onDelete: (
             ))}
           </div>
         </DndContext>
-        <p className="mt-8 text-[11.5px] text-tertiary">
+        <button
+          onClick={() => {
+            const child = newNode()
+            commit(zoomNode ? addChild(root, zoomNode.id, child) : [...root, child])
+            requestFocus(child.id)
+          }}
+          className="mt-2 flex items-center gap-1.5 text-[12.5px] text-muted-foreground hover:text-foreground"
+        >
+          <Plus className="w-3.5 h-3.5" /> Add point
+        </button>
+        <p className="mt-6 text-[11.5px] text-tertiary">
           Enter new point · Tab / Shift+Tab nest · Alt+↑↓ reorder · ⌘. collapse · click a bullet to zoom in
         </p>
       </div>
