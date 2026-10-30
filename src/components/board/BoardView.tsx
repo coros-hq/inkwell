@@ -374,8 +374,8 @@ export function BoardView() {
         onDragEnd={handleDragEnd}
         onDragCancel={handleDragCancel}
       >
-        <div className="flex-1 overflow-x-auto overflow-y-hidden">
-          <div className="flex gap-0 p-4 h-full items-start min-w-max">
+        <div className="flex-1 min-h-0 overflow-auto">
+          <div className="flex gap-0 p-4 min-h-full items-start min-w-max">
 
             {/* Start gap (before first column) */}
             <ColGap

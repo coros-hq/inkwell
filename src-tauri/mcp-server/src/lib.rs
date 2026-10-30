@@ -22,6 +22,7 @@
 //! Note format: each .md file has YAML frontmatter (id, created, updated, pinned, tags).
 //! The MCP server strips frontmatter before returning content to Claude, and preserves
 //! existing frontmatter when updating notes.
+mod boards;
 mod calendar;
 
 use serde::{Deserialize, Serialize};
@@ -127,6 +128,7 @@ fn error_content(text: impl Into<String>) -> Value {
 fn tools_list() -> Value {
     let mut list = tools_list_notes();
     list["tools"].as_array_mut().unwrap().extend(calendar::tools());
+    list["tools"].as_array_mut().unwrap().extend(boards::tools());
     list
 }
 
@@ -540,6 +542,11 @@ fn handle(request: Request, fallback_vault: Option<&PathBuf>) -> Option<Response
                 Ok(p) => p,
                 Err(e) => return Some(Response::ok(id, error_content(e))),
             };
+
+            // Boards live in the vault's .inkwell/boards.json.
+            if let Some(result) = boards::call(tool_name, &args, &vault) {
+                return Some(Response::ok(id, result));
+            }
 
             let result = match tool_name {
                 "get_vault_info" => handle_get_vault_info(&vault),
