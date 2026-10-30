@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { TagsSection, TagFolderResults } from './TagsView'
 import { SettingsDialog } from '../settings/SettingsDialog'
+import { TagPopover } from '../shared/TagPicker'
 import {
   DndContext,
   DragOverlay,
