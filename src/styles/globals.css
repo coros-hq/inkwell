@@ -637,6 +637,32 @@ html[data-theme="catppuccin_latte"] {
   --code-block-bg:      220 21% 89%;
 }
 
+html[data-theme="finder_blue"] {
+  color-scheme: light;
+  /* Finder Blue — folder-icon sky blue (#72cff8 to #45abe0) on cool white */
+  --background:         208 70% 98%;
+  --foreground:         208 40% 20%;
+  --card:               0 0% 100%;
+  --card-foreground:    208 40% 20%;
+  --sidebar:            206 65% 94%;
+  --panel:              207 75% 97%;
+  --surface:            206 60% 92%;
+  --active:             203 75% 87%;
+  --border:             206 50% 87%;
+  --border-strong:      205 40% 76%;
+  --input:              206 50% 87%;
+  --accent:             203 72% 50%;
+  --accent-foreground:  0 0% 100%;
+  --muted:              206 60% 92%;
+  --muted-foreground:   208 22% 38%;
+  --tertiary:           207 18% 58%;
+  --code-bg:            206 60% 92%;
+  --tag-bg:             200 85% 88%;
+  --tag-text:           204 80% 34%;
+  --destructive:        356 70% 48%;
+  --code-block-bg:      206 55% 94%;
+}
+
 /* ── Syntax highlighting ─────────────────────────────────────────────────── */
 /* Unlayered so nothing can override. rehype-highlight adds .hljs-* classes. */
 /* Background is stripped here; the pre.inkwell-code-block provides it.      */

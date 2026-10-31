@@ -587,6 +587,16 @@ function LocalImage({ absPath, alt, vaultPath, searchRoot }: { absPath: string; 
   )
 }
 
+const TERMINAL_LANGS = new Set(['shell', 'sh', 'bash', 'zsh', 'terminal', 'console', 'shellsession'])
+
+/** Header label for a fenced code block: "TERMINAL" for shells, else the language name. */
+function codeLanguageLabel(className?: string): string | null {
+  const m = className?.match(/language-([\w+#-]+)/)
+  if (!m) return null
+  const lang = m[1].toLowerCase()
+  return TERMINAL_LANGS.has(lang) ? 'Terminal' : lang
+}
+
 function extractText(node: React.ReactNode): string {
   if (typeof node === 'string') return node
   if (typeof node === 'number') return String(node)
@@ -819,12 +829,18 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
       )
     },
 
-    pre: ({ children }: any) => (
-      <div className="relative group mb-4">
-        <pre className="inkwell-code-block font-mono text-[13px] p-4 rounded-lg overflow-x-auto border border-border/50">{children}</pre>
-        <CopyButton getText={() => extractText(children)} />
-      </div>
-    ),
+    pre: ({ children }: any) => {
+      const lang = codeLanguageLabel(children?.props?.className)
+      return (
+        <div className="relative group mb-4">
+          <pre className="inkwell-code-block font-mono text-[13px] px-4 pb-4 pt-3 rounded-lg overflow-x-auto border border-border/50">
+            {lang && <span className="block mb-3 text-[11px] font-semibold uppercase tracking-wider text-accent select-none">{lang}</span>}
+            {children}
+          </pre>
+          <CopyButton getText={() => extractText(children)} />
+        </div>
+      )
+    },
 
     blockquote: ({ children }: any) => (
       <blockquote className="border-l-2 border-accent pl-4 my-4 text-muted-foreground italic">{children}</blockquote>
@@ -951,7 +967,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
               key={i}
               remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkChartCodeBlocks, remarkTableCodeBlocks, remarkTabsCodeBlocks, remarkBoardCodeBlocks, remarkHighlight]}
               rehypePlugins={[
-                [rehypeHighlight, { ignoreMissing: true }],
+                [rehypeHighlight, { ignoreMissing: true, aliases: { bash: ['shell', 'sh', 'zsh', 'terminal', 'console'] } }],
                 rehypeRaw,
                 [rehypeKatex, { throwOnError: false, output: 'htmlAndMathml', errorColor: 'var(--katex-error, #cc0000)' }],
               ]}

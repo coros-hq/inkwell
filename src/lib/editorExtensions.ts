@@ -112,6 +112,88 @@ const codeTokenHighlightStyle = HighlightStyle.define([
 
 export const codeHighlighting = syntaxHighlighting(codeTokenHighlightStyle)
 
+// ─── Shell fences ─────────────────────────────────────────────────────────────
+// CodeMirror's legacy shell mode leaves most commands uncoloured (`bunx biome init`
+// is plain text), so shell fences get their own tokenizer: command, subcommand,
+// flags, strings, variables, operators and comments.
+
+const SHELL_LANGS = new Set(['sh', 'shell', 'bash', 'zsh', 'terminal', 'console', 'shellsession'])
+const SHELL_TOKEN_RE = /(#.*$)|("(?:[^"\\]|\\.)*"?|'[^']*'?)|(\$\{?[\w@#?*-]+\}?)|(&&|\|\||[|;<>&]+)|(--?[\w][\w=.:/-]*)|([^\s|;<>&"'$#]+)/g
+
+function decorateShellLine(text: string, offset: number, decos: Range<Decoration>[]) {
+  let expectCmd = true
+  let sawSub = false
+  let m: RegExpExecArray | null
+  SHELL_TOKEN_RE.lastIndex = 0
+  const mark = (cls: string, start: number, len: number) =>
+    decos.push(Decoration.mark({ class: cls }).range(offset + start, offset + start + len))
+  // A leading `$ ` or `> ` is a prompt, not part of the command.
+  const prompt = text.match(/^\s*[$>]\s/)
+  if (prompt) SHELL_TOKEN_RE.lastIndex = prompt[0].length
+  while ((m = SHELL_TOKEN_RE.exec(text))) {
+    const [tok, comment, str, variable, op, flag, word] = m
+    if (!tok) { SHELL_TOKEN_RE.lastIndex++; continue }
+    if (comment) { mark('cm-sh-cmt', m.index, tok.length); break }
+    if (str) { mark('cm-sh-str', m.index, tok.length); expectCmd = false; continue }
+    if (variable) { mark('cm-sh-var', m.index, tok.length); expectCmd = false; continue }
+    if (op) { mark('cm-sh-op', m.index, tok.length); expectCmd = true; sawSub = false; continue }
+    if (flag) { mark('cm-sh-flag', m.index, tok.length); expectCmd = false; continue }
+    if (word) {
+      if (expectCmd) { mark('cm-sh-cmd', m.index, tok.length); expectCmd = false; sawSub = false }
+      else if (!sawSub && !/[/.=]/.test(word)) { mark('cm-sh-sub', m.index, tok.length); sawSub = true }
+    }
+  }
+}
+
+function buildShellDecorations(view: EditorView): DecorationSet {
+  const decos: Range<Decoration>[] = []
+  const doc = view.state.doc
+  for (const { from, to } of view.visibleRanges) {
+    syntaxTree(view.state).iterate({
+      from,
+      to,
+      enter: (node) => {
+        if (node.name !== 'FencedCode') return
+        const first = doc.lineAt(node.from)
+        const lang = first.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().split(/\s+/)[0].toLowerCase()
+        if (!SHELL_LANGS.has(lang)) return false
+        const last = doc.lineAt(node.to)
+        for (let n = first.number + 1; n <= last.number; n++) {
+          const line = doc.line(n)
+          if (n === last.number && /^\s*(`{3,}|~{3,})\s*$/.test(line.text)) break
+          decorateShellLine(line.text, line.from, decos)
+        }
+        return false
+      },
+    })
+  }
+  return Decoration.set(decos, true)
+}
+
+export const shellHighlightPlugin = [
+  ViewPlugin.fromClass(
+    class {
+      decorations: DecorationSet
+      constructor(view: EditorView) { this.decorations = buildShellDecorations(view) }
+      update(u: ViewUpdate) {
+        if (u.docChanged || u.viewportChanged || syntaxTree(u.startState) !== syntaxTree(u.state)) {
+          this.decorations = buildShellDecorations(u.view)
+        }
+      }
+    },
+    { decorations: (v) => v.decorations },
+  ),
+  EditorView.baseTheme({
+    '.cm-sh-cmd': { color: 'hsl(var(--code-fn))', fontWeight: '500' },
+    '.cm-sh-sub': { color: 'hsl(var(--code-num))' },
+    '.cm-sh-flag': { color: 'hsl(var(--code-meta))' },
+    '.cm-sh-str': { color: 'hsl(var(--code-str))' },
+    '.cm-sh-var': { color: 'hsl(var(--code-kw))' },
+    '.cm-sh-op': { color: 'hsl(var(--code-op))' },
+    '.cm-sh-cmt': { color: 'hsl(var(--code-cmt))', fontStyle: 'italic' },
+  }),
+]
+
 // ─── Autocomplete popup theme ──────────────────────────────────────────────────
 // Shared by both the slash-command and @-mention popups (MarkdownEditor and
 // QuickNoteEditor both wire this in). Icons are CodeMirror's own mechanism:
@@ -1578,23 +1660,17 @@ export const dataTablePreviewField = selectionAwareField(buildDataTableDecoratio
 // Same reveal model as tables: an interactive tab group in "Normal" mode,
 // raw JSON when the selection touches it. Edits are written back into the range.
 
-class TabsWidget extends WidgetType {
-  private root: Root | null = null
-  private resizeObserver: ResizeObserver | null = null
+interface TabsMount { root: Root; resizeObserver: ResizeObserver }
+const tabsMounts = new WeakMap<HTMLElement, TabsMount>()
 
+class TabsWidget extends WidgetType {
   constructor(readonly spec: string, readonly blockFrom: number, readonly blockTo: number) { super() }
 
   eq(other: TabsWidget) {
     return other.spec === this.spec && other.blockFrom === this.blockFrom && other.blockTo === this.blockTo
   }
 
-  toDOM(view: EditorView) {
-    const el = document.createElement('div')
-    el.className = 'cm-tabs-block'
-    // Padding (not margin) so the gap counts toward the height CM measures.
-    el.style.padding = '0.5rem 0'
-    this.root = createRoot(el)
-
+  private render(root: Root, view: EditorView) {
     const onEditAsText = () => {
       view.dispatch({ selection: { anchor: this.blockFrom } })
       view.focus()
@@ -1605,19 +1681,39 @@ class TabsWidget extends WidgetType {
       const fence = m ? m[1].trim() : '```'
       view.dispatch({ changes: { from: this.blockFrom, to: this.blockTo, insert: fence + 'tabs\n' + next + '\n' + fence } })
     }
-    this.root.render(createElement(TabsBlock, { spec: this.spec, onChange, onEditAsText }))
+    root.render(createElement(TabsBlock, { spec: this.spec, onChange, onEditAsText }))
+  }
 
-    this.resizeObserver = new ResizeObserver(() => view.requestMeasure())
-    this.resizeObserver.observe(el)
+  toDOM(view: EditorView) {
+    const el = document.createElement('div')
+    el.className = 'cm-tabs-block'
+    // Padding (not margin) so the gap counts toward the height CM measures.
+    el.style.padding = '0.5rem 0'
+    const root = createRoot(el)
+    this.render(root, view)
+
+    const resizeObserver = new ResizeObserver(() => view.requestMeasure())
+    resizeObserver.observe(el)
+    tabsMounts.set(el, { root, resizeObserver })
     return el
   }
 
-  destroy() {
-    this.resizeObserver?.disconnect()
-    this.resizeObserver = null
-    const root = this.root
-    this.root = null
-    if (root) queueMicrotask(() => root.unmount())
+  // Every keystroke in a tab rewrites the block's spec, so the widget changes
+  // constantly. Re-render the existing React root instead of rebuilding the DOM,
+  // otherwise the textarea is replaced and loses focus after each character.
+  updateDOM(dom: HTMLElement, view: EditorView) {
+    const mount = tabsMounts.get(dom)
+    if (!mount) return false
+    this.render(mount.root, view)
+    return true
+  }
+
+  destroy(dom: HTMLElement) {
+    const mount = tabsMounts.get(dom)
+    if (!mount) return
+    tabsMounts.delete(dom)
+    mount.resizeObserver.disconnect()
+    queueMicrotask(() => mount.root.unmount())
   }
 
   // The block owns its inputs; CodeMirror must not also react.

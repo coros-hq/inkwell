@@ -91,6 +91,13 @@ export const THEMES: ThemeDef[] = [
     preview: { bg: '#eff1f5', sidebar: '#e6e9ef', accent: '#8839ef', text: '#4c4f69', border: '#ccd0da' },
   },
   {
+    id: 'finder_blue',
+    label: 'Finder Blue',
+    description: 'Clean light with the macOS folder sky blue',
+    dark: false,
+    preview: { bg: '#f4f9fd', sidebar: '#e6f1fa', accent: '#2f9edb', text: '#1c3347', border: '#cfe3f2' },
+  },
+  {
     id: 'sepia',
     label: 'Sepia',
     description: 'Aged paper with terracotta',

@@ -15,7 +15,7 @@
 
 inkwell is a local-first markdown editor built as a native desktop app for macOS, Windows, and Linux. Notes are stored as plain `.md` files in a vault folder you own — no lock-in, and everything works offline with no account. Signing in is optional and only needed to share a vault with teammates.
 
-It pairs a distraction-free writing environment with a rich live preview, charts, a Kanban board, a calendar, an optional canvas and brainstorm outliner, 15 themes, and deep integrations: a native MCP server so Claude can read and write your notes, and built-in GitHub sync to push your docs to any repository.
+It pairs a distraction-free writing environment with a rich live preview, charts, a Kanban board, a calendar, an optional canvas and brainstorm outliner, 16 themes, and deep integrations: a native MCP server so Claude can read and write your notes, and built-in GitHub sync to push your docs to any repository.
 
 ---
 
