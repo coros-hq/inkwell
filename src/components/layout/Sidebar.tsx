@@ -1,3 +1,4 @@
+import { openNewFolderPrompt } from "../../lib/newFolderPrompt";
 import { useState, useCallback, useRef, useMemo, useEffect, useLayoutEffect } from "react";
 import {
   ChevronRight,
@@ -698,7 +699,6 @@ export function Sidebar() {
     setSearchOpen,
     setActiveView,
     createNote,
-    createFolder,
     openExternalNote,
     moveNotes,
     reorderNote,
@@ -708,7 +708,6 @@ export function Sidebar() {
     setFolderIcon,
     toggleFolderGroupByTags,
     toggleFolder,
-    openPrompt,
     selectedFolderId,
     clearFolderSelection,
     sidebarGlass,
@@ -1180,31 +1179,7 @@ export function Sidebar() {
     });
   };
 
-  const handleNewFolder = () => {
-    // Flatten the tree into indented options so the new folder's location is an
-    // explicit choice rather than implied by the current selection.
-    const flatten = (
-      list: FolderType[],
-      depth: number,
-    ): { id: string | null; label: string }[] =>
-      list.flatMap((f) => [
-        { id: f.id, label: `${"  ".repeat(depth)}${f.name}` },
-        ...flatten(f.children, depth + 1),
-      ]);
-
-    openPrompt({
-      title: "New Folder",
-      placeholder: "Folder name",
-      confirmLabel: "Create",
-      destinations: [
-        { id: null, label: "Library (root)" },
-        ...flatten(folders, 0),
-      ],
-      initialDestinationId: selectedFolderId ?? null,
-      onConfirm: (name, destinationId) =>
-        createFolder(name, destinationId ?? null),
-    });
-  };
+  const handleNewFolder = openNewFolderPrompt;
 
   // Always creates at the library root — creating inside a specific folder is
   // done via that folder's right-click context menu ("New note").

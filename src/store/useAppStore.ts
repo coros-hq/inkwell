@@ -1284,7 +1284,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     set({
       selectedNoteIds: nextIds,
       lastSelectedNoteId: id,
-      selectedFolderId: note.folder,
+      // Viewing "all notes" (no folder scope) stays that way: narrowing the
+      // list to the note's folder would hide the other notes while the
+      // sidebar shows no matching folder highlighted.
+      selectedFolderId: get().selectedFolderId === null ? null : note.folder,
       openTabs: openTabs.includes(id) ? openTabs : [...openTabs, id],
     });
   },

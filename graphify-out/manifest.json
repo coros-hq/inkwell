@@ -10,8 +10,8 @@
     "semantic_hash": "a4038619f5414c01f04abbbdd4730820"
   },
   "package.json": {
-    "mtime": 1793353896.4560165,
-    "ast_hash": "acc9ac0b4834552cd6b3a1f6504ed0ae",
+    "mtime": 1793399763.2310457,
+    "ast_hash": "c1456b00ac68eb6b684eb9f41f707df0",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -65,8 +65,8 @@
     "semantic_hash": ""
   },
   "src-tauri/src/lib.rs": {
-    "mtime": 1793377881.826803,
-    "ast_hash": "f21aed336c002bd6fe465dd836c5f049",
+    "mtime": 1793458774.1297793,
+    "ast_hash": "e7ff1a0632ebeb19e92cc91c9c027fa0",
     "semantic_hash": ""
   },
   "src-tauri/src/main.rs": {
@@ -75,8 +75,8 @@
     "semantic_hash": ""
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1793377881.8273501,
-    "ast_hash": "4d73e9c71506ffbacab46e997cd0e1bb",
+    "mtime": 1793399763.2316172,
+    "ast_hash": "d24fb01f76c947c70aca89ab2178b7dc",
     "semantic_hash": ""
   },
   "src/App.tsx": {
@@ -165,8 +165,8 @@
     "semantic_hash": "3395185c59d4b925e2b7d609379130d3"
   },
   "src/components/editor/MarkdownEditor.tsx": {
-    "mtime": 1792770136.7943823,
-    "ast_hash": "0db20872ed473eccba465bbec8e58dd8",
+    "mtime": 1793486067.7990308,
+    "ast_hash": "ed5b4736b520a33e1165c32696d9c798",
     "semantic_hash": ""
   },
   "src/components/editor/MediaPanel.tsx": {
@@ -180,8 +180,8 @@
     "semantic_hash": ""
   },
   "src/components/editor/RichPreview.tsx": {
-    "mtime": 1792148103.7308314,
-    "ast_hash": "8f8cc61255f8d69f67066223e0af7fbb",
+    "mtime": 1793485660.529794,
+    "ast_hash": "8c5e7243e8e876b2394e3cc2a9dbbfb8",
     "semantic_hash": ""
   },
   "src/components/editor/ShareDialog.tsx": {
@@ -210,8 +210,8 @@
     "semantic_hash": ""
   },
   "src/components/layout/Sidebar.tsx": {
-    "mtime": 1793398220.3028262,
-    "ast_hash": "29808cbe3f7bdbf0926c6ac7f9276f40",
+    "mtime": 1793398527.0899742,
+    "ast_hash": "26fe4584b9d51326d596224f3cd96eda",
     "semantic_hash": ""
   },
   "src/components/quicknote/QuickNoteCapture.tsx": {
@@ -265,8 +265,8 @@
     "semantic_hash": ""
   },
   "src/components/shared/TagChip.tsx": {
-    "mtime": 1792772503.698953,
-    "ast_hash": "45b92ddef4fc4a741649fa9514dbe03e",
+    "mtime": 1793456299.5337827,
+    "ast_hash": "e02f4ed08d2702d21638398746a2e7e3",
     "semantic_hash": ""
   },
   "src/components/shared/VaultPicker.tsx": {
@@ -295,8 +295,8 @@
     "semantic_hash": ""
   },
   "src/lib/editorExtensions.ts": {
-    "mtime": 1792789647.1070216,
-    "ast_hash": "b817c22a022217361bff38d6c502123c",
+    "mtime": 1793486067.7981536,
+    "ast_hash": "141e8579b16907646a0bbdd063e58b96",
     "semantic_hash": ""
   },
   "src/lib/editorTypography.ts": {
@@ -345,8 +345,8 @@
     "semantic_hash": ""
   },
   "src/lib/themes.ts": {
-    "mtime": 1792789221.7242994,
-    "ast_hash": "c0a89ec94b3f02e1e585a6f5d59e7a89",
+    "mtime": 1793489093.6327195,
+    "ast_hash": "15d73e400cdda17eddd6ea3d3845cf1c",
     "semantic_hash": ""
   },
   "src/lib/utils.ts": {
@@ -355,8 +355,8 @@
     "semantic_hash": ""
   },
   "src/lib/vault.ts": {
-    "mtime": 1793353896.4596539,
-    "ast_hash": "a12ceb54b31e96b31404398f5ca55964",
+    "mtime": 1793698937.053756,
+    "ast_hash": "4367c3192998110dadf48d0a0697adad",
     "semantic_hash": ""
   },
   "src/main.tsx": {
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1793351264.0925384,
-    "ast_hash": "c6648bc4d45b2d63cecc3c3eb1ab6431",
+    "mtime": 1793489101.9246404,
+    "ast_hash": "c658fdb5f5c3c6a9ec258ebd985ee5f3",
     "semantic_hash": ""
   },
   "canvas-feature-design.md": {
@@ -955,8 +955,8 @@
     "semantic_hash": ""
   },
   "src/components/editor/TabsBlock.tsx": {
-    "mtime": 1792148103.7115324,
-    "ast_hash": "9615a0ec38a208fdf59a6147388da134",
+    "mtime": 1793485865.3147037,
+    "ast_hash": "ca47ea740359e5280a96120cdb2ab1d4",
     "semantic_hash": ""
   },
   "src/lib/remarkTabsCodeBlocks.ts": {
@@ -1102,6 +1102,11 @@
   "src/lib/macCalendar.ts": {
     "mtime": 1793377881.8290546,
     "ast_hash": "96a370149e4f5126c87af04a31158726",
+    "semantic_hash": ""
+  },
+  "src/components/editor/TabEditor.tsx": {
+    "mtime": 1793486067.7984612,
+    "ast_hash": "3a8aa5b30ac14b0f5ee00ebe59e3d39d",
     "semantic_hash": ""
   }
 }

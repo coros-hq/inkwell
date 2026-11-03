@@ -149,15 +149,25 @@ function serializeFrontmatter(meta: FrontmatterMeta, body: string): string {
 // a local vault, but a shared vault needs stable ids across devices — the sync
 // session persists these before sharing them (see vaultSession.ts).
 const ephemeralNoteIds = new Set<string>()
+// Keyed by file path so a rescan (window focus, watcher event) hands the same
+// file the same id. Without this the open note's id vanished on every rescan
+// and the editor/tab closed itself.
+const ephemeralIdByPath = new Map<string, string>()
 
 export function isEphemeralNoteId(id: string): boolean {
   return ephemeralNoteIds.has(id)
 }
 
-function noteIdFromMeta(meta: Partial<FrontmatterMeta>): string {
-  if (meta.id) return meta.id
+function noteIdFromMeta(meta: Partial<FrontmatterMeta>, path: string): string {
+  if (meta.id) {
+    ephemeralIdByPath.delete(path)
+    return meta.id
+  }
+  const existing = ephemeralIdByPath.get(path)
+  if (existing) return existing
   const id = genId('note')
   ephemeralNoteIds.add(id)
+  ephemeralIdByPath.set(path, id)
   return id
 }
 
@@ -276,7 +286,7 @@ async function readDirectory(
     try {
       const raw = await readTextFile(file.path)
       const { meta, body } = parseFrontmatter(raw)
-      const id = noteIdFromMeta(meta)
+      const id = noteIdFromMeta(meta, file.path)
       const noteMeta = appData.noteMeta?.[id] ?? { attachments: [], linkedItems: [] }
       const note: Note = {
         id,
@@ -347,7 +357,7 @@ export async function readVaultFS(vaultPath: string): Promise<VaultData | null> 
     try {
       const raw = await readTextFile(file.path)
       const { meta, body } = parseFrontmatter(raw)
-      const id = noteIdFromMeta(meta)
+      const id = noteIdFromMeta(meta, file.path)
       const noteMeta = appData.noteMeta?.[id] ?? { attachments: [], linkedItems: [] }
       allNotes.push({
         id,
@@ -424,6 +434,7 @@ export async function writeNoteFile(note: Note): Promise<void> {
   }
   await writeFileAtomic(note.path, serializeFrontmatter(meta, note.content))
   ephemeralNoteIds.delete(note.id)
+  ephemeralIdByPath.delete(note.path)
 }
 
 /**

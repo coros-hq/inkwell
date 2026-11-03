@@ -1,3 +1,4 @@
+import { openNewFolderPrompt } from '../../lib/newFolderPrompt'
 import { useEffect, useRef, useState } from 'react'
 import { isDarkTheme, THEMES, loadCustomThemes } from '../../lib/themes'
 import { deriveThemeVars, applyCustomThemeVars, clearCustomThemeVars } from '../../lib/themeUtils'
@@ -287,13 +288,7 @@ export function AppShell() {
       if (comboMatches(e, shortcuts.newFolder)) {
         e.preventDefault()
         setActiveView('notes')
-        const folderId = useAppStore.getState().selectedFolderId
-        openPrompt({
-          title: folderId ? 'New Subfolder' : 'New Folder',
-          placeholder: 'Folder name',
-          confirmLabel: 'Create',
-          onConfirm: (name) => createFolder(name, folderId),
-        })
+        openNewFolderPrompt()
       }
     }
     window.addEventListener('keydown', handler)
