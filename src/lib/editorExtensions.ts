@@ -16,6 +16,7 @@ import {
 import { createRoot, type Root } from 'react-dom/client'
 import { useAppStore } from '../store/useAppStore'
 import { MarkdownChart } from '../components/editor/MarkdownChart'
+import { MermaidBlock } from '../components/editor/MermaidBlock'
 import { TabsBlock } from '../components/editor/TabsBlock'
 import { tabsBlock, defaultTabsSpec } from './tabsBlock'
 import { DataTable } from '../components/editor/DataTable'
@@ -1569,6 +1570,80 @@ function buildChartDecorations(state: EditorState, spans: SelectionSpan[]): Deco
 }
 
 export const chartPreviewField = selectionAwareField(buildChartDecorations)
+
+// ─── Mermaid Live Preview (```mermaid fenced blocks) ──────────────────────────
+// Same reveal model as charts: renders as a diagram until the selection
+// touches the block, then reverts to source.
+
+class MermaidWidget extends WidgetType {
+  private root: Root | null = null
+  private resizeObserver: ResizeObserver | null = null
+
+  constructor(readonly source: string, readonly blockFrom: number, readonly blockTo: number) { super() }
+
+  eq(other: MermaidWidget) {
+    return other.source === this.source && other.blockFrom === this.blockFrom && other.blockTo === this.blockTo
+  }
+
+  toDOM(view: EditorView) {
+    const el = document.createElement('div')
+    el.className = 'cm-mermaid-block'
+    // Stop the browser's default caret placement (which would move the
+    // selection into the block and flip it back to source); click still fires.
+    el.addEventListener('mousedown', (e) => e.preventDefault())
+    el.style.padding = '1rem 0'
+    this.root = createRoot(el)
+    const onEdit = () => {
+      view.dispatch({ selection: { anchor: this.blockFrom } })
+      view.focus()
+    }
+    this.root.render(createElement(MermaidBlock, { source: this.source, onEdit }))
+    this.resizeObserver = new ResizeObserver(() => view.requestMeasure())
+    this.resizeObserver.observe(el)
+    return el
+  }
+
+  destroy() {
+    this.resizeObserver?.disconnect()
+    this.resizeObserver = null
+    const root = this.root
+    this.root = null
+    if (root) queueMicrotask(() => root.unmount())
+  }
+
+  ignoreEvent() { return true }
+}
+
+function buildMermaidDecorations(state: EditorState, spans: SelectionSpan[]): DecorationSet {
+  const doc = state.doc
+  const decos: Range<Decoration>[] = []
+
+  syntaxTree(state).iterate({
+    enter: (node) => {
+      if (node.name !== 'FencedCode') return
+      const firstLine = doc.lineAt(node.from)
+      const info = firstLine.text.replace(/^\s*(`{3,}|~{3,})/, '').trim().toLowerCase()
+      if (info !== 'mermaid') return
+      spans.push([node.from, node.to])
+      if (overlapsSelection(state, node.from, node.to)) return
+
+      const lastLine = doc.lineAt(node.to)
+      const innerFrom = firstLine.to + 1
+      const innerTo = lastLine.number > firstLine.number ? lastLine.from - 1 : node.to
+      const source = innerFrom < innerTo ? doc.sliceString(innerFrom, innerTo).trim() : ''
+      if (!source) return
+
+      decos.push(
+        Decoration.replace({ widget: new MermaidWidget(source, node.from, node.to), block: true })
+          .range(node.from, node.to),
+      )
+    },
+  })
+
+  return Decoration.set(decos, true)
+}
+
+export const mermaidPreviewField = selectionAwareField(buildMermaidDecorations)
 
 // ─── Data Table Live Preview (```table fenced blocks) ─────────────────────────
 // Same reveal model as charts: the block renders as an interactive, editable

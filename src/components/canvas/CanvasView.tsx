@@ -9,9 +9,17 @@ import { useAppStore } from '../../store/useAppStore'
 import { cn, glassBg } from '../../lib/utils'
 import { CanvasToolbar, FONT_HAND } from './CanvasToolbar'
 import { CanvasNotesSheet } from './CanvasNotesSheet'
+import { DrawingsPanel } from './DrawingsPanel'
+import { CanvasExportDialog } from './CanvasExportDialog'
+import { useDrawingsStore } from '../../store/useDrawingsStore'
+import { loadDrawing, saveDrawing } from '../../lib/drawings'
 import { CanvasTemplatesPicker } from './CanvasTemplatesPicker'
 import { CanvasCategoryPanel } from './CanvasCategoryPanel'
 import type { DiagramTemplate, TemplateCategory } from './canvasTemplates'
+import {
+  adaptShape, ctxFont, roughOptions, wrapCanvasText, getMeasureCtx, boundFont, containerTextBox,
+  STICKY_TEXT_COLOR, TEXT_PAD, ELLIPSE_TEXT_RATIO, BOUND_LINE_HEIGHT,
+} from './canvasShared'
 import { uid, hitTest, hitTopmost, shapeBounds, recolorTemplateShapes, unrotatePoint } from './canvasTypes'
 import type { Shape, Tool, Point, PathShape, RectShape, EllipseShape, LineShape, ArrowShape, TextShape, BoundText, StickyShape, ImageShape } from './canvasTypes'
 
@@ -32,36 +40,6 @@ function getCSSColor(varName: string, fallback: string): string {
 // that would vanish against the current canvas (near-white on the light theme,
 // near-black on the dark one) is swapped for the theme's ink at draw time only.
 // Saved data is never rewritten, so the same drawing reads well in both themes.
-
-function parseHex(c: string): [number, number, number] | null {
-  const m = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(c.trim())
-  if (!m) return null
-  const h = m[1].length === 3 ? m[1].split('').map(x => x + x).join('') : m[1]
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]
-}
-
-function adaptInk(c: string, darkBg: boolean, ink: string): string {
-  const rgb = parseHex(c)
-  if (!rgb) return c
-  const [r, g, b] = rgb
-  if (Math.max(r, g, b) - Math.min(r, g, b) > 48) return c // clearly coloured: legible on both
-  const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255
-  if (darkBg ? lum < 0.28 : lum > 0.72) return ink
-  return c
-}
-
-function adaptShape(sh: Shape, darkBg: boolean, ink: string): Shape {
-  if (sh.type === 'sticky' || sh.type === 'image') return sh // pastel notes carry their own fixed dark text
-  const color = adaptInk(sh.color, darkBg, ink)
-  const fill = sh.fill === 'none' ? sh.fill : adaptInk(sh.fill, darkBg, ink)
-  let boundText: BoundText | undefined
-  if ((sh.type === 'rect' || sh.type === 'ellipse') && sh.boundText) {
-    const bc = adaptInk(sh.boundText.color, darkBg, ink)
-    if (bc !== sh.boundText.color) boundText = { ...sh.boundText, color: bc }
-  }
-  if (color === sh.color && fill === sh.fill && !boundText) return sh
-  return { ...sh, color, fill, ...(boundText ? { boundText } : {}) } as Shape
-}
 
 function normalizeRect(x1: number, y1: number, x2: number, y2: number) {
   return { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1), h: Math.abs(y2 - y1) }
@@ -174,32 +152,6 @@ function drawDotGrid(ctx: CanvasRenderingContext2D, cssW: number, cssH: number, 
   ctx.restore()
 }
 
-function ctxFont(t: TextShape): string {
-  return `${t.italic ? 'italic ' : ''}${t.bold ? 'bold ' : ''}${t.size}px ${t.fontFamily ?? FONT_HAND}`
-}
-
-/** Stable small int from a shape id, used as roughjs's seed so jitter doesn't reshuffle every re-render */
-function seedFromId(id: string): number {
-  let h = 0
-  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0
-  return Math.abs(h) % 2 ** 31 || 1
-}
-
-function roughOptions(s: Shape) {
-  return {
-    stroke: s.color,
-    strokeWidth: s.width,
-    fill: s.fill === 'none' ? undefined : s.fill,
-    fillStyle: 'hachure' as const,
-    roughness: 1,
-    seed: seedFromId(s.id),
-    // A single clean stroke per edge — roughjs's default second overlapping
-    // pass is what creates the gap/overshoot look at corners.
-    disableMultiStroke: true,
-    disableMultiStrokeFill: true,
-  }
-}
-
 // Decoded pictures per shape id. Decoding is async, so a shape drawn before its
 // image is ready is skipped and the view is asked to repaint once it loads.
 const imageCache = new Map<string, { src: string; img: HTMLImageElement }>()
@@ -239,7 +191,6 @@ function cachedRoughDraw(rc: RoughCanvas, cache: RoughCache, s: Shape, build: ()
   drawables.forEach(d => rc.draw(d))
 }
 
-const STICKY_TEXT_COLOR    = '#1e293b'
 const DEFAULT_STICKY_COLOR = '#fbbf24'
 const STICKY_DEFAULT_W     = 160
 const STICKY_DEFAULT_H     = 40
@@ -338,55 +289,7 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | n
   ctx.restore()
 }
 
-/** Word-wrap (paragraph-aware) text to fit within maxWidth, using ctx's current font. Words wider than maxWidth are broken by character. */
-function wrapCanvasText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
-  const lines: string[] = []
-  const breakWord = (word: string): string => {
-    let chunk = ''
-    for (const ch of word) {
-      if (chunk && ctx.measureText(chunk + ch).width > maxWidth) { lines.push(chunk); chunk = ch }
-      else chunk += ch
-    }
-    return chunk
-  }
-  for (const paragraph of text.split('\n')) {
-    if (paragraph === '') { lines.push(''); continue }
-    let cur = ''
-    for (const w of paragraph.split(' ')) {
-      const test = cur ? cur + ' ' + w : w
-      if (ctx.measureText(test).width <= maxWidth) { cur = test; continue }
-      if (cur) lines.push(cur)
-      cur = ctx.measureText(w).width > maxWidth ? breakWord(w) : w
-    }
-    if (cur) lines.push(cur)
-  }
-  return lines
-}
-
-let measureCtx: CanvasRenderingContext2D | null = null
-function getMeasureCtx(): CanvasRenderingContext2D {
-  if (!measureCtx) measureCtx = document.createElement('canvas').getContext('2d')!
-  return measureCtx
-}
-
-const TEXT_PAD = 8
 // An ellipse's text lives in the rectangle inscribed in it (~1/√2 of each axis), not its full bounding box
-const ELLIPSE_TEXT_RATIO = 0.72
-const BOUND_LINE_HEIGHT = 1.25
-
-function boundFont(bt: BoundText): string {
-  return `${bt.italic ? 'italic ' : ''}${bt.bold ? 'bold ' : ''}${bt.size}px ${bt.fontFamily}`
-}
-
-/** World-space rect that a rect/ellipse's label must stay inside */
-function containerTextBox(s: RectShape | EllipseShape) {
-  const b = shapeBounds(s)
-  if (s.type === 'ellipse') {
-    const w = b.w * ELLIPSE_TEXT_RATIO, h = b.h * ELLIPSE_TEXT_RATIO
-    return { x: b.x + (b.w - w) / 2, y: b.y + (b.h - h) / 2, w, h }
-  }
-  return { x: b.x + TEXT_PAD, y: b.y + TEXT_PAD, w: Math.max(b.w - TEXT_PAD * 2, 10), h: Math.max(b.h - TEXT_PAD * 2, 10) }
-}
 
 /** Shape height needed so `bt.text`, wrapped to width `w`, fits inside the container */
 function containerNeededH(s: RectShape | EllipseShape, bt: BoundText, w: number): number {
@@ -421,6 +324,35 @@ function drawBoundText(ctx: CanvasRenderingContext2D, s: RectShape | EllipseShap
   let y = box.y + box.h / 2 - (lines.length * lineH) / 2 + lineH / 2
   for (const line of lines) { ctx.fillText(line, box.x + box.w / 2, y); y += lineH }
   ctx.restore()
+}
+
+/** Painter handed to the PNG exporter: same drawing code as the live canvas, minus editor chrome. */
+function paintForExport(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, shapes: Shape[], sketchy: boolean) {
+  const rc = rough.canvas(canvas)
+  const cache: RoughCache = new Map()
+  for (const s of shapes) {
+    ctx.save()
+    applyRotation(ctx, s)
+    drawShape(ctx, s, rc, sketchy, cache)
+    if ((s.type === 'rect' || s.type === 'ellipse') && s.boundText) drawBoundText(ctx, s)
+    ctx.restore()
+  }
+}
+
+/** Resolves once every image shape is decoded, so exports never miss a picture that is still loading. */
+async function preloadImages(shapes: Shape[]) {
+  await Promise.all(shapes.filter((s): s is ImageShape => s.type === 'image').map(s => new Promise<void>(resolve => {
+    let entry = imageCache.get(s.id)
+    if (!entry || entry.src !== s.src) {
+      const img = new Image()
+      img.src = s.src
+      entry = { src: s.src, img }
+      imageCache.set(s.id, entry)
+    }
+    if (entry.img.complete) { resolve(); return }
+    entry.img.addEventListener('load', () => resolve(), { once: true })
+    entry.img.addEventListener('error', () => resolve(), { once: true })
+  })))
 }
 
 const SHAPE_TYPE_LABELS: Record<Shape['type'], string> = {
@@ -559,34 +491,6 @@ function snapDrag(mb: { x: number; y: number; w: number; h: number }, others: Sh
   return { dx, dy, guides }
 }
 
-// ── Disk I/O ───────────────────────────────────────────────────────────────────
-// Canvas data is stored globally (~/.inkwell/canvas.json) by default, independent
-// of whichever vault happens to be open. If the user links the canvas to a
-// specific vault (linkedVaultPath), it's stored at
-// {linkedVaultPath}/.inkwell/canvas.json instead, regardless of the open vault.
-
-const canvasPath = (vp: string) => `${vp}/.inkwell/canvas.json`
-
-async function loadCanvas(linkedVaultPath: string | null): Promise<Shape[]> {
-  if (!linkedVaultPath) {
-    const { readGlobalCanvasFile } = await import('../../lib/vault')
-    return (await readGlobalCanvasFile()) as Shape[]
-  }
-  try { return JSON.parse(await (await import('@tauri-apps/plugin-fs')).readTextFile(canvasPath(linkedVaultPath))) }
-  catch { return [] }
-}
-async function saveCanvas(linkedVaultPath: string | null, shapes: Shape[]) {
-  if (!linkedVaultPath) {
-    const { writeGlobalCanvasFile } = await import('../../lib/vault')
-    return writeGlobalCanvasFile(shapes)
-  }
-  try {
-    const { writeTextFile, mkdir } = await import('@tauri-apps/plugin-fs')
-    await mkdir(`${linkedVaultPath}/.inkwell`, { recursive: true })
-    await writeTextFile(canvasPath(linkedVaultPath), JSON.stringify(shapes))
-  } catch (e) { console.error('[canvas] save failed:', e) }
-}
-
 // ── CanvasView ─────────────────────────────────────────────────────────────────
 
 // Default ink color must contrast with the canvas background, which follows the
@@ -674,6 +578,10 @@ export function CanvasView() {
   const [sketchy,           setSketchy]           = useState(true)
   const [showGrid,          setShowGrid]          = useState(false)
   const [showShortcuts,     setShowShortcuts]     = useState(false)
+  const [showExport,        setShowExport]        = useState(false)
+  const [showDrawings,      setShowDrawings]      = useState(() => {
+    try { return localStorage.getItem('inkwell-drawings-panel') !== 'false' } catch { return true }
+  })
 
   // ── Canvas content refs ──────────────────────────────────────────────────────
   const shapesRef       = useRef<Shape[]>([])
@@ -1015,48 +923,80 @@ export function CanvasView() {
   }, [render])
 
   // ── Load / save ──────────────────────────────────────────────────────────────
+  // The canvas holds many drawings (see useDrawingsStore). Shapes live in
+  // shapesRef; the open drawing is written to its own file, debounced, and
+  // flushed whenever another drawing is opened or the view unmounts.
+
+  const drawingsLoaded = useDrawingsStore(s => s.loaded)
+  const activeDrawingId = useDrawingsStore(s => s.activeId)
+  const activeDrawing = useDrawingsStore(s => s.drawings.find(d => d.id === s.activeId))
+  const activeIdRef  = useRef<string | null>(null)
+  const loadedIdRef  = useRef<string | null>(null)   // drawing whose data is currently in shapesRef
+  const dirtyRef     = useRef(false)
+  const notesRef     = useRef('')
+  const [fitTick, setFitTick] = useState(0)
+  const exportAfterLoadRef = useRef<string | null>(null)   // drawing the user asked to export from the list
+
+  useEffect(() => { void useDrawingsStore.getState().init(canvasLinkedVaultPath) }, [canvasLinkedVaultPath])
+
+  const flushSave = useCallback(async () => {
+    if (saveTimerRef.current) { clearTimeout(saveTimerRef.current); saveTimerRef.current = null }
+    const id = loadedIdRef.current
+    if (!id || !dirtyRef.current) return
+    dirtyRef.current = false
+    await saveDrawing(canvasLinkedVaultPath, id, { shapes: shapesRef.current, notes: notesRef.current })
+    useDrawingsStore.getState().touch(id)
+  }, [canvasLinkedVaultPath])
 
   useEffect(() => {
-    loadCanvas(canvasLinkedVaultPath).then(shapes => {
-      shapesRef.current = shapes; historyRef.current = []; futureRef.current = []
-      clearSelection(); setCanUndo(false); setCanRedo(false); render()
+    useDrawingsStore.getState().registerFlush(flushSave)
+    return () => useDrawingsStore.getState().registerFlush(null)
+  }, [flushSave])
+
+  useEffect(() => {
+    if (!drawingsLoaded || !activeDrawingId) return
+    let cancelled = false
+    activeIdRef.current = activeDrawingId
+    loadDrawing(canvasLinkedVaultPath, activeDrawingId).then(file => {
+      if (cancelled) return
+      shapesRef.current = file.shapes as Shape[]
+      notesRef.current = file.notes
+      setNotesContent(file.notes)
+      loadedIdRef.current = activeDrawingId
+      dirtyRef.current = false
+      historyRef.current = []; futureRef.current = []
+      roughCacheRef.current.clear()
+      clearSelection(); setCanUndo(false); setCanRedo(false)
+      setNotesTarget('global')
+      panRef.current = { x: 0, y: 0 }; zoomRef.current = 1; setZoomState(1)
+      render()
+      setFitTick(t => t + 1)
+      if (exportAfterLoadRef.current === activeDrawingId) { exportAfterLoadRef.current = null; setShowExport(true) }
     })
-  }, [canvasLinkedVaultPath, render, clearSelection])
+    return () => {
+      cancelled = true
+      // Leaving this drawing (or unmounting): write it out before its data is replaced.
+      void flushSave()
+      loadedIdRef.current = null
+    }
+  }, [drawingsLoaded, activeDrawingId, canvasLinkedVaultPath, render, clearSelection, flushSave])
 
   const scheduleSave = useCallback(() => {
+    if (!loadedIdRef.current) return
+    dirtyRef.current = true
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
-    saveTimerRef.current = setTimeout(() => saveCanvas(canvasLinkedVaultPath, shapesRef.current), 1000)
-  }, [canvasLinkedVaultPath])
+    saveTimerRef.current = setTimeout(() => { void flushSave() }, 1000)
+  }, [flushSave])
 
-  // ── Notes load / save ────────────────────────────────────────────────────────
-  // Same global-by-default / linked-vault-if-set model as the canvas shapes above.
-
-  useEffect(() => {
-    if (canvasLinkedVaultPath) {
-      import('@tauri-apps/plugin-fs').then(({ readTextFile }) =>
-        readTextFile(`${canvasLinkedVaultPath}/.inkwell/canvas-notes.md`).then(setNotesContent).catch(() => setNotesContent(''))
-      )
-    } else {
-      import('../../lib/vault').then(({ readGlobalCanvasNotes }) =>
-        readGlobalCanvasNotes().then(setNotesContent)
-      )
-    }
-  }, [canvasLinkedVaultPath])
+  // ── Notes ────────────────────────────────────────────────────────────────────
+  // Diagram notes are stored inside the drawing file, next to its shapes.
 
   const handleNotesChange = useCallback((text: string) => {
     setNotesContent(text)
+    notesRef.current = text
     if (notesTimerRef.current) clearTimeout(notesTimerRef.current)
-    notesTimerRef.current = setTimeout(async () => {
-      if (canvasLinkedVaultPath) {
-        const { writeTextFile, mkdir } = await import('@tauri-apps/plugin-fs')
-        await mkdir(`${canvasLinkedVaultPath}/.inkwell`, { recursive: true })
-        await writeTextFile(`${canvasLinkedVaultPath}/.inkwell/canvas-notes.md`, text)
-      } else {
-        const { writeGlobalCanvasNotes } = await import('../../lib/vault')
-        await writeGlobalCanvasNotes(text)
-      }
-    }, 600)
-  }, [canvasLinkedVaultPath])
+    notesTimerRef.current = setTimeout(scheduleSave, 600)
+  }, [scheduleSave])
 
   // Shape/group-scoped note edits: same debounce-and-write shape as global notes above,
   // but write into the shape(s) themselves (persisted via the regular canvas.json save
@@ -1802,17 +1742,20 @@ export function CanvasView() {
   }, [render])
 
   // Fit the given shapes (default: everything) into the viewport, same math loadTemplate uses
-  const zoomToFit = useCallback((shapes?: Shape[]) => {
+  const zoomToFit = useCallback((shapes?: Shape[], maxZoom = 3) => {
     const targets = shapes ?? shapesRef.current
     if (!targets.length) return
     const canvas = canvasRef.current!, DPR = window.devicePixelRatio || 1
     const cssW = canvas.width / DPR, cssH = canvas.height / DPR
     const b = unionBounds(targets), pad = 80
-    const newZoom = Math.max(0.1, Math.min((cssW - pad * 2) / b.w, (cssH - pad * 2) / b.h, 3))
+    const newZoom = Math.max(0.1, Math.min((cssW - pad * 2) / b.w, (cssH - pad * 2) / b.h, maxZoom))
     zoomRef.current = newZoom; setZoomState(newZoom)
     panRef.current = { x: cssW / 2 - (b.x + b.w / 2) * newZoom, y: cssH / 2 - (b.y + b.h / 2) * newZoom }
     render()
   }, [render])
+
+  // After a drawing loads, frame its content (never zooming in past 100%).
+  useEffect(() => { if (fitTick) zoomToFit(undefined, 1) }, [fitTick, zoomToFit])
 
   const resetZoom = useCallback(() => {
     const canvas = canvasRef.current!, DPR = window.devicePixelRatio || 1
@@ -2250,6 +2193,11 @@ export function CanvasView() {
       style={bodyGlass ? glassBg('background', glassOpacity, theme, 'card') : undefined}
     >
 
+      {showDrawings && <DrawingsPanel onExport={id => {
+        if (id === useDrawingsStore.getState().activeId && loadedIdRef.current === id) setShowExport(true)
+        else exportAfterLoadRef.current = id
+      }} />}
+
       {/* ── Canvas area ── */}
       <div ref={containerRef} className="relative h-full overflow-hidden flex-1">
         {/* Window drag strip — sits above canvas (z-10) but below toolbar buttons (z-20) */}
@@ -2281,6 +2229,9 @@ export function CanvasView() {
           showTemplates={showTemplates}
           sketchy={sketchy} onSketchy={() => setSketchy(v => !v)}
           showGrid={showGrid} onToggleGrid={() => setShowGrid(v => !v)}
+          showDrawings={showDrawings}
+          onToggleDrawings={() => setShowDrawings(v => { try { localStorage.setItem('inkwell-drawings-panel', String(!v)) } catch { /* ignore */ } return !v })}
+          onExport={() => setShowExport(true)}
           canAddNote={canAddNote} hasNote={hasNoteOnSelection} canPromoteSticky={canPromoteSticky}
           onAddNote={addNoteToSelection} onPromoteSticky={promoteStickyToNote}
         />
@@ -2297,6 +2248,19 @@ export function CanvasView() {
             if (files.length) void addFiles(files)
           }}
         />
+
+        {showExport && (
+          <CanvasExportDialog
+            title={activeDrawing?.title ?? 'drawing'}
+            shapes={shapesRef.current}
+            selected={selShapesForToolbar}
+            appIsDark={theme === 'dark'}
+            initialSketchy={sketchy}
+            paint={paintForExport}
+            preload={preloadImages}
+            onClose={() => setShowExport(false)}
+          />
+        )}
 
         {/* Template picker */}
         {showTemplates && (

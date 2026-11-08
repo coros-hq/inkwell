@@ -12,7 +12,7 @@ import { yCollab, yUndoManagerKeymap } from 'y-codemirror.next'
 import { getVaultSession, type NoteBinding } from '../../lib/sync/vaultSession'
 import { cn } from '../../lib/utils'
 
-import { markdownHighlighting, codeHighlighting, shellHighlightPlugin, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField, tabsPreviewField } from '../../lib/editorExtensions'
+import { markdownHighlighting, codeHighlighting, shellHighlightPlugin, slashCommandCompletion, tryAbbreviationReplace, highlightMarkPlugin, tablePlugin, createFileEmbedPlugin, autocompleteTheme, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, mermaidPreviewField, dataTablePreviewField, refEmbedPreviewField, tablePreviewField, tabsPreviewField } from '../../lib/editorExtensions'
 import { searchHighlightExtension } from '../../lib/searchHighlightExtension'
 import { useEditorViewRef } from './EditorViewContext'
 import { deleteAttachmentFile, makeAttachmentMarkdown } from '../../lib/attachments'
@@ -438,7 +438,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         codeHighlighting,
         markdownHighlighting,
         shellHighlightPlugin,
-        ...(liveConceal ? [wikiLinkPlugin, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, dataTablePreviewField, tabsPreviewField, refEmbedPreviewField, tablePreviewField] : []),
+        ...(liveConceal ? [wikiLinkPlugin, liveMarkdownPlugin, wikiLinkPlugin, mathPreviewField, chartPreviewField, mermaidPreviewField, dataTablePreviewField, tabsPreviewField, refEmbedPreviewField, tablePreviewField] : []),
         highlightMarkPlugin,
         tablePlugin,
         createFileEmbedPlugin(vaultPath ?? '', handleRemoveEmbed, useAppStore.getState().notes.find(n => n.id === noteId)?.searchRoot),

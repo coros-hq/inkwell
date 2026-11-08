@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react'
 import { Trash2 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
+import { MermaidBlock } from './MermaidBlock'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeHighlight from 'rehype-highlight'
@@ -831,6 +832,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
 
     pre: ({ children }: any) => {
       const lang = codeLanguageLabel(children?.props?.className)
+      if (lang === 'mermaid') return <MermaidBlock source={extractText(children)} />
       return (
         <div className="relative group mb-4">
           <pre className="inkwell-code-block font-mono text-[13px] px-4 pb-4 pt-3 rounded-lg overflow-x-auto border border-border/50">

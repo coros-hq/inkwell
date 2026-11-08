@@ -1,4 +1,4 @@
-import { MousePointer2, Pencil, Square, Circle, Minus, MoveRight, Type, StickyNote, Undo2, Redo2, ZoomIn, ZoomOut, LayoutTemplate, ImagePlus, Waves, FileText, Maximize2, Grid3x3 } from 'lucide-react'
+import { MousePointer2, Pencil, Square, Circle, Minus, MoveRight, Type, StickyNote, Undo2, Redo2, ZoomIn, ZoomOut, LayoutTemplate, ImagePlus, Waves, FileText, Maximize2, Grid3x3, PanelLeft, Download } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import type { Tool } from './canvasTypes'
 
@@ -106,6 +106,9 @@ interface Props {
   showTemplates: boolean
   onSketchy:    () => void
   onToggleGrid: () => void
+  showDrawings: boolean
+  onToggleDrawings: () => void
+  onExport: () => void
   onAddNote:    () => void
   onPromoteSticky: () => void
 }
@@ -340,6 +343,31 @@ export function CanvasToolbar(p: Props) {
           )}
         >
           <LayoutTemplate size={14} />
+        </button>
+
+        <VDivider />
+
+        {/* Drawings list */}
+        <button
+          onClick={p.onToggleDrawings}
+          title={p.showDrawings ? 'Hide drawings list' : 'Show drawings list'}
+          className={cn(
+            'w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0',
+            p.showDrawings
+              ? 'bg-accent text-white'
+              : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+          )}
+        >
+          <PanelLeft size={14} />
+        </button>
+
+        {/* Export (SVG / PNG) */}
+        <button
+          onClick={p.onExport}
+          title="Export as SVG or PNG"
+          className="w-8 h-8 flex items-center justify-center rounded-lg transition-colors shrink-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <Download size={14} />
         </button>
       </div>
     </div>
