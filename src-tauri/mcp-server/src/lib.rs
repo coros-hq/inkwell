@@ -478,9 +478,17 @@ fn handle_search_notes(vault: &Path, args: &Value) -> Value {
 ///   1. ~/.inkwell/active-vault (written by the app on every vault open)
 ///   2. INKWELL_VAULT_PATH env var (static fallback)
 fn resolve_vault(fallback: Option<&PathBuf>) -> Result<PathBuf, String> {
-    // Try ~/.inkwell/active-vault first
-    if let Some(home) = std::env::var_os("HOME").or_else(|| std::env::var_os("USERPROFILE")) {
-        let state_file = PathBuf::from(home).join(".inkwell").join("active-vault");
+    // Try the app's config folder first: `<portable data>/config`, else `~/.inkwell`.
+    let config_dir = std::env::var_os("INKWELL_DATA_DIR")
+        .filter(|d| !d.is_empty())
+        .map(|d| PathBuf::from(d).join("config"))
+        .or_else(|| {
+            std::env::var_os("HOME")
+                .or_else(|| std::env::var_os("USERPROFILE"))
+                .map(|h| PathBuf::from(h).join(".inkwell"))
+        });
+    if let Some(dir) = config_dir {
+        let state_file = dir.join("active-vault");
         if let Ok(contents) = fs::read_to_string(&state_file) {
             let p = PathBuf::from(contents.trim());
             if p.exists() {

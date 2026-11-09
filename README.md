@@ -164,6 +164,12 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
+### Portable Windows build
+
+Each release also ships `inkwell_*_x64-portable.zip`: unzip it, run `inkwell.exe`, no installer or admin rights needed. It keeps **everything** in a `data` folder beside the executable — the web profile (settings, themes, shortcuts, sign-in), canvas and calendar data, and the suggested first vault (`data/Vault`) — so nothing lands in the Windows user profile, and the folder can be moved to another drive or PC (vaults inside it are re-found automatically). Updating means replacing `inkwell.exe`; deleting the folder removes it completely.
+
+How it works: a bare, uninstalled `inkwell.exe` (no `uninstall.exe` beside it, not under Program Files) in a release build is treated as portable — see `data_root` in `src-tauri/src/lib.rs`. The main window is created in `setup` (`"create": false` in `tauri.windows.conf.json`) so it can use the portable WebView2 profile folder, and every other window gets the same one. The frontend finds out through `src/lib/dataRoot.ts`. Set `INKWELL_DATA_DIR` to force a data location. Debug builds are never portable.
+
 Pushing a `v*` tag runs the GitHub Actions release workflow, which builds macOS (universal), Windows (installer + portable zip) and Linux (`.deb`, AppImage) bundles and attaches them to a draft release. It needs the `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `TAURI_SIGNING_PRIVATE_KEY` and `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` repository secrets, plus an optional `RELEASE_TOKEN` PAT (Contents: read & write) if the org restricts the built-in token. Installed apps check for updates through the Tauri updater.
 
 The output bundles are written to `src-tauri/target/release/bundle/` (`.app`/`.dmg` on macOS, `.deb`/`.rpm`/`.AppImage` on Linux, `.exe`/`.msi` on Windows).

@@ -28,6 +28,8 @@ function InsertLine() {
 
 interface KanbanColumnProps {
   column: BoardColumn
+  /** The board has a wallpaper: give the column a frosted backing so text stays readable. */
+  onWallpaper?: boolean
   tasks: BoardTask[]
   isDraggingTask: boolean
   isDraggingColumn: boolean
@@ -45,6 +47,7 @@ interface KanbanColumnProps {
 
 export function KanbanColumn({
   column,
+  onWallpaper,
   tasks,
   isDraggingTask,
   isDraggingColumn,
@@ -111,6 +114,7 @@ export function KanbanColumn({
     <div
       className={cn(
         'w-[260px] shrink-0 flex flex-col mx-1.5',
+        onWallpaper && 'rounded-xl border border-border/60 bg-background/85 p-2 backdrop-blur-md',
         isDragging && 'opacity-20 pointer-events-none scale-[0.98] transition-transform',
       )}
     >

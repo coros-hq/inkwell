@@ -248,9 +248,7 @@ export const autocompleteTheme = EditorView.theme({
     padding: '6px',
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
-    // Deliberately not editorFontFamily — this is UI chrome, not document
-    // content, so it shouldn't follow the user's prose font (e.g. a serif).
-    fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    fontFamily: 'var(--font-app)',
     maxHeight: '320px',
     minWidth: '260px',
   },

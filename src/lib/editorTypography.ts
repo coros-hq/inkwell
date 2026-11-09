@@ -1,4 +1,4 @@
-export const EDITOR_FONT_FAMILY = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif"
+export const EDITOR_FONT_FAMILY = 'var(--font-app)'
 export const EDITOR_FONT_SIZE = '15px'
 export const EDITOR_LINE_HEIGHT = '1.7'
 

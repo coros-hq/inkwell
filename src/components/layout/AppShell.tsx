@@ -1,7 +1,7 @@
 import { openNewFolderPrompt } from '../../lib/newFolderPrompt'
 import { useEffect, useRef, useState } from 'react'
-import { isDarkTheme, THEMES, loadCustomThemes } from '../../lib/themes'
-import { deriveThemeVars, applyCustomThemeVars, clearCustomThemeVars } from '../../lib/themeUtils'
+import { loadCustomThemes } from '../../lib/themes'
+import { applyThemeToDom, resolveSavedThemeName } from '../../lib/restoreTheme'
 import { Sidebar } from './Sidebar'
 import { NoteList } from './NoteList'
 import { EditorPane } from './EditorPane'
@@ -28,6 +28,11 @@ import { startVaultWatcher } from '../../lib/vaultWatcher'
 import { TrashView } from '../trash/TrashView'
 import { ConflictBanner } from '../editor/ConflictBanner'
 import { CollabGlobals } from '../collab/CollabGlobals'
+import { maybeAutoBackup } from '../../lib/backup'
+import { startSettingsHost } from '../../lib/settingsSync'
+import { switchVault } from '../../lib/switchVault'
+import { ShareVaultDialog } from '../collab/ShareVaultDialog'
+import { JoinVaultDialog } from '../settings/JoinVaultDialog'
 
 export function AppShell() {
   const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, focusMode, noteSidebarMode, sidebarGlass, bodyGlass, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
@@ -36,25 +41,9 @@ export function AppShell() {
 
   // Restore theme from localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem('inkwell-theme')
-    // Backward compat: 'dark' → 'midnight', 'light' → 'parchment'
-    const resolvedId: string = saved === 'dark' ? 'midnight'
-      : saved === 'light' ? 'parchment'
-      : (saved && THEMES.find(t => t.id === saved)) ? saved
-      : saved ?? 'midnight'   // may be a custom theme id
-
     const customThemes = loadCustomThemes()
-    const custom = customThemes.find(t => t.id === resolvedId)
-    const dark = custom ? custom.dark : isDarkTheme(resolvedId)
-
-    document.documentElement.classList.toggle('dark', dark)
-    if (custom) {
-      delete document.documentElement.dataset.theme
-      applyCustomThemeVars(deriveThemeVars(custom.colors, dark))
-    } else {
-      clearCustomThemeVars()
-      document.documentElement.dataset.theme = resolvedId
-    }
+    const resolvedId = resolveSavedThemeName()
+    const { dark } = applyThemeToDom(resolvedId, customThemes)
     useAppStore.setState({
       themeName: resolvedId,
       theme: dark ? 'dark' : 'light',
@@ -194,6 +183,34 @@ export function AppShell() {
     }
   }, [vaultPath])
 
+  // Settings lives in its own window and mirrors this one's state. It can ask us to run
+  // actions, including the ones that need this window's vault session or dialogs.
+  const [shareOpen, setShareOpen] = useState(false)
+  const [joinOpen, setJoinOpen] = useState(false)
+  useEffect(() => {
+    const focusMain = async () => {
+      const { getCurrentWindow } = await import('@tauri-apps/api/window')
+      const win = getCurrentWindow()
+      await win.show()
+      await win.unminimize()
+      await win.setFocus()
+    }
+    return startSettingsHost({
+      switchVault: (path: string, empty = false) => switchVault(path, empty),
+      openShareVault: async () => { await focusMain(); setShareOpen(true) },
+      openJoinVault: async () => { await focusMain(); setJoinOpen(true) },
+    })
+  }, [])
+
+  // Automatic local backup: on vault open, then hourly while the app stays running.
+  // maybeAutoBackup itself enforces the once-a-day limit.
+  useEffect(() => {
+    if (!vaultPath) return
+    const t = setTimeout(() => { maybeAutoBackup(vaultPath) }, 10_000)
+    const id = setInterval(() => { maybeAutoBackup(vaultPath) }, 60 * 60 * 1000)
+    return () => { clearTimeout(t); clearInterval(id) }
+  }, [vaultPath])
+
   // Git sync: pull/push on vault open and whenever the window regains focus —
   // no continuous polling, consistent with the rest of the app.
   useEffect(() => {
@@ -242,6 +259,13 @@ export function AppShell() {
         const s = useAppStore.getState()
         const id = s.lastSelectedNoteId ?? s.selectedNoteIds[0]
         if (s.activeView === 'notes' && id) s.setNoteEditorMode(id, s.getEditorMode(id) === 'markdown' ? 'normal' : 'markdown')
+        return
+      }
+      if (comboMatches(e, shortcuts.toggleViewMode)) {
+        e.preventDefault()
+        const s = useAppStore.getState()
+        const id = s.lastSelectedNoteId ?? s.selectedNoteIds[0]
+        if (s.activeView === 'notes' && id) s.toggleNoteViewMode(id)
         return
       }
       if (e.key === 'Escape' && useAppStore.getState().focusMode) {
@@ -344,7 +368,7 @@ export function AppShell() {
   }
 
   return (
-    <div className={cn("flex h-screen w-screen overflow-hidden", !(sidebarGlass || bodyGlass) && "bg-background")}>
+    <div className={cn("flex h-full w-full overflow-hidden", !(sidebarGlass || bodyGlass) && "bg-background")}>
       <SidebarSlide open={sidebarOpen && !focusMode} />
 
       {activeView === 'notes' && (
@@ -371,6 +395,8 @@ export function AppShell() {
       <ConfirmDialog />
       <ConflictBanner />
       <CollabGlobals />
+      <ShareVaultDialog open={shareOpen} onClose={() => setShareOpen(false)} />
+      <JoinVaultDialog open={joinOpen} onClose={() => setJoinOpen(false)} />
     </div>
   )
 }

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "app": {
+    "windows": [
+      {
+        "title": "inkwell",
+        "width": 1440,
+        "height": 900,
+        "minWidth": 900,
+        "minHeight": 600,
+        "create": false,
+        "decorations": false,
+        "transparent": false,
+        "acceptFirstMouse": true
+      }
+    ]
+  }
+}

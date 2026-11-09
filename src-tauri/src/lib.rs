@@ -4,10 +4,13 @@ use window_vibrancy::{apply_vibrancy, clear_vibrancy, NSVisualEffectMaterial, NS
 mod claude_mcp;
 mod mac_calendar;
 
+use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 
 const MAIN_LABEL: &str = "main";
 const QUICK_NOTE_LABEL: &str = "quick-note";
+const SETTINGS_LABEL: &str = "settings";
 
 /// True when running as the bare portable `inkwell.exe` (unzipped, not installed).
 /// An installed copy is recognisable on Windows: the NSIS installer puts
@@ -20,17 +23,99 @@ fn is_portable() -> bool {
         let Some(dir) = std::env::current_exe().ok().and_then(|p| p.parent().map(|d| d.to_path_buf())) else {
             return false;
         };
-        if dir.join("uninstall.exe").exists() {
-            return false;
-        }
-        let under_program_files = ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]
-            .iter()
-            .filter_map(|k| std::env::var_os(k))
-            .any(|pf| dir.starts_with(pf));
-        return !under_program_files;
+        return looks_portable(&dir);
     }
     #[cfg(not(windows))]
     false
+}
+
+/// A folder that holds a bare, uninstalled `inkwell.exe`.
+#[cfg_attr(not(windows), allow(dead_code))]
+fn looks_portable(dir: &Path) -> bool {
+    if dir.join("uninstall.exe").exists() {
+        return false;
+    }
+    let under_program_files = ["ProgramFiles", "ProgramFiles(x86)", "ProgramW6432"]
+        .iter()
+        .filter_map(|k| std::env::var_os(k))
+        .any(|pf| dir.starts_with(pf));
+    !under_program_files
+}
+
+// ── Portable mode ─────────────────────────────────────────────────────────────
+// A portable copy keeps EVERYTHING in a `data` folder beside the executable —
+// the web profile (settings, themes, sign-in), canvas/calendar data, and the default
+// vault — so it can be moved or deleted without leaving anything in the OS user
+// profile. An installed copy is unaffected (this returns None).
+//
+// Layout:  data/webview   the WebView2 profile (localStorage etc.)
+//          data/config    what an installed copy keeps in ~/.inkwell and %APPDATA%
+//          data/Vault     the suggested first vault
+
+/// `<exe dir>/data`, created on demand — or None if the copy is not portable or
+/// its folder is read-only (then the app falls back to the normal OS locations).
+fn portable_data_dir(exe_dir: &Path, portable: bool) -> Option<PathBuf> {
+    if !portable {
+        return None;
+    }
+    let dir = exe_dir.join("data");
+    match std::fs::create_dir_all(dir.join("config")) {
+        Ok(()) => Some(dir),
+        Err(e) => {
+            eprintln!("[inkwell] portable data folder {} is not writable ({e}); using the system profile", dir.display());
+            None
+        }
+    }
+}
+
+/// Where this run keeps its data, or None for a normal installed run.
+/// `INKWELL_DATA_DIR` forces a location (it is also how `inkwell --mcp` learns it).
+/// Debug builds never go portable, so `tauri dev` keeps using the normal locations.
+pub fn data_root() -> Option<PathBuf> {
+    static ROOT: OnceLock<Option<PathBuf>> = OnceLock::new();
+    ROOT.get_or_init(|| {
+        if let Some(forced) = std::env::var_os("INKWELL_DATA_DIR").filter(|p| !p.is_empty()) {
+            let dir = PathBuf::from(forced);
+            return std::fs::create_dir_all(dir.join("config")).ok().map(|_| dir);
+        }
+        if cfg!(debug_assertions) {
+            return None;
+        }
+        let exe_dir = std::env::current_exe().ok()?.parent()?.to_path_buf();
+        #[cfg(windows)]
+        let portable = looks_portable(&exe_dir);
+        #[cfg(not(windows))]
+        let portable = false;
+        portable_data_dir(&exe_dir, portable)
+    })
+    .clone()
+}
+
+/// Where inkwell's own small files live: `data/config` when portable, else `~/.inkwell`.
+pub fn config_dir() -> Option<PathBuf> {
+    if let Some(root) = data_root() {
+        return Some(root.join("config"));
+    }
+    std::env::var_os("HOME")
+        .or_else(|| std::env::var_os("USERPROFILE"))
+        .map(|h| PathBuf::from(h).join(".inkwell"))
+}
+
+/// The portable data folder for the frontend (None when installed).
+#[tauri::command]
+fn data_root_path() -> Option<String> {
+    data_root().map(|p| p.to_string_lossy().into_owned())
+}
+
+/// Every window must share one WebView2 profile, or they would each get their
+/// own localStorage — so the portable profile is applied wherever a window is built.
+fn with_data_dir<'a, R: tauri::Runtime, M: Manager<R>>(
+    builder: WebviewWindowBuilder<'a, R, M>,
+) -> WebviewWindowBuilder<'a, R, M> {
+    match data_root() {
+        Some(root) => builder.data_directory(root.join("webview")),
+        None => builder,
+    }
 }
 
 /// Toggle macOS NSVisualEffectView (native sidebar glass) on the main window.
@@ -116,6 +201,10 @@ fn claude_mcp_set_enabled(enabled: bool) -> Result<claude_mcp::ClaudeMcpStatus, 
 
 /// Serve inkwell's MCP tools over stdio (launched by Claude Desktop as `inkwell --mcp`).
 pub fn run_mcp() {
+    // Let the MCP server find the same files as the app (it only knows the OS locations).
+    if let Some(root) = data_root() {
+        std::env::set_var("INKWELL_DATA_DIR", root);
+    }
     inkwell_mcp::run()
 }
 
@@ -127,11 +216,11 @@ fn show_quick_note_window(app: &tauri::AppHandle) {
         return;
     }
 
-    let builder = WebviewWindowBuilder::new(
+    let builder = with_data_dir(WebviewWindowBuilder::new(
         app,
         QUICK_NOTE_LABEL,
         WebviewUrl::App("index.html?quicknote=1".into()),
-    )
+    ))
     .title("Quick Note")
     .inner_size(420.0, 320.0)
     .min_inner_size(300.0, 220.0)
@@ -145,11 +234,58 @@ fn show_quick_note_window(app: &tauri::AppHandle) {
         .title_bar_style(tauri::TitleBarStyle::Overlay)
         .hidden_title(true);
 
+    // Windows draws its own chrome (see TitleBar / QuickNoteCapture), so drop
+    // the native frame here too.
+    #[cfg(windows)]
+    let builder = builder.decorations(false);
+
     match builder.build() {
         Ok(win) => {
             let _ = win.set_focus();
         }
         Err(e) => eprintln!("[inkwell] failed to create quick-note window: {e}"),
+    }
+}
+
+/// Open Settings in its own native window (like an IDE's preferences), or bring
+/// the existing one to the front. The window loads the same frontend with
+/// `?settings=1`; it mirrors the main window's state over events (see
+/// src/lib/settingsSync.ts), so there is only ever one source of truth.
+#[tauri::command]
+fn open_settings_window(app: tauri::AppHandle) {
+    if let Some(win) = app.get_webview_window(SETTINGS_LABEL) {
+        let _ = win.show();
+        let _ = win.unminimize();
+        let _ = win.set_focus();
+        return;
+    }
+
+    let builder = with_data_dir(WebviewWindowBuilder::new(
+        &app,
+        SETTINGS_LABEL,
+        WebviewUrl::App("index.html?settings=1".into()),
+    ))
+    .title("Settings")
+    .inner_size(860.0, 640.0)
+    .min_inner_size(640.0, 460.0)
+    .resizable(true)
+    .center()
+    .visible(true);
+
+    #[cfg(target_os = "macos")]
+    let builder = builder
+        .title_bar_style(tauri::TitleBarStyle::Overlay)
+        .hidden_title(true);
+
+    // Windows draws its own titlebar (see TitleBar.tsx), like the main window.
+    #[cfg(windows)]
+    let builder = builder.decorations(false);
+
+    match builder.build() {
+        Ok(win) => {
+            let _ = win.set_focus();
+        }
+        Err(e) => eprintln!("[inkwell] failed to create settings window: {e}"),
     }
 }
 
@@ -201,9 +337,26 @@ pub fn run() {
     }
 
     builder
-        .invoke_handler(tauri::generate_handler![set_vibrancy, list_system_fonts, is_portable, claude_mcp_status, claude_mcp_set_enabled, mac_calendar::mac_calendar_status, mac_calendar::mac_calendar_request_access, mac_calendar::mac_calendar_list, mac_calendar::mac_calendar_ensure_inkwell, mac_calendar::mac_calendar_fetch, mac_calendar::mac_calendar_upsert, mac_calendar::mac_calendar_delete])
+        .invoke_handler(tauri::generate_handler![open_settings_window, data_root_path, set_vibrancy, list_system_fonts, is_portable, claude_mcp_status, claude_mcp_set_enabled, mac_calendar::mac_calendar_status, mac_calendar::mac_calendar_request_access, mac_calendar::mac_calendar_list, mac_calendar::mac_calendar_ensure_inkwell, mac_calendar::mac_calendar_fetch, mac_calendar::mac_calendar_upsert, mac_calendar::mac_calendar_delete])
         .setup(|app| {
-            claude_mcp::sync_on_startup();
+            // A portable copy must not write into Claude Desktop's config (outside its folder)
+            // unprompted; the Claude settings toggle still works if the user wants it.
+            if data_root().is_none() {
+                claude_mcp::sync_on_startup();
+            }
+
+            // Windows' config sets `create: false` for the main window so it can be built here
+            // with the portable profile folder (config can't express an absolute path).
+            for cfg in app.config().app.windows.iter().filter(|w| !w.create) {
+                match WebviewWindowBuilder::from_config(app.handle(), cfg) {
+                    Ok(builder) => {
+                        if let Err(e) = with_data_dir(builder).build() {
+                            eprintln!("[inkwell] failed to create window '{}': {e}", cfg.label);
+                        }
+                    }
+                    Err(e) => eprintln!("[inkwell] bad window config '{}': {e}", cfg.label),
+                }
+            }
 
             #[cfg(desktop)]
             {
@@ -285,4 +438,50 @@ pub fn run() {
                 show_main_window(_app);
             }
         });
+}
+
+#[cfg(test)]
+mod portable_tests {
+    use super::*;
+
+    fn scratch(name: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!("inkwell-portable-{name}-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn portable_copy_gets_a_data_folder_next_to_the_exe() {
+        let exe_dir = scratch("portable");
+        let data = portable_data_dir(&exe_dir, true).expect("portable");
+        assert_eq!(data, exe_dir.join("data"));
+        assert!(data.join("config").is_dir(), "config subfolder is created up front");
+        std::fs::remove_dir_all(&exe_dir).unwrap();
+    }
+
+    #[test]
+    fn an_installed_copy_gets_no_data_folder() {
+        let exe_dir = scratch("installed");
+        assert_eq!(portable_data_dir(&exe_dir, false), None);
+        assert!(!exe_dir.join("data").exists(), "nothing is created for an installed copy");
+        std::fs::remove_dir_all(&exe_dir).unwrap();
+    }
+
+    #[test]
+    fn a_read_only_location_falls_back_instead_of_failing() {
+        let exe_dir = scratch("readonly");
+        // A *file* named `data` makes the folder impossible to create, like a read-only drive.
+        std::fs::write(exe_dir.join("data"), "x").unwrap();
+        assert_eq!(portable_data_dir(&exe_dir, true), None);
+        std::fs::remove_dir_all(&exe_dir).unwrap();
+    }
+
+    #[test]
+    fn the_nsis_installer_is_recognised_as_installed() {
+        let dir = scratch("nsis");
+        std::fs::write(dir.join("uninstall.exe"), "").unwrap();
+        assert!(!looks_portable(&dir), "uninstall.exe beside the app means it was installed");
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
 }

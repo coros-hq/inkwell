@@ -11,6 +11,10 @@ use std::path::PathBuf;
 const APP_IDENTIFIER: &str = "com.ayphone.inkwell";
 
 fn calendar_path() -> Result<PathBuf, String> {
+    // A portable copy keeps calendar.json in its own data folder.
+    if let Some(dir) = std::env::var_os("INKWELL_DATA_DIR").filter(|d| !d.is_empty()) {
+        return Ok(PathBuf::from(dir).join("config").join("calendar.json"));
+    }
     let home = || {
         std::env::var_os("HOME")
             .or_else(|| std::env::var_os("USERPROFILE"))

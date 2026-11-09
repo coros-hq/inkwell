@@ -48,8 +48,8 @@ const config: Config = {
         'tag-text': 'hsl(var(--tag-text))',
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-        serif: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        sans: ['var(--font-app)', 'Inter', 'sans-serif'],
+        serif: ['var(--font-app)', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       borderRadius: {

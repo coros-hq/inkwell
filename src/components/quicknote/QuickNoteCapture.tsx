@@ -11,6 +11,7 @@ import {
 import { isDarkTheme, loadCustomThemes } from '../../lib/themes'
 import { deriveThemeVars, applyCustomThemeVars, clearCustomThemeVars } from '../../lib/themeUtils'
 import { cn } from '../../lib/utils'
+import { isWindowsApp } from '../../lib/platform'
 import { QuickNoteEditor, type QuickNoteEditorHandle } from './QuickNoteEditor'
 
 async function closeThisWindow() {
@@ -101,11 +102,11 @@ export function QuickNoteCapture() {
   const vaultName = vaultPath?.split('/').pop() ?? 'Choose a vault…'
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden rounded-xl border border-border bg-background text-foreground">
+    <div className={cn('flex h-screen w-screen flex-col overflow-hidden border border-border bg-background text-foreground', !isWindowsApp && 'rounded-xl')}>
       {/* Header / drag region — left padding clears the macOS traffic lights */}
       <div
         data-tauri-drag-region
-        className="flex shrink-0 items-center justify-between gap-2 border-b border-border py-2.5 pl-20 pr-3"
+        className={cn('flex shrink-0 items-center justify-between gap-2 border-b border-border py-2.5 pr-3', isWindowsApp ? 'pl-3' : 'pl-20')}
       >
         <div className="relative">
           <button

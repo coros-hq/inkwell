@@ -1,3 +1,4 @@
+import { isWindowsApp } from '../../lib/platform'
 import { NoteListEmpty } from './NoteListEmpty'
 import { Star, Trash2, List, PanelTop, Clock, ArrowDownAZ, ChevronRight, Plus, CornerLeftUp } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
@@ -105,7 +106,7 @@ export function NoteList() {
       >
         {/* Clears the macOS traffic-light overlay — normally reserved by the
             Sidebar column, which is gone from the layout while it's collapsed. */}
-        {!sidebarOpen && <div className="w-20 shrink-0" data-tauri-drag-region />}
+        {!sidebarOpen && !isWindowsApp && <div className="w-20 shrink-0" data-tauri-drag-region />}
         <span className="text-[14px] font-bold text-foreground truncate">
           {selectedNoteIds.length > 1
             ? `${selectedNoteIds.length} selected`

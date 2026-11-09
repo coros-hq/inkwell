@@ -31,6 +31,7 @@
  * Note.path   = absolute path to the .md file
  */
 
+import { configDir, calendarDir, portableRoot } from './dataRoot'
 import type { Folder, Note, Task, Board, BoardColumn, BoardTask, Attachment, LinkedItem, Brainstorm, CalendarEvent } from '../types'
 import { slugifyTitle } from './utils'
 import { genId } from './id'
@@ -644,9 +645,8 @@ export interface CalendarData {
 }
 
 async function calendarPath(): Promise<string> {
-  const { appDataDir } = await import('@tauri-apps/api/path')
   const { mkdir, exists } = await import('@tauri-apps/plugin-fs')
-  const dir = (await appDataDir()).replace(/\/$/, '')
+  const dir = await calendarDir()
   if (!await exists(dir)) await mkdir(dir, { recursive: true })
   return `${dir}/${CALENDAR_FILE}`
 }
@@ -705,24 +705,18 @@ export async function watchCalendarFile(onChange: () => void): Promise<() => voi
 // {vaultPath}/.inkwell/canvas.json instead, regardless of the vault currently open.
 
 async function getGlobalCanvasPath(): Promise<string> {
-  const { homeDir, join } = await import('@tauri-apps/api/path')
-  const home = await homeDir()
-  return join(home, INKWELL_DIR, CANVAS_FILE)
+  return `${await configDir()}/${CANVAS_FILE}`
 }
 
 async function getGlobalCanvasNotesPath(): Promise<string> {
-  const { homeDir, join } = await import('@tauri-apps/api/path')
-  const home = await homeDir()
-  return join(home, INKWELL_DIR, CANVAS_NOTES_FILE)
+  return `${await configDir()}/${CANVAS_NOTES_FILE}`
 }
 
 export async function writeGlobalCanvasFile(shapes: unknown): Promise<void> {
   if (!isTauri) return
   try {
     const { writeTextFile, mkdir } = await import('@tauri-apps/plugin-fs')
-    const { homeDir, join } = await import('@tauri-apps/api/path')
-    const home = await homeDir()
-    const dir  = await join(home, INKWELL_DIR)
+    const dir = await configDir()
     await mkdir(dir, { recursive: true })
     await writeTextFile(await getGlobalCanvasPath(), JSON.stringify(shapes))
   } catch (e) { console.error('Failed to write global canvas:', e) }
@@ -742,9 +736,7 @@ export async function writeGlobalCanvasNotes(content: string): Promise<void> {
   if (!isTauri) return
   try {
     const { writeTextFile, mkdir } = await import('@tauri-apps/plugin-fs')
-    const { homeDir, join } = await import('@tauri-apps/api/path')
-    const home = await homeDir()
-    const dir  = await join(home, INKWELL_DIR)
+    const dir = await configDir()
     await mkdir(dir, { recursive: true })
     await writeTextFile(await getGlobalCanvasNotesPath(), content)
   } catch (e) { console.error('Failed to write global canvas notes:', e) }
@@ -874,6 +866,9 @@ export async function getSuggestedVaultPath(): Promise<string | null> {
   if (!isTauri) return null
   try {
     const { documentDir, homeDir, join } = await import('@tauri-apps/api/path')
+    // A portable copy keeps its first vault inside its own folder.
+    const root = await portableRoot()
+    if (root) return `${root}/Vault`
     const docs = await documentDir().catch(async () => join(await homeDir(), 'Documents'))
     return await join(docs, 'Inkwell', 'Vault')
   } catch { return null }

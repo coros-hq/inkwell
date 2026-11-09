@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* The user-chosen UI font (Settings → Appearance); see src/lib/appFont.ts */
+:root {
+  --font-app: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
 /* Allow Tauri window transparency to reach the sidebar backdrop-filter */
 html, body, #root {
   background: transparent !important;
@@ -143,7 +148,7 @@ html, body, #root {
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-app);
     -webkit-font-smoothing: antialiased;
     margin: 0;
     padding: 0;
@@ -187,7 +192,7 @@ html, body, #root {
   .inkwell-editor .cm-scroller,
   .inkwell-editor .cm-content,
   .inkwell-editor .cm-line {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font-app);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

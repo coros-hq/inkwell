@@ -1,3 +1,4 @@
+import { isWindowsApp } from '../../lib/platform'
 import { openNewFolderPrompt } from "../../lib/newFolderPrompt";
 import { useState, useCallback, useRef, useMemo, useEffect, useLayoutEffect } from "react";
 import {
@@ -21,7 +22,7 @@ import {
   ChevronsUpDown,
 } from "lucide-react";
 import { TagsSection, TagFolderResults } from './TagsView'
-import { SettingsDialog } from '../settings/SettingsDialog'
+import { SettingsButton } from '../settings/SettingsDialog'
 import { TagPopover } from '../shared/TagPicker'
 import {
   DndContext,
@@ -1248,7 +1249,7 @@ export function Sidebar() {
           onDoubleClick={() => { setSidebarWidth(224); try { localStorage.setItem(SIDEBAR_WIDTH_KEY, '224') } catch { /* ok */ } }}
           className="absolute top-0 right-0 h-full w-1.5 z-20 cursor-col-resize hover:bg-accent/40 active:bg-accent/60 transition-colors"
         />
-        <div className="h-8 shrink-0" data-tauri-drag-region />
+        {!isWindowsApp && <div className="h-8 shrink-0" data-tauri-drag-region />}
 
         <div className="flex items-center justify-between px-3 pb-3.5">
           <button
@@ -1525,7 +1526,7 @@ export function Sidebar() {
 
         {/* Settings button */}
         <div className={cn("px-2 py-2 shrink-0", !updateInfo && "mt-auto")}>
-          <SettingsDialog />
+          <SettingsButton />
         </div>
 
         {contextMenu && (

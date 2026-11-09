@@ -117,7 +117,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         left: '-1px',
         padding: '0 5px',
         borderRadius: '4px 4px 4px 0',
-        fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+        fontFamily: 'var(--font-app)',
         fontSize: '11px',
         fontWeight: '500',
         lineHeight: '16px',

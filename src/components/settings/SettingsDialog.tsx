@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react'
-import * as Dialog from '@radix-ui/react-dialog'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
-import { RefreshCw, Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail, Bot } from 'lucide-react'
+import { RefreshCw, Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail, Bot, HardDriveDownload } from 'lucide-react'
 import { useAppStore, type Abbreviation } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { THEMES, DARK_THEMES, LIGHT_THEMES, type CustomTheme } from '../../lib/themes'
 import { ThemeEditor } from './ThemeEditor'
 import { FontPicker } from './FontPicker'
+import { BackupSection } from './BackupSection'
+import { runInMainWindow, openSettingsWindow } from '../../lib/settingsSync'
+import { portableRoot } from '../../lib/dataRoot'
 import {
   pickVaultDirectory,
   getRecentVaults, removeRecentVault, type RecentVault,
@@ -22,15 +24,12 @@ import {
   type Team, type TeamMember,
 } from '../../lib/team'
 import { SignInDialog } from '../shared/SignInDialog'
-import { JoinVaultDialog } from './JoinVaultDialog'
-import { switchVault } from '../../lib/switchVault'
-import { ShareVaultDialog } from '../collab/ShareVaultDialog'
 import { macCalendarSupported } from '../../lib/macCalendar'
 import { isGitRepo, gitRemoteUrl as gitGetRemoteUrl } from '../../lib/gitSync'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'github' | 'claude' | 'sync' | 'team' | 'about'
+type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'backup' | 'github' | 'claude' | 'sync' | 'team' | 'about'
 
 // ─── Font options ─────────────────────────────────────────────────────────────
 
@@ -65,7 +64,11 @@ const LINE_HEIGHT_OPTIONS = [
 
 // ─── Nav items ────────────────────────────────────────────────────────────────
 
-const NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ className?: string }> }> = [
+// Team sync is hidden from Settings for now. Flip this to bring the tab back —
+// the section itself (TeamSection) is untouched.
+const SHOW_TEAM_SETTINGS = false
+
+const ALL_NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ className?: string }> }> = [
   { id: 'themes', label: 'Themes', icon: Palette },
   { id: 'appearance', label: 'Appearance', icon: Sun },
   { id: 'editor', label: 'Editor', icon: Type },
@@ -73,16 +76,19 @@ const NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ className?
   { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
   { id: 'abbreviations', label: 'Abbreviations', icon: List },
   { id: 'vault', label: 'Vaults', icon: Folder },
+  { id: 'backup', label: 'Backup', icon: HardDriveDownload },
   { id: 'github', label: 'GitHub', icon: GitBranch },
   { id: 'claude', label: 'Claude', icon: Bot },
   { id: 'team', label: 'Team', icon: Users },
   { id: 'about', label: 'About', icon: Info },
 ]
 
+const NAV_ITEMS = ALL_NAV_ITEMS.filter(n => n.id !== 'team' || SHOW_TEAM_SETTINGS)
+
 // ─── SettingsDialog ───────────────────────────────────────────────────────────
 
-export function SettingsDialog() {
-  const [open, setOpen] = useState(false)
+/** The settings UI (nav + sections). Rendered inside the dedicated settings window. */
+export function SettingsPanel() {
   const [section, setSection] = useState<Section>('themes')
   // null = grid, undefined = new, CustomTheme = edit existing
   const [editingTheme, setEditingTheme] = useState<CustomTheme | null | undefined>(null)
@@ -91,6 +97,10 @@ export function SettingsDialog() {
   useEffect(() => {
     getVersion().then(setAppVersion).catch(() => {})
   }, [])
+
+  // Set only for the portable build, which keeps all its data in a folder beside the app.
+  const [dataFolder, setDataFolder] = useState<string | null>(null)
+  useEffect(() => { portableRoot().then(setDataFolder) }, [])
 
   const {
     theme, toggleTheme, themeName, setTheme,
@@ -126,469 +136,460 @@ export function SettingsDialog() {
   }
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
+    <div className="flex flex-1 min-h-0">
+    {/* Left nav */}
+    <div className="w-48 shrink-0 bg-sidebar border-r border-border flex flex-col py-3 px-2 gap-0.5">
+      {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
         <button
+          key={id}
+          onClick={() => setSection(id)}
           className={cn(
-            'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs',
-            'text-muted-foreground hover:text-foreground hover:bg-surface transition-colors',
+            'flex items-center gap-2.5 px-2 py-1.5 rounded-md text-xs transition-colors text-left',
+            section === id
+              ? 'bg-active text-foreground font-medium'
+              : 'text-muted-foreground hover:text-foreground hover:bg-surface',
           )}
-          title="Settings"
         >
-          <Settings className="w-3.5 h-3.5 shrink-0" />
-          <span>Settings</span>
+          <Icon className="w-3.5 h-3.5 shrink-0" />
+          {label}
         </button>
-      </Dialog.Trigger>
+      ))}
+    </div>
 
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 z-50" />
-        <Dialog.Content
-          className={cn(
-            'fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50',
-            'w-[720px] min-h-[480px] max-h-[80vh] bg-panel border border-border rounded-xl shadow-2xl',
-            'flex overflow-hidden focus:outline-none',
-          )}
-        >
-          {/* Left nav */}
-          <div className="w-48 shrink-0 bg-sidebar border-r border-border flex flex-col py-3 px-2 gap-0.5">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary px-2 pb-2">Settings</p>
-            {NAV_ITEMS.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                onClick={() => setSection(id)}
-                className={cn(
-                  'flex items-center gap-2.5 px-2 py-1.5 rounded-md text-xs transition-colors text-left',
-                  section === id
-                    ? 'bg-active text-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-surface',
-                )}
-              >
-                <Icon className="w-3.5 h-3.5 shrink-0" />
-                {label}
-              </button>
-            ))}
-          </div>
+    {/* Content */}
+    <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Section heading */}
+      <div className="px-6 py-4 border-b border-border shrink-0">
+        <h2 className="text-sm font-semibold text-foreground">
+          {NAV_ITEMS.find(n => n.id === section)?.label}
+        </h2>
+      </div>
 
-          {/* Content */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
-              <Dialog.Title className="text-sm font-semibold text-foreground">
-                {NAV_ITEMS.find(n => n.id === section)?.label}
-              </Dialog.Title>
-              <Dialog.Close asChild>
-                <button className="w-6 h-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface transition-colors">
-                  <X className="w-3.5 h-3.5" />
-                </button>
-              </Dialog.Close>
-            </div>
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
 
-            {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
-
-              {/* ── Themes ── */}
-              {section === 'themes' && (
-                editingTheme !== null ? (
-                  <ThemeEditor
-                    initial={editingTheme}
-                    onSave={handleSaveCustomTheme}
-                    onCancel={handleCancelEditor}
-                  />
-                ) : (
-                  <div className="space-y-5">
-                    {/* Dark themes */}
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-3">Dark</p>
-                      <div className="grid grid-cols-4 gap-2">
-                        {DARK_THEMES.map(t => (
-                          <ThemeCard
-                            key={t.id}
-                            theme={t}
-                            selected={themeName === t.id}
-                            onSelect={() => setTheme(t.id)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Light themes */}
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-3">Light</p>
-                      <div className="grid grid-cols-4 gap-2">
-                        {LIGHT_THEMES.map(t => (
-                          <ThemeCard
-                            key={t.id}
-                            theme={t}
-                            selected={themeName === t.id}
-                            onSelect={() => setTheme(t.id)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Custom themes */}
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Custom</p>
-                        <button
-                          onClick={() => setEditingTheme(undefined)}
-                          className="flex items-center gap-1 text-[10px] text-accent hover:opacity-80 transition-opacity font-medium"
-                        >
-                          <Plus className="w-3 h-3" />
-                          New theme
-                        </button>
-                      </div>
-                      {customThemes.length === 0 ? (
-                        <button
-                          onClick={() => setEditingTheme(undefined)}
-                          className={cn(
-                            'w-full flex items-center justify-center gap-2 py-6 rounded-lg border-2 border-dashed border-border',
-                            'text-xs text-muted-foreground hover:text-foreground hover:border-accent/50 transition-colors',
-                          )}
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                          Create your first theme
-                        </button>
-                      ) : (
-                        <div className="grid grid-cols-4 gap-2">
-                          {customThemes.map(t => (
-                            <CustomThemeCard
-                              key={t.id}
-                              theme={t}
-                              selected={themeName === t.id}
-                              onSelect={() => setTheme(t.id)}
-                              onEdit={() => setEditingTheme(t)}
-                              onDelete={() => deleteCustomTheme(t.id)}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Active theme label */}
-                    {(() => {
-                      const builtIn = THEMES.find(t => t.id === themeName)
-                      const custom = customThemes.find(t => t.id === themeName)
-                      const active = builtIn ?? custom
-                      return active ? (
-                        <div className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
-                          <span className="text-foreground font-medium">{active.label}</span>
-                          {builtIn && <><span>·</span><span>{builtIn.description}</span></>}
-                          {custom && <><span>·</span><span>Custom theme</span></>}
-                        </div>
-                      ) : null
-                    })()}
-                  </div>
-                ))}
-
-              {/* ── Appearance ── */}
-              {section === 'appearance' && (
-                <>
-                  <SettingRow label="Mode" description="Choose between dark and light">
-                    <div className="flex items-center gap-1 border border-border rounded-lg p-1">
-                      <button
-                        onClick={() => theme === 'light' && toggleTheme()}
-                        className={cn(
-                          'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors',
-                          theme === 'dark'
-                            ? 'bg-active text-foreground font-medium'
-                            : 'text-muted-foreground hover:text-foreground',
-                        )}
-                      >
-                        <Moon className="w-3 h-3" />
-                        Dark
-                      </button>
-                      <button
-                        onClick={() => theme === 'dark' && toggleTheme()}
-                        className={cn(
-                          'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors',
-                          theme === 'light'
-                            ? 'bg-active text-foreground font-medium'
-                            : 'text-muted-foreground hover:text-foreground',
-                        )}
-                      >
-                        <Sun className="w-3 h-3" />
-                        Light
-                      </button>
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow
-                    label="Glass sidebar"
-                    description="Show the desktop through the sidebar"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-medium text-tertiary border border-border/60 rounded px-1.5 py-0.5 leading-none">
-                        macOS
-                      </span>
-                      <ToggleSwitch checked={sidebarGlass} onChange={setSidebarGlass} />
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow
-                    label="Glass body"
-                    description="Show the desktop through the note list and editor"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-medium text-tertiary border border-border/60 rounded px-1.5 py-0.5 leading-none">
-                        macOS
-                      </span>
-                      <ToggleSwitch checked={bodyGlass} onChange={setBodyGlass} />
-                    </div>
-                  </SettingRow>
-
-                  {(sidebarGlass || bodyGlass) && (
-                    <SettingRow
-                      label="Glass intensity"
-                      description="How see-through the glass effect is"
-                    >
-                      <div className="flex items-center gap-2 w-40">
-                        <input
-                          type="range"
-                          min={0}
-                          max={100}
-                          step={5}
-                          value={glassOpacity}
-                          onChange={e => setGlassOpacity(Number(e.target.value))}
-                          className="flex-1 accent-accent"
-                        />
-                        <span className="text-[10px] text-tertiary w-8 text-right tabular-nums">
-                          {glassOpacity}%
-                        </span>
-                      </div>
-                    </SettingRow>
-                  )}
-                </>
-              )}
-
-              {/* ── Editor ── */}
-              {section === 'editor' && (
-                <>
-                  <SettingRow label="Font family" description="The typeface used in the editor — pick a built-in or any font installed on your system">
-                    <FontPicker
-                      value={editorFontFamily}
-                      onChange={v => setEditorSettings({ editorFontFamily: v })}
-                      presets={FONT_OPTIONS}
+        {/* ── Themes ── */}
+        {section === 'themes' && (
+          editingTheme !== null ? (
+            <ThemeEditor
+              initial={editingTheme}
+              onSave={handleSaveCustomTheme}
+              onCancel={handleCancelEditor}
+            />
+          ) : (
+            <div className="space-y-5">
+              {/* Dark themes */}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-3">Dark</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {DARK_THEMES.map(t => (
+                    <ThemeCard
+                      key={t.id}
+                      theme={t}
+                      selected={themeName === t.id}
+                      onSelect={() => setTheme(t.id)}
                     />
-                  </SettingRow>
-
-                  <SettingRow label="Font size" description="Base size for editor text">
-                    <div className="flex items-center gap-1">
-                      {FONT_SIZE_OPTIONS.map(o => (
-                        <button
-                          key={o.value}
-                          onClick={() => setEditorSettings({ editorFontSize: o.value })}
-                          className={cn(
-                            'px-2.5 py-1 rounded-md text-xs border transition-colors',
-                            editorFontSize === o.value
-                              ? 'bg-accent text-accent-foreground border-accent'
-                              : 'border-border text-muted-foreground hover:text-foreground hover:bg-surface',
-                          )}
-                        >
-                          {o.label}
-                        </button>
-                      ))}
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Line height" description="Spacing between lines of text">
-                    <div className="flex items-center gap-1">
-                      {LINE_HEIGHT_OPTIONS.map(o => (
-                        <button
-                          key={o.value}
-                          onClick={() => setEditorSettings({ editorLineHeight: o.value })}
-                          className={cn(
-                            'px-2.5 py-1 rounded-md text-xs border transition-colors',
-                            editorLineHeight === o.value
-                              ? 'bg-accent text-accent-foreground border-accent'
-                              : 'border-border text-muted-foreground hover:text-foreground hover:bg-surface',
-                          )}
-                        >
-                          {o.label}
-                        </button>
-                      ))}
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Editor width" description="How wide the note column is — the space on either side of the text">
-                    <div className="flex items-center gap-1">
-                      {EDITOR_WIDTH_OPTIONS.map(o => (
-                        <button
-                          key={o.value}
-                          onClick={() => setEditorSettings({ editorWidth: o.value })}
-                          className={cn(
-                            'px-2.5 py-1 rounded-md text-xs border transition-colors',
-                            editorWidth === o.value
-                              ? 'bg-accent text-accent-foreground border-accent'
-                              : 'border-border text-muted-foreground hover:text-foreground hover:bg-surface',
-                          )}
-                        >
-                          {o.label}
-                        </button>
-                      ))}
-                    </div>
-                  </SettingRow>
-
-                  <SettingRow label="Vim mode" description="Edit notes with Vim keybindings (modal editing, motions, : commands)">
-                    <ToggleSwitch checked={vimModeEnabled} onChange={setVimModeEnabled} />
-                  </SettingRow>
-
-                  <SettingRow
-                    label="Default note mode"
-                    description="Normal is the single-pane WYSIWYG editor. Markdown shows raw source and preview side by side. Applies to notes with no per-note override."
-                  >
-                    <div className="flex items-center gap-1 border border-border rounded-lg p-1">
-                      {(['normal', 'markdown'] as const).map(mode => (
-                        <button
-                          key={mode}
-                          onClick={() => setDefaultEditorMode(mode)}
-                          className={cn(
-                            'px-3 py-1.5 rounded-md text-xs capitalize transition-colors',
-                            defaultEditorMode === mode
-                              ? 'bg-active text-foreground font-medium'
-                              : 'text-muted-foreground hover:text-foreground',
-                          )}
-                        >
-                          {mode}
-                        </button>
-                      ))}
-                    </div>
-                  </SettingRow>
-
-                  {/* Preview */}
-                  <div className="rounded-lg border border-border bg-background p-4">
-                    <p className="text-[10px] uppercase tracking-wider text-tertiary mb-3">Preview</p>
-                    <p
-                      style={{
-                        fontFamily: editorFontFamily,
-                        fontSize: editorFontSize,
-                        lineHeight: editorLineHeight,
-                      }}
-                      className="text-foreground"
-                    >
-                      The quick brown fox jumps over the lazy dog.{' '}
-                      <span className="text-muted-foreground">Writing feels effortless when the editor feels right.</span>
-                    </p>
-                  </div>
-                </>
-              )}
-
-              {/* ── Features ── */}
-              {section === 'features' && (
-                <>
-                  <SettingRow
-                    label="Canvas"
-                    description="Freehand drawing and diagramming — add a Draw page to the sidebar"
-                  >
-                    <ToggleSwitch checked={canvasEnabled} onChange={setCanvasEnabled} />
-                  </SettingRow>
-
-                  <SettingRow
-                    label="Brainstorm"
-                    description="Private outliner for ideas — add a Brainstorm page to the sidebar and the /brainstorm embed"
-                  >
-                    <ToggleSwitch checked={brainstormEnabled} onChange={setBrainstormEnabled} />
-                  </SettingRow>
-
-                  <SettingRow
-                    label="Calendar"
-                    description="Private weekly planner — add a Calendar page to the sidebar to plan your week"
-                  >
-                    <ToggleSwitch checked={calendarEnabled} onChange={setCalendarEnabled} />
-                  </SettingRow>
-
-                  {calendarEnabled && macCalendarSupported && <MacCalendarSync />}
-
-                  {canvasEnabled && (
-                    <SettingRow
-                      label="Canvas storage"
-                      description={
-                        canvasLinkedVaultPath
-                          ? `Linked to ${canvasLinkedVaultPath.split('/').pop()} — drawings are stored in that vault`
-                          : 'Not linked to a vault — drawings are stored globally and stay the same across every vault'
-                      }
-                    >
-                      {canvasLinkedVaultPath ? (
-                        <button
-                          onClick={() => setCanvasLinkedVaultPath(null)}
-                          className="text-xs px-2.5 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-                        >
-                          Unlink
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleLinkCanvasVault}
-                          className="text-xs px-2.5 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-                        >
-                          Link to a vault…
-                        </button>
-                      )}
-                    </SettingRow>
-                  )}
-                </>
-              )}
-
-              {/* ── Shortcuts ── */}
-              {section === 'shortcuts' && <ShortcutsSection />}
-
-              {/* ── Abbreviations ── */}
-              {section === 'abbreviations' && <AbbreviationsSection />}
-
-              {/* ── Vaults ── */}
-              {section === 'vault' && (
-                <VaultSection onClose={() => setOpen(false)} />
-              )}
-
-              {/* ── GitHub ── */}
-              {section === 'github' && (
-                <GitBranchSection />
-              )}
-
-              {/* ── Claude Desktop (MCP) ── */}
-              {section === 'claude' && (
-                <ClaudeSection />
-              )}
-
-              {/* ── Sync (git) ── */}
-              {section === 'sync' && (
-                <SyncSection />
-              )}
-
-              {/* ── Team ── */}
-              {section === 'team' && (
-                <TeamSection />
-              )}
-
-              {/* ── About ── */}
-              {section === 'about' && (
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src="/inkwell-icon.svg"
-                      alt="inkwell"
-                      className="w-14 h-14 rounded-2xl shadow-md"
-                    />
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">inkwell</p>
-                      <p className="text-xs text-muted-foreground">Version {appVersion}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
-                    <p>A calm, focused writing environment built on Tauri and CodeMirror.</p>
-                    <p>Your notes live as plain Markdown files in a folder you own — no cloud sync, no lock-in.</p>
-                  </div>
-
-                  <AboutLink label="Built with Tauri v2" href="https://tauri.app" />
-                  <AboutLink label="Editor powered by CodeMirror 6" href="https://codemirror.net" />
+                  ))}
                 </div>
-              )}
+              </div>
 
+              {/* Light themes */}
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-3">Light</p>
+                <div className="grid grid-cols-4 gap-2">
+                  {LIGHT_THEMES.map(t => (
+                    <ThemeCard
+                      key={t.id}
+                      theme={t}
+                      selected={themeName === t.id}
+                      onSelect={() => setTheme(t.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Custom themes */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Custom</p>
+                  <button
+                    onClick={() => setEditingTheme(undefined)}
+                    className="flex items-center gap-1 text-[10px] text-accent hover:opacity-80 transition-opacity font-medium"
+                  >
+                    <Plus className="w-3 h-3" />
+                    New theme
+                  </button>
+                </div>
+                {customThemes.length === 0 ? (
+                  <button
+                    onClick={() => setEditingTheme(undefined)}
+                    className={cn(
+                      'w-full flex items-center justify-center gap-2 py-6 rounded-lg border-2 border-dashed border-border',
+                      'text-xs text-muted-foreground hover:text-foreground hover:border-accent/50 transition-colors',
+                    )}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Create your first theme
+                  </button>
+                ) : (
+                  <div className="grid grid-cols-4 gap-2">
+                    {customThemes.map(t => (
+                      <CustomThemeCard
+                        key={t.id}
+                        theme={t}
+                        selected={themeName === t.id}
+                        onSelect={() => setTheme(t.id)}
+                        onEdit={() => setEditingTheme(t)}
+                        onDelete={() => deleteCustomTheme(t.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Active theme label */}
+              {(() => {
+                const builtIn = THEMES.find(t => t.id === themeName)
+                const custom = customThemes.find(t => t.id === themeName)
+                const active = builtIn ?? custom
+                return active ? (
+                  <div className="flex items-center gap-2 pt-1 text-xs text-muted-foreground">
+                    <span className="text-foreground font-medium">{active.label}</span>
+                    {builtIn && <><span>·</span><span>{builtIn.description}</span></>}
+                    {custom && <><span>·</span><span>Custom theme</span></>}
+                  </div>
+                ) : null
+              })()}
             </div>
+          ))}
+
+        {/* ── Appearance ── */}
+        {section === 'appearance' && (
+          <>
+            <SettingRow label="Font family" description="The typeface for the whole app — pick a built-in or any font installed on your system">
+              <FontPicker
+                value={editorFontFamily}
+                onChange={v => setEditorSettings({ editorFontFamily: v })}
+                presets={FONT_OPTIONS}
+              />
+            </SettingRow>
+
+            <SettingRow label="Mode" description="Choose between dark and light">
+              <div className="flex items-center gap-1 border border-border rounded-lg p-1">
+                <button
+                  onClick={() => theme === 'light' && toggleTheme()}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors',
+                    theme === 'dark'
+                      ? 'bg-active text-foreground font-medium'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  <Moon className="w-3 h-3" />
+                  Dark
+                </button>
+                <button
+                  onClick={() => theme === 'dark' && toggleTheme()}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs transition-colors',
+                    theme === 'light'
+                      ? 'bg-active text-foreground font-medium'
+                      : 'text-muted-foreground hover:text-foreground',
+                  )}
+                >
+                  <Sun className="w-3 h-3" />
+                  Light
+                </button>
+              </div>
+            </SettingRow>
+
+            <SettingRow
+              label="Glass sidebar"
+              description="Show the desktop through the sidebar"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-medium text-tertiary border border-border/60 rounded px-1.5 py-0.5 leading-none">
+                  macOS
+                </span>
+                <ToggleSwitch checked={sidebarGlass} onChange={setSidebarGlass} />
+              </div>
+            </SettingRow>
+
+            <SettingRow
+              label="Glass body"
+              description="Show the desktop through the note list and editor"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-medium text-tertiary border border-border/60 rounded px-1.5 py-0.5 leading-none">
+                  macOS
+                </span>
+                <ToggleSwitch checked={bodyGlass} onChange={setBodyGlass} />
+              </div>
+            </SettingRow>
+
+            {(sidebarGlass || bodyGlass) && (
+              <SettingRow
+                label="Glass intensity"
+                description="How see-through the glass effect is"
+              >
+                <div className="flex items-center gap-2 w-40">
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={glassOpacity}
+                    onChange={e => setGlassOpacity(Number(e.target.value))}
+                    className="flex-1 accent-accent"
+                  />
+                  <span className="text-[10px] text-tertiary w-8 text-right tabular-nums">
+                    {glassOpacity}%
+                  </span>
+                </div>
+              </SettingRow>
+            )}
+          </>
+        )}
+
+        {/* ── Editor ── */}
+        {section === 'editor' && (
+          <>
+            <SettingRow label="Font size" description="Base size for editor text">
+              <div className="flex items-center gap-1">
+                {FONT_SIZE_OPTIONS.map(o => (
+                  <button
+                    key={o.value}
+                    onClick={() => setEditorSettings({ editorFontSize: o.value })}
+                    className={cn(
+                      'px-2.5 py-1 rounded-md text-xs border transition-colors',
+                      editorFontSize === o.value
+                        ? 'bg-accent text-accent-foreground border-accent'
+                        : 'border-border text-muted-foreground hover:text-foreground hover:bg-surface',
+                    )}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </SettingRow>
+
+            <SettingRow label="Line height" description="Spacing between lines of text">
+              <div className="flex items-center gap-1">
+                {LINE_HEIGHT_OPTIONS.map(o => (
+                  <button
+                    key={o.value}
+                    onClick={() => setEditorSettings({ editorLineHeight: o.value })}
+                    className={cn(
+                      'px-2.5 py-1 rounded-md text-xs border transition-colors',
+                      editorLineHeight === o.value
+                        ? 'bg-accent text-accent-foreground border-accent'
+                        : 'border-border text-muted-foreground hover:text-foreground hover:bg-surface',
+                    )}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </SettingRow>
+
+            <SettingRow label="Editor width" description="How wide the note column is — the space on either side of the text">
+              <div className="flex items-center gap-1">
+                {EDITOR_WIDTH_OPTIONS.map(o => (
+                  <button
+                    key={o.value}
+                    onClick={() => setEditorSettings({ editorWidth: o.value })}
+                    className={cn(
+                      'px-2.5 py-1 rounded-md text-xs border transition-colors',
+                      editorWidth === o.value
+                        ? 'bg-accent text-accent-foreground border-accent'
+                        : 'border-border text-muted-foreground hover:text-foreground hover:bg-surface',
+                    )}
+                  >
+                    {o.label}
+                  </button>
+                ))}
+              </div>
+            </SettingRow>
+
+            <SettingRow label="Vim mode" description="Edit notes with Vim keybindings (modal editing, motions, : commands)">
+              <ToggleSwitch checked={vimModeEnabled} onChange={setVimModeEnabled} />
+            </SettingRow>
+
+            <SettingRow
+              label="Default note mode"
+              description="Normal is the single-pane WYSIWYG editor. Markdown shows raw source and preview side by side. Applies to notes with no per-note override."
+            >
+              <div className="flex items-center gap-1 border border-border rounded-lg p-1">
+                {(['normal', 'markdown'] as const).map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setDefaultEditorMode(mode)}
+                    className={cn(
+                      'px-3 py-1.5 rounded-md text-xs capitalize transition-colors',
+                      defaultEditorMode === mode
+                        ? 'bg-active text-foreground font-medium'
+                        : 'text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {mode}
+                  </button>
+                ))}
+              </div>
+            </SettingRow>
+
+            {/* Preview */}
+            <div className="rounded-lg border border-border bg-background p-4">
+              <p className="text-[10px] uppercase tracking-wider text-tertiary mb-3">Preview</p>
+              <p
+                style={{
+                  fontFamily: editorFontFamily,
+                  fontSize: editorFontSize,
+                  lineHeight: editorLineHeight,
+                }}
+                className="text-foreground"
+              >
+                The quick brown fox jumps over the lazy dog.{' '}
+                <span className="text-muted-foreground">Writing feels effortless when the editor feels right.</span>
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* ── Features ── */}
+        {section === 'features' && (
+          <>
+            <SettingRow
+              label="Canvas"
+              description="Freehand drawing and diagramming — add a Draw page to the sidebar"
+            >
+              <ToggleSwitch checked={canvasEnabled} onChange={setCanvasEnabled} />
+            </SettingRow>
+
+            <SettingRow
+              label="Brainstorm"
+              description="Private outliner for ideas — add a Brainstorm page to the sidebar and the /brainstorm embed"
+            >
+              <ToggleSwitch checked={brainstormEnabled} onChange={setBrainstormEnabled} />
+            </SettingRow>
+
+            <SettingRow
+              label="Calendar"
+              description="Private weekly planner — add a Calendar page to the sidebar to plan your week"
+            >
+              <ToggleSwitch checked={calendarEnabled} onChange={setCalendarEnabled} />
+            </SettingRow>
+
+            {calendarEnabled && macCalendarSupported && <MacCalendarSync />}
+
+            {canvasEnabled && (
+              <SettingRow
+                label="Canvas storage"
+                description={
+                  canvasLinkedVaultPath
+                    ? `Linked to ${canvasLinkedVaultPath.split('/').pop()} — drawings are stored in that vault`
+                    : 'Not linked to a vault — drawings are stored globally and stay the same across every vault'
+                }
+              >
+                {canvasLinkedVaultPath ? (
+                  <button
+                    onClick={() => setCanvasLinkedVaultPath(null)}
+                    className="text-xs px-2.5 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                  >
+                    Unlink
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleLinkCanvasVault}
+                    className="text-xs px-2.5 py-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+                  >
+                    Link to a vault…
+                  </button>
+                )}
+              </SettingRow>
+            )}
+          </>
+        )}
+
+        {/* ── Shortcuts ── */}
+        {section === 'shortcuts' && <ShortcutsSection />}
+
+        {/* ── Abbreviations ── */}
+        {section === 'abbreviations' && <AbbreviationsSection />}
+
+        {/* ── Vaults ── */}
+        {section === 'vault' && (
+          <VaultSection />
+        )}
+
+        {/* ── Backup ── */}
+        {section === 'backup' && <BackupSection />}
+
+        {/* ── GitHub ── */}
+        {section === 'github' && (
+          <GitBranchSection />
+        )}
+
+        {/* ── Claude Desktop (MCP) ── */}
+        {section === 'claude' && (
+          <ClaudeSection />
+        )}
+
+        {/* ── Sync (git) ── */}
+        {section === 'sync' && (
+          <SyncSection />
+        )}
+
+        {/* ── Team ── */}
+        {section === 'team' && (
+          <TeamSection />
+        )}
+
+        {/* ── About ── */}
+        {section === 'about' && (
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <img
+                src="/inkwell-icon.svg"
+                alt="inkwell"
+                className="w-14 h-14 rounded-2xl shadow-md"
+              />
+              <div>
+                <p className="text-sm font-semibold text-foreground">inkwell</p>
+                <p className="text-xs text-muted-foreground">Version {appVersion}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs text-muted-foreground leading-relaxed">
+              <p>A calm, focused writing environment built on Tauri and CodeMirror.</p>
+              <p>Your notes live as plain Markdown files in a folder you own — no cloud sync, no lock-in.</p>
+            </div>
+
+            {dataFolder && (
+              <div data-testid="portable-info" className="rounded-lg border border-border bg-surface px-3 py-2.5 text-xs">
+                <p className="font-medium text-foreground">Portable mode</p>
+                <p className="mt-0.5 text-muted-foreground">
+                  Settings and data stay in this folder, so you can move or delete the app without leaving anything behind:
+                </p>
+                <p className="mt-1 break-all font-mono text-[11px] text-foreground">{dataFolder}</p>
+                <button
+                  onClick={() => {
+                    import('@tauri-apps/plugin-opener').then(({ revealItemInDir }) => revealItemInDir(dataFolder)).catch(console.error)
+                  }}
+                  className="mt-2 rounded-md border border-border px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-background"
+                >
+                  Show data folder
+                </button>
+              </div>
+            )}
+
+            <AboutLink label="Built with Tauri v2" href="https://tauri.app" />
+            <AboutLink label="Editor powered by CodeMirror 6" href="https://codemirror.net" />
           </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+        )}
+
+      </div>
+    </div>
+    </div>
   )
 }
 
@@ -985,14 +986,12 @@ function formatVaultDate(iso: string | Date): string {
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
-function VaultSection({ onClose }: { onClose: () => void }) {
+function VaultSection() {
   const { vaultPath, sharedVault, syncStatus, syncProgress } = useAppStore()
   const [recents, setRecents] = useState<RecentVault[]>([])
   const [switching, setSwitching] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const [showShare, setShowShare] = useState(false)
-  const [showJoin, setShowJoin] = useState(false)
 
   // Reload recents whenever vaultPath changes, filtering out the active vault
   useEffect(() => {
@@ -1003,8 +1002,7 @@ function VaultSection({ onClose }: { onClose: () => void }) {
     setError(null)
     setSwitching(path)
     try {
-      await switchVault(path, empty)
-      onClose()
+      await runInMainWindow('switchVault', path, empty)
     } catch {
       setError("Couldn't open this vault. The folder may have moved or been deleted.")
     } finally {
@@ -1061,7 +1059,7 @@ function VaultSection({ onClose }: { onClose: () => void }) {
         <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary mb-2">Team</p>
         {sharedVault ? (
           <button
-            onClick={() => setShowShare(true)}
+            onClick={() => { runInMainWindow('openShareVault').catch(console.error) }}
             className={cn(
               'w-full flex items-center gap-2 px-3 py-2.5 rounded-lg border text-left transition-colors hover:bg-surface',
               syncStatus === 'error' ? 'border-red-500/30 bg-red-500/8' : 'border-green-500/30 bg-green-500/8',
@@ -1083,22 +1081,20 @@ function VaultSection({ onClose }: { onClose: () => void }) {
         ) : (
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowShare(true)}
+              onClick={() => { runInMainWindow('openShareVault').catch(console.error) }}
               className="px-3 py-1.5 rounded-lg text-xs font-medium bg-accent text-white hover:opacity-90 transition-colors"
             >
               Share vault
             </button>
             <span className="text-border text-xs">·</span>
             <button
-              onClick={() => setShowJoin(true)}
+              onClick={() => { runInMainWindow('openJoinVault').catch(console.error) }}
               className="text-[11px] text-muted-foreground hover:text-foreground transition-colors"
             >
               Join a shared vault
             </button>
           </div>
         )}
-        <ShareVaultDialog open={showShare} onClose={() => setShowShare(false)} />
-        <JoinVaultDialog open={showJoin} onClose={() => setShowJoin(false)} />
       </div>
 
       {/* Other vaults */}
@@ -2105,5 +2101,22 @@ function AboutLink({ label, href }: { label: string; href: string }) {
       <span>{label}</span>
       <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
     </a>
+  )
+}
+
+/** The "Settings" entry in the sidebar: opens Settings in its own window. */
+export function SettingsButton() {
+  return (
+    <button
+      onClick={() => { openSettingsWindow().catch(console.error) }}
+      className={cn(
+        'w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs',
+        'text-muted-foreground hover:text-foreground hover:bg-surface transition-colors',
+      )}
+      title="Settings"
+    >
+      <Settings className="w-3.5 h-3.5 shrink-0" />
+      <span>Settings</span>
+    </button>
   )
 }

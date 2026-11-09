@@ -1,3 +1,4 @@
+import { configDir } from './dataRoot'
 import { genId } from './id'
 
 // Multiple canvas drawings. Stored globally in ~/.inkwell by default, or in
@@ -34,8 +35,7 @@ interface IndexFile { version: 1; drawings: DrawingMeta[] }
 
 async function baseDir(linkedVault: string | null): Promise<string> {
   if (linkedVault) return `${linkedVault}/${INKWELL_DIR}`
-  const { homeDir, join } = await import('@tauri-apps/api/path')
-  return join(await homeDir(), INKWELL_DIR)
+  return configDir()
 }
 
 async function readJson<T>(path: string): Promise<T | null> {

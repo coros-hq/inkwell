@@ -1,3 +1,5 @@
+import { configDir } from "../lib/dataRoot";
+import { APP_FONT_KEY, applyAppFont, savedAppFont } from "../lib/appFont";
 import { create } from "zustand";
 import type {
   Note,
@@ -7,6 +9,7 @@ import type {
   EditorMode,
   ActiveView,
   Board,
+  BoardBackground,
   BoardColumn,
   BoardTask,
   BoardComment,
@@ -119,12 +122,9 @@ function syncVibrancy(enabled: boolean, dark: boolean): void {
 async function writeActiveVaultFile(vaultPath: string): Promise<void> {
   try {
     const { writeTextFile, mkdir } = await import("@tauri-apps/plugin-fs");
-    const { homeDir, join } = await import("@tauri-apps/api/path");
-    const home = await homeDir();
-    const dir = await join(home, ".inkwell");
-    const file = await join(dir, "active-vault");
+    const dir = await configDir();
     await mkdir(dir, { recursive: true });
-    await writeTextFile(file, vaultPath);
+    await writeTextFile(`${dir}/active-vault`, vaultPath);
   } catch (e) {
     console.warn("[inkwell] could not write active-vault file:", e);
   }
@@ -225,6 +225,22 @@ function loadNoteEditorModes(): Record<string, EditorMode> {
   }
 }
 
+// The mode a note was in before it entered read-only view, so leaving view restores it.
+const modeBeforeView = new Map<string, EditorMode>();
+
+/** What goes to localStorage: view mode is session-only, so a note never reopens read-only. */
+function persistableModes(modes: Record<string, EditorMode>): Record<string, EditorMode> {
+  const out: Record<string, EditorMode> = {};
+  for (const [id, mode] of Object.entries(modes)) {
+    if (mode !== "view") out[id] = mode;
+    else {
+      const before = modeBeforeView.get(id);
+      if (before) out[id] = before;
+    }
+  }
+  return out;
+}
+
 export interface ConfirmConfig {
   title: string;
   description: string;
@@ -253,6 +269,8 @@ interface AppState {
   /** Per-note overrides, keyed by note id — independent of later global default changes. */
   noteEditorModes: Record<string, EditorMode>;
   setNoteEditorMode: (noteId: string, mode: EditorMode) => void;
+  /** Flips a note between read-only view and whichever editing mode it was in. */
+  toggleNoteViewMode: (noteId: string) => void;
   /** Resolves a note's effective mode: its override, else the global default. */
   getEditorMode: (noteId: string) => EditorMode;
   /** Split ratio (0–1, source pane share) for Markdown mode, remembered globally. */
@@ -468,6 +486,7 @@ interface AppState {
 
   createBoard: (name: string) => void;
   deleteBoard: (id: string) => void;
+  setBoardBackground: (boardId: string, background: BoardBackground | null) => void;
   setActiveBoardId: (id: string | null) => void;
   setActiveBoardTaskId: (id: string | null) => void;
   addBoardColumn: (boardId: string, name: string) => void;
@@ -1035,9 +1054,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   themeName: "midnight",
   customThemes: loadCustomThemes(),
   editorFontSize: localStorage.getItem("inkwell-editor-fontSize") ?? "15px",
-  editorFontFamily:
-    localStorage.getItem("inkwell-editor-fontFamily") ??
-    "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  editorFontFamily: savedAppFont(),
   editorLineHeight: localStorage.getItem("inkwell-editor-lineHeight") ?? "1.7",
   editorWidth: localStorage.getItem("inkwell-editor-width") ?? "740px",
   sidebarGlass: localStorage.getItem("inkwell-sidebar-glass") === "true",
@@ -1348,9 +1365,20 @@ export const useAppStore = create<AppState>((set, get) => ({
   setNoteEditorMode: (noteId, mode) => {
     set((s) => {
       const noteEditorModes = { ...s.noteEditorModes, [noteId]: mode };
-      localStorage.setItem("inkwell-note-editor-modes", JSON.stringify(noteEditorModes));
+      localStorage.setItem("inkwell-note-editor-modes", JSON.stringify(persistableModes(noteEditorModes)));
       return { noteEditorModes };
     });
+  },
+
+  toggleNoteViewMode: (noteId) => {
+    const current = get().getEditorMode(noteId);
+    if (current === "view") {
+      get().setNoteEditorMode(noteId, modeBeforeView.get(noteId) ?? "normal");
+      modeBeforeView.delete(noteId);
+    } else {
+      modeBeforeView.set(noteId, current);
+      get().setNoteEditorMode(noteId, "view");
+    }
   },
 
   getEditorMode: (noteId) => {
@@ -1444,11 +1472,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   setEditorSettings: (settings) => {
     if (settings.editorFontSize)
       localStorage.setItem("inkwell-editor-fontSize", settings.editorFontSize);
-    if (settings.editorFontFamily)
-      localStorage.setItem(
-        "inkwell-editor-fontFamily",
-        settings.editorFontFamily,
-      );
+    if (settings.editorFontFamily) {
+      localStorage.setItem(APP_FONT_KEY, settings.editorFontFamily);
+      applyAppFont(settings.editorFontFamily);
+    }
     if (settings.editorLineHeight)
       localStorage.setItem(
         "inkwell-editor-lineHeight",
@@ -2664,6 +2691,18 @@ export const useAppStore = create<AppState>((set, get) => ({
         activeBoardId: remaining[0]?.id ?? null,
       };
     });
+    const { vaultPath, boards, boardColumns, boardTasks } = get();
+    flushBoards(vaultPath, boards, boardColumns, boardTasks);
+  },
+
+  setBoardBackground: (boardId, background) => {
+    set((s) => ({
+      boards: s.boards.map((b) => {
+        if (b.id !== boardId) return b;
+        const { background: _old, ...rest } = b;
+        return background ? { ...rest, background } : rest;
+      }),
+    }));
     const { vaultPath, boards, boardColumns, boardTasks } = get();
     flushBoards(vaultPath, boards, boardColumns, boardTasks);
   },

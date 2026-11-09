@@ -17,6 +17,7 @@ export const SHORTCUT_DEFS: ShortcutDef[] = [
   { id: 'toggleSidebar', label: 'Toggle Sidebar', description: 'Show or hide the sidebar', defaultCombo: 'mod+shift+b' },
   { id: 'focusMode', label: 'Focus Mode', description: 'Hide everything except the open note', defaultCombo: 'mod+shift+d' },
   { id: 'toggleEditorMode', label: 'Single / Split Mode', description: 'Switch the open note between Normal (single) and Markdown (split) mode', defaultCombo: 'mod+shift+e' },
+  { id: 'toggleViewMode', label: 'Reading View', description: 'Switch the open note between editing and a read-only rendered view', defaultCombo: 'mod+e' },
   { id: 'focusFiles', label: 'Focus File Tree', description: 'Move keyboard focus to the folders & notes (arrows, Enter, F2 to rename, Esc to return to the editor)', defaultCombo: 'mod+0' },
   { id: 'focusNotes', label: 'Focus Note List', description: 'Move keyboard focus to the notes of the open folder', defaultCombo: 'mod+9' },
   { id: 'openFile', label: 'Open File', description: 'Open a standalone .md file into this vault', defaultCombo: 'mod+o' },

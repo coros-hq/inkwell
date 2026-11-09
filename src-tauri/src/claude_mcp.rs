@@ -32,7 +32,7 @@ fn config_path() -> Option<PathBuf> {
 /// Marker file: present once the user has switched the integration off, so the
 /// startup sync doesn't re-add the entry.
 fn disabled_marker() -> Option<PathBuf> {
-    home_dir().map(|h| h.join(".inkwell").join("claude-mcp-disabled"))
+    crate::config_dir().map(|d| d.join("claude-mcp-disabled"))
 }
 
 /// The binary Claude should launch. AppImages run from a throwaway mount, so

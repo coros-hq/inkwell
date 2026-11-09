@@ -18,6 +18,8 @@ import { useAppStore } from '../../store/useAppStore'
 import { KanbanColumn } from './KanbanColumn'
 import { TaskCard } from './TaskCard'
 import { cn, glassBg } from '../../lib/utils'
+import { backgroundStyle } from '../../lib/boardBackgrounds'
+import { BoardBackgroundPicker } from './BoardBackgroundPicker'
 import type { BoardTask, BoardColumn } from '../../types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -85,15 +87,20 @@ export function BoardView() {
     bodyGlass,
     glassOpacity,
     theme,
+    vaultPath,
   } = useAppStore()
 
-  // With the window blur on, the board sits on the same translucent glass card as the editor.
-  const surface = {
-    className: bodyGlass ? 'glass-card' : 'bg-background',
-    style: bodyGlass ? glassBg('background', glassOpacity, theme, 'card') : undefined,
-  }
-
   const board = boards.find(b => b.id === activeBoardId)
+
+  // A per-board wallpaper wins over everything; otherwise, with the window blur on,
+  // the board sits on the same translucent glass card as the editor.
+  const wallpaper = backgroundStyle(board?.background, vaultPath)
+  const surface = wallpaper
+    ? { className: '', style: wallpaper }
+    : {
+        className: bodyGlass ? 'glass-card' : 'bg-background',
+        style: bodyGlass ? glassBg('background', glassOpacity, theme, 'card') : undefined,
+      }
   const columns: BoardColumn[] = board
     ? board.columnIds.map(id => boardColumns.find(c => c.id === id)).filter(Boolean) as BoardColumn[]
     : []
@@ -302,7 +309,7 @@ export function BoardView() {
   return (
     <div className={cn('flex-1 flex flex-col overflow-hidden min-w-0', surface.className)} style={surface.style}>
       {/* Top bar */}
-      <div className="h-10 shrink-0 border-b border-border flex items-center px-4 gap-3 relative" data-tauri-drag-region>
+      <div className={cn('h-10 shrink-0 border-b border-border flex items-center px-4 gap-3 relative z-20', wallpaper && 'bg-background/80 backdrop-blur-md')} data-tauri-drag-region>
         {!sidebarOpen && (
           <button
             className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-surface transition-colors shrink-0"
@@ -348,6 +355,8 @@ export function BoardView() {
 
         <div className="flex-1" />
 
+        {board && <BoardBackgroundPicker board={board} />}
+
         <button
           onClick={handleDeleteBoard}
           className="w-7 h-7 flex items-center justify-center rounded text-muted-foreground hover:text-red-500 hover:bg-surface transition-colors"
@@ -391,6 +400,7 @@ export function BoardView() {
                 <div key={col.id} className="flex items-start">
                   <KanbanColumn
                     column={col}
+                    onWallpaper={!!wallpaper}
                     tasks={tasks}
                     isDraggingTask={activeDrag?.type === 'task'}
                     isDraggingColumn={activeDrag?.type === 'column'}

@@ -71,15 +71,23 @@ export interface Comment {
 }
 
 /** Normal = single-pane WYSIWYG editor. Markdown = resizable raw-source + preview split. */
-export type EditorMode = 'normal' | 'markdown'
+/** `view` is a read-only rendered view; it is never saved as a note's remembered mode. */
+export type EditorMode = 'normal' | 'markdown' | 'view'
 export type ActiveView = 'notes' | 'board' | 'canvas' | 'brainstorm' | 'calendar' | 'trash'
 
 // ─── Board system ─────────────────────────────────────────────────────────────
+
+/** Wallpaper behind a board. `image.path` is relative to the vault root. */
+export type BoardBackground =
+  | { type: 'color'; value: string }
+  | { type: 'gradient'; value: string }
+  | { type: 'image'; path: string }
 
 export interface Board {
   id: string
   name: string
   columnIds: string[]  // ordered
+  background?: BoardBackground
 }
 
 export interface BoardColumn {

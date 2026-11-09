@@ -120,22 +120,28 @@ jobs:
             |----------|------|
             | macOS (Apple Silicon + Intel) | `inkwell_*.dmg` |
             | Windows (installer) | `inkwell_*_x64-setup.exe` |
-            | Windows (portable — unzip and run, no install) | `inkwell_*_x64-portable.zip` |
+            | Windows (portable — unzip and run, no install; all data stays in its folder) | `inkwell_*_x64-portable.zip` |
             | Linux (Debian/Ubuntu) | `inkwell_*_amd64.deb` |
             | Linux (universal) | `inkwell_*_amd64.AppImage` |
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
 
-      # Portable Windows build: just the app executable in a zip, runnable without an
-      # installer or admin rights. `tauri build` embeds the frontend in the binary, so
-      # inkwell.exe is self-contained (WebView2 ships with Windows 11 and Edge).
+      # Portable Windows build: the app executable plus a readme, in a folder inside the zip.
+      # `tauri build` embeds the frontend in the binary, so inkwell.exe is self-contained
+      # (WebView2 ships with Windows 11 and Edge). At run time the app notices it is a bare,
+      # uninstalled copy and keeps all its data in a `data` folder beside the exe (see
+      # `data_root` in src-tauri/src/lib.rs) — nothing is shipped in `data` itself.
       - name: Package portable Windows build
         if: matrix.platform == 'windows-latest'
         shell: pwsh
         run: |
           $zip = "inkwell_${{ github.ref_name }}_x64-portable.zip"
-          Compress-Archive -Path src-tauri/target/release/inkwell.exe -DestinationPath $zip
+          $dir = "inkwell-portable"
+          New-Item -ItemType Directory -Path $dir | Out-Null
+          Copy-Item src-tauri/target/release/inkwell.exe $dir/
+          Copy-Item .github/portable/README.txt $dir/
+          Compress-Archive -Path $dir -DestinationPath $zip
           "PORTABLE_ZIP=$zip" >> $env:GITHUB_ENV
 
       - name: Attach portable build to the release

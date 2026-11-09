@@ -1,3 +1,4 @@
+import { isWindowsApp } from '../../lib/platform'
 import {
   Pin,
   PenLine,
@@ -9,6 +10,7 @@ import {
   GitBranch,
   FilePlus2,
   Columns2,
+  Eye,
   List,
   X,
 } from "lucide-react";
@@ -33,6 +35,7 @@ import { NoteTagsMenu } from "../editor/NoteTagsMenu";
 import { MediaPanel } from "../editor/MediaPanel";
 import { EditorViewProvider } from "../editor/EditorViewContext";
 import { StructureRail } from "../editor/StructureRail";
+import { RichPreview } from "../editor/RichPreview";
 import { cn, glassBg } from "../../lib/utils";
 import { formatDate } from "../../lib/utils";
 import { comboMatches } from "../../lib/shortcuts";
@@ -50,7 +53,7 @@ function TabBar() {
       {/* Clears the macOS traffic-light overlay, which otherwise sits on top of
           this row's content — the Sidebar column normally reserves this space
           itself, but it's gone from the layout while the sidebar is collapsed. */}
-      {!sidebarOpen && <div className="w-20 shrink-0" data-tauri-drag-region />}
+      {!sidebarOpen && !isWindowsApp && <div className="w-20 shrink-0" data-tauri-drag-region />}
       <button
         className="w-9 shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-surface transition-colors border-r border-border"
         onClick={() => setNoteSidebarMode("list")}
@@ -101,6 +104,7 @@ export function EditorPane() {
     noteSidebarMode,
     getEditorMode,
     setNoteEditorMode,
+    toggleNoteViewMode,
     pinNote,
     saveStatus,
     saveError,
@@ -299,7 +303,7 @@ export function EditorPane() {
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         {noteSidebarMode === "tabs" && <TabBar />}
         {/* Keeps the macOS window controls clear of the text in focus mode */}
-        {focusMode && <div className="h-8 shrink-0" data-tauri-drag-region />}
+        {focusMode && !isWindowsApp && <div className="h-8 shrink-0" data-tauri-drag-region />}
         {/* Top bar — minimal: breadcrumb + title left, actions tucked right, no divider */}
         <div className={cn("shrink-0 flex items-center px-5 gap-3", focusMode ? "hidden" : "h-12")} data-tauri-drag-region>
           {!sidebarOpen && (
@@ -377,6 +381,22 @@ export function EditorPane() {
             >
               {saveLabel}
             </span>
+
+            {/* Reading view — rendered, read-only */}
+            <button
+              className={cn(
+                "w-7 h-7 flex items-center justify-center rounded-md transition-colors",
+                editorMode === "view"
+                  ? "text-accent bg-active"
+                  : "text-muted-foreground hover:text-foreground hover:bg-surface",
+              )}
+              onClick={() => toggleNoteViewMode(note.id)}
+              aria-pressed={editorMode === "view"}
+              aria-label="Reading view"
+              title={editorMode === "view" ? "Back to editing (⌘E)" : "Reading view (⌘E)"}
+            >
+              <Eye className="w-3.5 h-3.5" />
+            </button>
 
             {/* Markdown mode toggle — small escape hatch, not a primary control */}
             <button
@@ -470,7 +490,7 @@ export function EditorPane() {
         </div>
 
         {/* Meta line */}
-        {editorMode === "markdown" && !focusMode && (
+        {editorMode !== "normal" && !focusMode && (
           <div className="px-10 pt-2 pb-0 shrink-0">
             <p className="text-xs text-muted-foreground">
               {parentFolder && `${parentFolder.name} / `}
@@ -500,6 +520,18 @@ export function EditorPane() {
             )}
             {editorMode === "markdown" && (
               <SplitView noteId={note.id} content={note.content} />
+            )}
+            {editorMode === "view" && (
+              <>
+                <RichPreview
+                  content={note.content}
+                  noteId={note.id}
+                  searchQuery={searchOpen ? searchQuery : ""}
+                  searchMatchIndex={searchMatchIndex}
+                  onScrollerReady={setScrollerEl}
+                />
+                <StructureRail content={note.content} scrollerEl={scrollerEl} />
+              </>
             )}
 
             {editorMode === "normal" && !focusMode && <EditorToolbar />}

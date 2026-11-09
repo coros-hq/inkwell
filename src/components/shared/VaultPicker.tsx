@@ -127,7 +127,7 @@ export function VaultPicker() {
   }
 
   return (
-    <div className="flex h-screen w-screen items-center justify-center bg-background">
+    <div className="flex h-full w-full items-center justify-center bg-background">
       <div className="flex flex-col items-center w-full max-w-md px-6">
         {/* Logo */}
         <div className="mb-8 text-center">
