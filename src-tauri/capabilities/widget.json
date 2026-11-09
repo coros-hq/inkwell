@@ -1,0 +1,10 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "widget",
+  "description": "Capability for the quick-actions widget",
+  "windows": ["widget"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-hide"
+  ]
+}

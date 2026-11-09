@@ -11,6 +11,10 @@ use tauri::{Manager, WebviewUrl, WebviewWindowBuilder, WindowEvent};
 const MAIN_LABEL: &str = "main";
 const QUICK_NOTE_LABEL: &str = "quick-note";
 const SETTINGS_LABEL: &str = "settings";
+const WIDGET_LABEL: &str = "widget";
+/// Side of the (transparent, square) widget window in logical pixels; the visible
+/// disc is drawn inside it by src/components/widget/QuickWidget.tsx.
+const WIDGET_SIZE: f64 = 360.0;
 
 /// True when running as the bare portable `inkwell.exe` (unzipped, not installed).
 /// An installed copy is recognisable on Windows: the NSIS installer puts
@@ -208,6 +212,71 @@ pub fn run_mcp() {
     inkwell_mcp::run()
 }
 
+/// Open the quick-note popup (the widget's "Note" petal).
+#[tauri::command]
+fn open_quick_note(app: tauri::AppHandle) {
+    show_quick_note_window(&app);
+}
+
+/// Build the quick-actions widget window, hidden. It is created once at startup and then
+/// only shown/hidden, so the shortcut feels instant and the window keeps its state.
+#[cfg(desktop)]
+fn build_widget_window(app: &tauri::AppHandle) {
+    let builder = with_data_dir(WebviewWindowBuilder::new(
+        app,
+        WIDGET_LABEL,
+        WebviewUrl::App("index.html?widget=1".into()),
+    ))
+    .title("Quick Actions")
+    .inner_size(WIDGET_SIZE, WIDGET_SIZE)
+    .resizable(false)
+    .decorations(false)
+    .transparent(true)
+    .shadow(false)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .visible(false);
+
+    // Appear over full-screen apps and on whichever Space is active.
+    #[cfg(target_os = "macos")]
+    let builder = builder.visible_on_all_workspaces(true);
+
+    if let Err(e) = builder.build() {
+        eprintln!("[inkwell] failed to create widget window: {e}");
+    }
+}
+
+/// Show the widget centred on the mouse pointer (kept inside that screen), or hide it
+/// if it is already up. Driven by the global shortcut and the tray menu.
+#[cfg(desktop)]
+fn toggle_widget(app: &tauri::AppHandle) {
+    use tauri::{Emitter, PhysicalPosition};
+
+    let Some(win) = app.get_webview_window(WIDGET_LABEL) else {
+        return;
+    };
+    if win.is_visible().unwrap_or(false) {
+        let _ = win.hide();
+        return;
+    }
+
+    if let Ok(cursor) = app.cursor_position() {
+        let scale = win.scale_factor().unwrap_or(1.0);
+        let size = WIDGET_SIZE * scale;
+        let (mut x, mut y) = (cursor.x - size / 2.0, cursor.y - size / 2.0);
+        if let Ok(Some(mon)) = app.monitor_from_point(cursor.x, cursor.y) {
+            let (mp, ms) = (mon.position(), mon.size());
+            x = x.clamp(mp.x as f64, (mp.x as f64 + ms.width as f64 - size).max(mp.x as f64));
+            y = y.clamp(mp.y as f64, (mp.y as f64 + ms.height as f64 - size).max(mp.y as f64));
+        }
+        let _ = win.set_position(PhysicalPosition::new(x.round() as i32, y.round() as i32));
+    }
+    let _ = win.show();
+    let _ = win.set_focus();
+    // Tells the page to replay its opening animation and drop any half-typed form.
+    let _ = win.emit("inkwell:widget-shown", ());
+}
+
 fn show_quick_note_window(app: &tauri::AppHandle) {
     if let Some(win) = app.get_webview_window(QUICK_NOTE_LABEL) {
         let _ = win.center();
@@ -330,6 +399,8 @@ pub fn run() {
 
                     if shortcut == &Shortcut::new(Some(modifier), Code::KeyN) {
                         show_quick_note_window(app);
+                    } else if shortcut == &Shortcut::new(Some(modifier | Modifiers::SHIFT), Code::Space) {
+                        toggle_widget(app);
                     }
                 })
                 .build(),
@@ -337,7 +408,7 @@ pub fn run() {
     }
 
     builder
-        .invoke_handler(tauri::generate_handler![open_settings_window, data_root_path, set_vibrancy, list_system_fonts, is_portable, claude_mcp_status, claude_mcp_set_enabled, mac_calendar::mac_calendar_status, mac_calendar::mac_calendar_request_access, mac_calendar::mac_calendar_list, mac_calendar::mac_calendar_ensure_inkwell, mac_calendar::mac_calendar_fetch, mac_calendar::mac_calendar_upsert, mac_calendar::mac_calendar_delete])
+        .invoke_handler(tauri::generate_handler![open_settings_window, open_quick_note, data_root_path, set_vibrancy, list_system_fonts, is_portable, claude_mcp_status, claude_mcp_set_enabled, mac_calendar::mac_calendar_status, mac_calendar::mac_calendar_request_access, mac_calendar::mac_calendar_list, mac_calendar::mac_calendar_ensure_inkwell, mac_calendar::mac_calendar_fetch, mac_calendar::mac_calendar_upsert, mac_calendar::mac_calendar_delete])
         .setup(|app| {
             // A portable copy must not write into Claude Desktop's config (outside its folder)
             // unprompted; the Claude settings toggle still works if the user wants it.
@@ -376,10 +447,21 @@ pub fn run() {
                 {
                     eprintln!("[inkwell] failed to register global shortcut: {e}");
                 }
+                // Cmd+Shift+Space (Ctrl+Shift+Space elsewhere): the quick-actions widget.
+                if let Err(e) = app
+                    .global_shortcut()
+                    .register(Shortcut::new(Some(modifier | Modifiers::SHIFT), Code::Space))
+                {
+                    eprintln!("[inkwell] failed to register widget shortcut: {e}");
+                }
+                build_widget_window(app.handle());
 
                 // Menu bar tray icon — keeps inkwell reachable (and the
                 // shortcut alive) once the main window has been hidden.
                 let open_item = MenuItemBuilder::with_id("open", "Open inkwell").build(app)?;
+                let widget_item = MenuItemBuilder::with_id("widget", "Quick Actions")
+                    .accelerator("CmdOrCtrl+Shift+Space")
+                    .build(app)?;
                 let new_note_item = MenuItemBuilder::with_id("new-note", "New Quick Note")
                     .accelerator("CmdOrCtrl+N")
                     .build(app)?;
@@ -387,7 +469,7 @@ pub fn run() {
                 let quit_item = MenuItemBuilder::with_id("quit", "Quit inkwell").build(app)?;
 
                 let tray_menu = MenuBuilder::new(app)
-                    .items(&[&open_item, &new_note_item, &separator, &quit_item])
+                    .items(&[&open_item, &widget_item, &new_note_item, &separator, &quit_item])
                     .build()?;
 
                 TrayIconBuilder::new()
@@ -396,6 +478,7 @@ pub fn run() {
                     .tooltip("inkwell")
                     .on_menu_event(move |app, event| match event.id.as_ref() {
                         "open" => show_main_window(app),
+                        "widget" => toggle_widget(app),
                         "new-note" => show_quick_note_window(app),
                         "quit" => app.exit(0),
                         _ => {}
@@ -409,6 +492,12 @@ pub fn run() {
             // Closing the main window hides it instead of quitting the app,
             // so the tray icon and global shortcut keep working. Cmd+Q / the
             // tray "Quit" item still fully exit via app.exit().
+            // The widget is a pop-up: clicking anywhere else dismisses it.
+            if window.label() == WIDGET_LABEL {
+                if let WindowEvent::Focused(false) = event {
+                    let _ = window.hide();
+                }
+            }
             if window.label() == MAIN_LABEL {
                 if let WindowEvent::CloseRequested { api, .. } = event {
                     api.prevent_close();

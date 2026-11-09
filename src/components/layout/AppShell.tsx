@@ -30,6 +30,7 @@ import { ConflictBanner } from '../editor/ConflictBanner'
 import { CollabGlobals } from '../collab/CollabGlobals'
 import { maybeAutoBackup } from '../../lib/backup'
 import { startSettingsHost } from '../../lib/settingsSync'
+import { startWidgetHost } from '../../lib/widgetSync'
 import { switchVault } from '../../lib/switchVault'
 import { ShareVaultDialog } from '../collab/ShareVaultDialog'
 import { JoinVaultDialog } from '../settings/JoinVaultDialog'
@@ -201,6 +202,9 @@ export function AppShell() {
       openJoinVault: async () => { await focusMain(); setJoinOpen(true) },
     })
   }, [])
+
+  // The quick-actions widget (global shortcut) asks this window to add tasks / events / drawings.
+  useEffect(() => startWidgetHost(), [])
 
   // Automatic local backup: on vault open, then hourly while the app stays running.
   // maybeAutoBackup itself enforces the once-a-day limit.
