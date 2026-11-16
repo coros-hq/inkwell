@@ -796,6 +796,11 @@ html[data-theme="finder_blue"] {
   padding-bottom: 10px !important;
 }
 
+.cm-quote-text {
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
 .cm-line.cm-line-blockquote {
   border-left: 3px solid hsl(var(--border));
   padding-left: 14px !important;

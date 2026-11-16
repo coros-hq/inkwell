@@ -516,7 +516,7 @@ export function EditorPane() {
           {editorMode === "normal" && !focusMode && <NoteTagsMenu noteId={note.id} tags={note.tags} />}
           <div className="flex-1 overflow-hidden relative">
             {editorMode === "normal" && (
-              <MarkdownEditor noteId={note.id} content={note.content} onScrollerReady={setScrollerEl} />
+              <MarkdownEditor noteId={note.id} content={note.content} onScrollerReady={setScrollerEl} topPadding={focusMode ? 64 : 24} />
             )}
             {editorMode === "markdown" && (
               <SplitView noteId={note.id} content={note.content} />

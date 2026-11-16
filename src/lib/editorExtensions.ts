@@ -1,6 +1,6 @@
 import { HighlightStyle, syntaxHighlighting, syntaxTree } from '@codemirror/language'
 import { tags } from '@lezer/highlight'
-import { autocompletion } from '@codemirror/autocomplete'
+import { autocompletion, startCompletion } from '@codemirror/autocomplete'
 import type { CompletionContext, CompletionResult } from '@codemirror/autocomplete'
 import { ViewPlugin, Decoration, WidgetType, EditorView } from '@codemirror/view'
 import type { DecorationSet, ViewUpdate } from '@codemirror/view'
@@ -10,7 +10,7 @@ import katex from 'katex'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
-  Bold, ChartColumn, CircleCheck, Code, Heading1, Heading2, Heading3, Highlighter, Italic, Lightbulb,
+  Bold, ChartColumn, Info, MessageSquareWarning, OctagonAlert, TriangleAlert, CircleCheck, Code, Heading1, Heading2, Heading3, Highlighter, Italic, Lightbulb,
   List, ListOrdered, Minus, PanelTop, Play, Quote, SquareCheck, SquareKanban, Table, Table2, type LucideIcon,
 } from 'lucide-react'
 import { createRoot, type Root } from 'react-dom/client'
@@ -24,6 +24,7 @@ import { BoardEmbed, TaskEmbed } from '../components/editor/BoardEmbeds'
 import { BrainstormEmbed } from '../components/editor/BrainstormEmbed'
 import { defaultTableSpec, tableBlock } from './dataTable'
 import { WIKILINK_RE, NOTE_REF_RE } from './noteReferences'
+import { ALERT_META, ALERT_TYPES, parseAlertType, ensureAlertStyles, type AlertType } from './alerts'
 
 // ─── Syntax Highlight Style ──────────────────────────────────────────────────
 
@@ -44,7 +45,8 @@ export const inkwellHighlightStyle = HighlightStyle.define([
   { tag: tags.monospace, fontFamily: 'monospace', color: 'hsl(var(--accent))', fontSize: '0.9em' },
   { tag: tags.processingInstruction, color: 'hsl(var(--muted-foreground))', opacity: '0.6' },
   { tag: tags.punctuation, color: 'hsl(var(--muted-foreground))', opacity: '0.6' },
-  { tag: tags.quote, color: 'hsl(var(--muted-foreground))', fontStyle: 'italic' },
+  // Styled in globals.css (.cm-quote-text) so alert lines can override it.
+  { tag: tags.quote, class: 'cm-quote-text' },
   { tag: tags.list, color: 'hsl(var(--foreground))' },
   { tag: tags.meta, color: 'hsl(var(--muted-foreground))' },
 ])
@@ -214,6 +216,8 @@ const ICON_COMPONENTS: Record<string, LucideIcon> = {
   ikhighlight: Highlighter, ikdivider: Minus, ikbold: Bold, ikitalic: Italic,
   ikvideo: Play, ikboard: SquareKanban, iktask: CircleCheck, ikbrainstorm: Lightbulb,
   ikchart: ChartColumn,
+  ikalertnote: Info, ikalerttip: Lightbulb, ikalertimportant: MessageSquareWarning,
+  ikalertwarning: TriangleAlert, ikalertcaution: OctagonAlert,
 }
 
 function iconRules(): Record<string, unknown> {
@@ -319,6 +323,7 @@ const SLASH_COMMANDS = [
   { label: '/numbered', displayLabel: 'Numbered List', detail: '1. Ordered list', apply: '1. ', type: 'iknumbered' },
   { label: '/todo', displayLabel: 'To-do', detail: '- [ ] Checkbox item', apply: '- [ ] ', type: 'iktodo' },
   { label: '/quote', displayLabel: 'Quote', detail: '> Blockquote', apply: '> ', type: 'ikquote' },
+  { label: '/alert', displayLabel: 'Alert  ›', detail: 'Note, Tip, Important, Warning or Caution callout', apply: '__ALERT_MENU__', type: 'ikalertnote' },
   { label: '/code', displayLabel: 'Code Block', detail: 'Fenced code block', apply: '```\n\n```', type: 'ikcode' },
   { label: '/table', displayLabel: 'Table', detail: 'Custom columns & data, like Notion', apply: '__DATA_TABLE__', type: 'iktable' },
   { label: '/tabs', displayLabel: 'Tabs', detail: 'Tab group — each tab holds its own content', apply: '__TABS__', type: 'iktabs' },
@@ -338,9 +343,37 @@ const SLASH_COMMANDS = [
 // via EditorPane's <ChartInsertDialog>) mounts — omit it from the smaller
 // slash menus (task descriptions, quick capture) that have nowhere to route
 // openChartInsertDialog()'s request to.
+// Typed text that opens the Alert sub-menu: picking "Alert" in the slash menu
+// turns "/alert" into "/alert/" and reopens completion on it. Backspacing the
+// trailing "/" lands back in the main menu.
+const ALERT_SUBMENU_PREFIX = '/alert/'
+
+function alertSubmenu(from: number): CompletionResult {
+  return {
+    from,
+    validFor: /^\/alert\/\w*$/,
+    options: ALERT_TYPES.map((type, i) => ({
+      label: `${ALERT_SUBMENU_PREFIX}${type}`,
+      displayLabel: ALERT_META[type].label,
+      detail: ALERT_META[type].hint,
+      type: `ikalert${type}`,
+      boost: -i, // keep the Note → Caution order
+      apply: (view: EditorView, _c: unknown, a: number, b: number) => {
+        const line = view.state.doc.lineAt(a)
+        const needsLeading = a !== line.from || line.text.slice(b - line.from).trim().length > 0
+        const insert = `${needsLeading ? '\n' : ''}> [!${type.toUpperCase()}]\n> `
+        view.dispatch({ changes: { from: a, to: b, insert }, selection: { anchor: a + insert.length } })
+      },
+    })),
+  }
+}
+
 function slashCompletion(context: CompletionContext, allowChart: boolean): CompletionResult | null {
   const line = context.state.doc.lineAt(context.pos)
   const before = context.state.sliceDoc(line.from, context.pos)
+
+  const sub = before.match(/^(\s*)\/alert\/\w*$/)
+  if (sub) return alertSubmenu(line.from + sub[1].length)
 
   const match = before.match(/^(\s*)(\/\w*)$/)
   if (!match) return null
@@ -360,6 +393,14 @@ function slashCompletion(context: CompletionContext, allowChart: boolean): Compl
       boost: (cmd as any).boost,
       type: cmd.type,
       apply: (view: EditorView, _completion: unknown, slashFrom: number, slashTo: number) => {
+        if (cmd.apply === '__ALERT_MENU__') {
+          view.dispatch({
+            changes: { from: slashFrom, to: slashTo, insert: ALERT_SUBMENU_PREFIX },
+            selection: { anchor: slashFrom + ALERT_SUBMENU_PREFIX.length },
+          })
+          startCompletion(view)
+          return
+        }
         if (cmd.apply === '__CHART_DIALOG__') {
           // Clear the "/chart" text now; the dialog inserts the finished
           // ```chart block at this position once the user confirms it.
@@ -731,6 +772,25 @@ class OrderedMarkWidget extends WidgetType {
 
 // Replaces a `---` / `***` / `___` thematic-break line with a rendered rule.
 // Revealed as raw text on the active line, like every other conceal here.
+// `> [!NOTE]` → the alert's icon + label, standing in for the raw marker on
+// the alert's first line (shown again while the caret is on that line).
+const ALERT_LINE_RE = /^([ \t]*>[ \t]?)(\[!(note|tip|important|warning|caution)\])([ \t]*)(.*)$/i
+
+class AlertTitleWidget extends WidgetType {
+  constructor(readonly type: AlertType, readonly showLabel: boolean) { super() }
+  eq(other: AlertTitleWidget) { return other.type === this.type && other.showLabel === this.showLabel }
+  toDOM() {
+    const { label, icon } = ALERT_META[this.type]
+    const span = document.createElement('span')
+    span.className = 'cm-alert-title'
+    span.innerHTML = renderToStaticMarkup(createElement(icon, { size: 16, strokeWidth: 2 }))
+    if (this.showLabel) span.append(label)
+    else span.style.marginRight = '0.45rem'
+    return span
+  }
+  ignoreEvent() { return false }
+}
+
 class HorizontalRuleWidget extends WidgetType {
   eq() { return true }
   toDOM() {
@@ -806,6 +866,7 @@ function decorateBlockLines(
 
 function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
   const decos: Range<Decoration>[] = []
+  const alertMarkers: [number, number][] = []
   const activeLines = activeLineSet(view)
 
   for (const { from, to } of view.visibleRanges) {
@@ -822,7 +883,24 @@ function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
           return
         }
         if (node.name === 'Blockquote') {
-          decorateBlockLines(view, decos, node.from, node.to, 'cm-line-blockquote')
+          const firstLine = view.state.doc.lineAt(node.from)
+          const m = node.node.parent?.name === 'Blockquote' ? null : firstLine.text.match(ALERT_LINE_RE)
+          if (!m || !(ALERT_TYPES as readonly string[]).includes(m[3].toLowerCase())) {
+            decorateBlockLines(view, decos, node.from, node.to, 'cm-line-blockquote')
+          } else {
+            const type = parseAlertType(m[3])
+            ensureAlertStyles()
+            decorateBlockLines(view, decos, node.from, node.to, `cm-line-alert md-alert-${type}`, 'cm-line-alert-first', 'cm-line-alert-last')
+            if (!activeLines.has(firstLine.number)) {
+              const markerFrom = firstLine.from + m[1].length
+              const markerTo = markerFrom + m[2].length + m[4].length
+              const title = m[5].trim()
+              decos.push(Decoration.replace({ widget: new AlertTitleWidget(type, !title) }).range(markerFrom, markerTo))
+              if (title) decos.push(Decoration.mark({ class: 'cm-alert-custom-title' }).range(markerTo, firstLine.to))
+              // The parser reads `[!NOTE]` as a link; don't also conceal its brackets.
+              alertMarkers.push([markerFrom, markerTo])
+            }
+          }
         }
 
         // `- [ ]` / `- [x]` task items render as a clickable checkbox, even on
@@ -869,6 +947,8 @@ function buildLiveMarkdownDecorations(view: EditorView): DecorationSet {
           decos.push(Decoration.replace({}).range(node.from, node.to))
           return
         }
+
+        if (alertMarkers.some(([f, t]) => node.from >= f && node.to <= t)) return
 
         if (node.name === 'LinkMark' || (node.name === 'URL' && node.node.parent?.name === 'Link')) {
           decos.push(Decoration.replace({}).range(node.from, node.to))

@@ -8,6 +8,10 @@ import rehypeHighlight from 'rehype-highlight'
 import rehypeRaw from 'rehype-raw'
 import rehypeKatex from 'rehype-katex'
 import { remarkHighlight } from '../../lib/remarkHighlight'
+import { remarkAlerts } from '../../lib/remarkAlerts'
+import { ALERT_META, ALERT_TYPES, ensureAlertStyles, type AlertType } from '../../lib/alerts'
+
+ensureAlertStyles()
 import { remarkMathCodeBlocks } from '../../lib/remarkMathCodeBlocks'
 import { remarkChartCodeBlocks } from '../../lib/remarkChartCodeBlocks'
 import { remarkTableCodeBlocks } from '../../lib/remarkTableCodeBlocks'
@@ -844,9 +848,24 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
       )
     },
 
-    blockquote: ({ children }: any) => (
-      <blockquote className="border-l-2 border-accent pl-4 my-4 text-muted-foreground italic">{children}</blockquote>
-    ),
+    blockquote: ({ children, ...props }: any) => {
+      // `> [!NOTE]` etc. — tagged by remarkAlerts. Plain CSS classes (not
+      // Tailwind) so exported HTML keeps the look; see .md-alert in globals.css.
+      const type = props['data-alert'] as AlertType | undefined
+      if (type && (ALERT_TYPES as readonly string[]).includes(type)) {
+        const { label, icon: Icon } = ALERT_META[type]
+        return (
+          <div className={`md-alert md-alert-${type}`} role="note">
+            <p className="md-alert-title">
+              <Icon className="md-alert-icon" aria-hidden />
+              {props['data-alert-title'] || label}
+            </p>
+            {children}
+          </div>
+        )
+      }
+      return <blockquote className="border-l-2 border-accent pl-4 my-4 text-muted-foreground italic">{children}</blockquote>
+    },
 
     table:  ({ children }: any) => <div className="overflow-x-auto mb-4"><table className="w-full border-collapse text-sm">{children}</table></div>,
     thead:  ({ children }: any) => <thead className="border-b border-border">{children}</thead>,
@@ -967,7 +986,7 @@ export function RichPreview({ content, noteId, searchQuery = '', searchMatchInde
           ) : (
             <ReactMarkdown
               key={i}
-              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkChartCodeBlocks, remarkTableCodeBlocks, remarkTabsCodeBlocks, remarkBoardCodeBlocks, remarkHighlight]}
+              remarkPlugins={[remarkGfm, remarkMath, remarkMathCodeBlocks, remarkChartCodeBlocks, remarkTableCodeBlocks, remarkTabsCodeBlocks, remarkBoardCodeBlocks, remarkHighlight, remarkAlerts]}
               rehypePlugins={[
                 [rehypeHighlight, { ignoreMissing: true, aliases: { bash: ['shell', 'sh', 'zsh', 'terminal', 'console'] } }],
                 rehypeRaw,

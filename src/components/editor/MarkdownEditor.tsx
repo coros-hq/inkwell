@@ -28,9 +28,12 @@ interface MarkdownEditorProps {
   /** false for the raw-source pane in Markdown mode — Normal mode wants the
    * WYSIWYG live-preview conceal behavior, the source pane wants plain markdown. */
   liveConceal?: boolean
+  /** Top padding of the text column, in px. Smaller when a fixed bar (the tag
+   * bar) already sits above the editor. */
+  topPadding?: number
 }
 
-export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal = true }: MarkdownEditorProps) {
+export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal = true, topPadding = 64 }: MarkdownEditorProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useEditorViewRef()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -92,7 +95,8 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
         ...editorFontStyles,
       },
       '.cm-content': {
-        padding: '64px 40px 96px',
+        // Via a CSS var so changing it doesn't rebuild the editor (keeps cursor/undo).
+        padding: 'var(--cm-top-pad, 64px) 40px 96px',
         maxWidth: editorWidth,
         margin: '0 auto',
         caretColor: 'hsl(var(--accent))',
@@ -502,7 +506,7 @@ export function MarkdownEditor({ noteId, content, onScrollerReady, liveConceal =
     <div
       ref={containerRef}
       className={cn("inkwell-editor h-full w-full overflow-hidden", bodyGlass ? "" : "bg-background")}
-      style={{ minHeight: 0 }}
+      style={{ minHeight: 0, ['--cm-top-pad' as string]: `${topPadding}px` }}
     />
   )
 }

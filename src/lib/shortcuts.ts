@@ -21,6 +21,7 @@ export const SHORTCUT_DEFS: ShortcutDef[] = [
   { id: 'focusFiles', label: 'Focus File Tree', description: 'Move keyboard focus to the folders & notes (arrows, Enter, F2 to rename, Esc to return to the editor)', defaultCombo: 'mod+0' },
   { id: 'focusNotes', label: 'Focus Note List', description: 'Move keyboard focus to the notes of the open folder', defaultCombo: 'mod+9' },
   { id: 'openFile', label: 'Open File', description: 'Open a standalone .md file into this vault', defaultCombo: 'mod+o' },
+  { id: 'toggleToolbar', label: 'Toggle Formatting Toolbar', description: 'Show or hide the floating formatting bar in the editor', defaultCombo: 'mod+shift+t' },
   { id: 'findInNote', label: 'Find in Note', description: 'Search within the current note', defaultCombo: 'mod+f' },
   // Not "mod+n" — that combo is already claimed globally (even when the app is
   // unfocused) for the quick-note capture popup, see src-tauri/src/lib.rs.
@@ -28,8 +29,15 @@ export const SHORTCUT_DEFS: ShortcutDef[] = [
   { id: 'newFolder', label: 'New Folder', description: 'Create a folder inside the selected folder', defaultCombo: 'mod+shift+f' },
 ]
 
+// System-wide shortcuts — registered with the OS by the Rust side
+// (set_widget_shortcut in src-tauri/src/lib.rs), so they fire even while inkwell
+// is hidden. Kept apart from SHORTCUT_DEFS so the command palette doesn't list them.
+export const GLOBAL_SHORTCUT_DEFS: ShortcutDef[] = [
+  { id: 'quickWidget', label: 'Quick Widget', description: 'Show or hide the quick-actions widget, from anywhere', defaultCombo: 'mod+shift+space' },
+]
+
 export const DEFAULT_SHORTCUTS: Record<string, string> = Object.fromEntries(
-  SHORTCUT_DEFS.map(d => [d.id, d.defaultCombo]),
+  [...SHORTCUT_DEFS, ...GLOBAL_SHORTCUT_DEFS].map(d => [d.id, d.defaultCombo]),
 )
 
 const STORAGE_KEY = 'inkwell-shortcuts'
@@ -58,6 +66,35 @@ export function eventToCombo(e: KeyboardEvent): string {
   if (e.altKey) parts.push('alt')
   parts.push(e.key.toLowerCase())
   return parts.join('+')
+}
+
+/** Like eventToCombo, but names the key by its physical position (e.code), since
+ * the OS registers global shortcuts that way — and ⌥/Alt can turn e.key into a
+ * symbol ("å"). e.g. KeyA → "a", Digit1 → "1", Space → "space". */
+export function eventToGlobalCombo(e: KeyboardEvent): string {
+  const parts: string[] = []
+  if (e.metaKey || e.ctrlKey) parts.push('mod')
+  if (e.shiftKey) parts.push('shift')
+  if (e.altKey) parts.push('alt')
+  parts.push(e.code.replace(/^Key|^Digit/, '').toLowerCase())
+  return parts.join('+')
+}
+
+/** "mod+shift+space" → "CommandOrControl+Shift+space" (global-hotkey syntax; key names are case-insensitive). */
+export function comboToAccelerator(combo: string): string {
+  const names: Record<string, string> = { mod: 'CommandOrControl', shift: 'Shift', alt: 'Alt' }
+  return combo.split('+').map(p => names[p] ?? p).join('+')
+}
+
+/** Registers the quick widget's global shortcut with the OS. Resolves to an error message, or null on success. */
+export async function applyWidgetShortcut(combo: string): Promise<string | null> {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core')
+    await invoke('set_widget_shortcut', { accelerator: comboToAccelerator(combo) })
+    return null
+  } catch (e) {
+    return String(e)
+  }
 }
 
 export function comboMatches(e: KeyboardEvent, combo: string | undefined): boolean {

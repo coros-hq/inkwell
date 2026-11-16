@@ -4,7 +4,7 @@
   <h1>inkwell</h1>
   <p>A focused, beautiful markdown note-taking app.</p>
 
-  ![Version](https://img.shields.io/badge/version-2.1.1-orange?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-2.4.0-orange?style=flat-square)
   ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-black?style=flat-square)
   ![License](https://img.shields.io/badge/license-MIT-orange?style=flat-square&color=c47d2e)
 </div>
@@ -28,7 +28,10 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 - LaTeX math via KaTeX *(new in v0.7.8)* — inline `$…$`, display `$$…$$`, and fenced ` ```math ` / ` ```latex ` blocks, rendered live in the editor and preview
 - GFM tables rendered as styled tables right in the editor *(new in v0.8.5)*
 - Charts *(new in v0.8.2)* — bar, line, area, pie, and donut charts from a ` ```chart ` JSON block, rendered live in the editor and preview; build them visually with the chart builder or edit the source directly
-- `/` command menu — headings, lists, todos, tables, tabs, charts, video embeds (YouTube, Vimeo, Loom), board and task embeds, and more; type `@` to link another note
+- `/` command menu — headings, lists, todos, alerts, tables, tabs, charts, video embeds (YouTube, Vimeo, Loom), board and task embeds, and more; type `@` to link another note
+- Alerts *(new in v2.4)* — GitHub-style `> [!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` and `[!CAUTION]` callouts with an optional custom title (`> [!TIP] My title`), rendered as colored boxes in the editor, reading view and HTML/PDF export; insert one from `/` → **Alert ›**, which opens a sub-menu of the five types
+- Floating formatting toolbar you can move to the top, bottom, left or right of the editor, or hide (⋯ menu on the bar, ⌘⇧T, or Settings → Editor) *(new in v2.4)*
+- Note tags stay pinned above the editor while you scroll
 - Notion-style data tables and tab groups with their own content
 - Optional Vim mode (Settings → Editor)
 - Find inside the current note (⌘F) and open a standalone `.md` file (⌘O)
@@ -47,6 +50,7 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 - Kanban board view with columns, cards, due dates, subtasks, and comments
 - Note links panel — link notes to each other and track references
 - Full-text search across all notes (⌘K)
+- Click a folder to scope the note list to that folder's notes; click **Folders** or **Notes** to see everything again *(new in v2.4)*
 - Two ways to browse notes *(new in v0.8.3)*: the classic note list column, or open notes as tabs across the top of the editor
 - Live vault watcher picks up changes made on disk by iCloud/Dropbox/Syncthing, git, or an external editor
 - Conflict banner when the open note changed outside inkwell — choose "Keep mine" or "Reload from disk" without losing work
@@ -58,13 +62,14 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 - Create colored tags and assign them to folders (⌘/Ctrl-click to select several)
 - Click a tag in the sidebar to filter, or group a folder's contents by tag
 - Search `#tagname` in ⌘K to jump to tagged folders
-- Reorganized sidebar: Quick links, Folders, Tags, Open Files
+- Reorganized sidebar: Quick links, Folders, Tags, Open Files — the sidebar stays fixed and folders, tags and open files each scroll in their own section *(v2.4)*
 
 **Calendar** *(new in v2.1)*
 - Calendar view for color-coded events, with drag-and-drop to move them between days
 
 **Quick capture**
 - A global ⌘N / Ctrl+N popup captures a note even when inkwell isn't focused
+- Quick actions widget *(new in v2.3)* — a global ⌘⇧Space / Ctrl+Shift+Space (also in the menu-bar tray) pops up a radial menu at the pointer: quick note, add task, add event, new drawing, or open inkwell. The shortcut is configurable in Settings → Shortcuts → Global shortcuts *(v2.4)*
 
 **Collaboration** *(optional)*
 - Sign in to share a vault with teammates by email invite or invite link
@@ -109,6 +114,12 @@ It pairs a distraction-free writing environment with a rich live preview, charts
 - Claude can manage Kanban boards and tickets: `list_boards`, `create_board`, `rename_board`, `delete_board`, `list_board_tasks`, `read_board_task`, `create_board_task`, `update_board_task` (edit fields, tick subtasks, move between columns), `comment_on_board_task`, `delete_board_task` — also live in the app
 - Claude can read, write, and search your vault directly — no copy-paste
 - Notes written by Claude land as proper `.md` files with YAML frontmatter
+
+**ChatGPT MCP Integration** *(new in v2.4)*
+- The same note, calendar and board tools are available to ChatGPT (Settings → ChatGPT)
+- inkwell runs a local HTTP MCP server on `127.0.0.1` (port 8765 by default), guarded by a secret token in the URL that you can regenerate at any time
+- ChatGPT's developer-mode connectors need a public HTTPS address, so expose the server with a tunnel, e.g. `cloudflared tunnel --url http://127.0.0.1:8765`
+- In ChatGPT, enable Developer mode (Settings → Apps → Advanced) and create a connector whose URL is the tunnel's https address followed by the `/mcp/…` path shown in Settings, with no authentication
 
 **macOS**
 - Native window with overlay title bar

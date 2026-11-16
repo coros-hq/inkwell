@@ -39,7 +39,7 @@ type State = ReturnType<typeof useAppStore.getState>
 const MIRRORED = [
   'theme', 'themeName', 'customThemes',
   'editorFontSize', 'editorFontFamily', 'editorLineHeight', 'editorWidth',
-  'vimModeEnabled', 'defaultEditorMode',
+  'vimModeEnabled', 'defaultEditorMode', 'toolbarVisible', 'toolbarPosition',
   'sidebarGlass', 'bodyGlass', 'glassOpacity',
   'canvasEnabled', 'brainstormEnabled', 'calendarEnabled', 'canvasLinkedVaultPath',
   'shortcuts', 'abbreviationTrigger', 'abbreviations',

@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/core'
-import { RefreshCw, Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail, Bot, HardDriveDownload } from 'lucide-react'
-import { useAppStore, type Abbreviation } from '../../store/useAppStore'
+import { RefreshCw, Settings, X, Palette, Sun, Moon, Type, Folder, FolderOpen, Info, ChevronRight, Check, Plus, Pencil, Trash2, GitBranch, Eye, EyeOff, ExternalLink, Sparkles, Keyboard, RotateCcw, AlertTriangle, List, PencilIcon, Users, LogOut, Mail, Bot, HardDriveDownload, MessageCircle, Copy } from 'lucide-react'
+import { useAppStore, TOOLBAR_POSITIONS, type Abbreviation } from '../../store/useAppStore'
 import { cn } from '../../lib/utils'
 import { THEMES, DARK_THEMES, LIGHT_THEMES, type CustomTheme } from '../../lib/themes'
 import { ThemeEditor } from './ThemeEditor'
@@ -17,7 +17,8 @@ import {
 import {
   getGithubToken, setGithubToken, getGithubOwner, setGithubOwner, listRepos, type GhRepo,
 } from '../../lib/github'
-import { SHORTCUT_DEFS, formatCombo, hasModifier, eventToCombo } from '../../lib/shortcuts'
+import { SHORTCUT_DEFS, GLOBAL_SHORTCUT_DEFS, formatCombo, hasModifier, eventToCombo, eventToGlobalCombo, applyWidgetShortcut } from '../../lib/shortcuts'
+import type { ShortcutDef } from '../../lib/shortcuts'
 import { getSession, signOut, type Session } from '../../lib/auth'
 import {
   listMyTeams, createTeam, MAX_OWNED_TEAMS, listTeamMembers, inviteMember, removeMember, acceptPendingInvites,
@@ -29,7 +30,7 @@ import { isGitRepo, gitRemoteUrl as gitGetRemoteUrl } from '../../lib/gitSync'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'backup' | 'github' | 'claude' | 'sync' | 'team' | 'about'
+type Section = 'themes' | 'appearance' | 'editor' | 'features' | 'shortcuts' | 'abbreviations' | 'vault' | 'backup' | 'github' | 'claude' | 'chatgpt' | 'sync' | 'team' | 'about'
 
 // ─── Font options ─────────────────────────────────────────────────────────────
 
@@ -79,6 +80,7 @@ const ALL_NAV_ITEMS: Array<{ id: Section; label: string; icon: React.FC<{ classN
   { id: 'backup', label: 'Backup', icon: HardDriveDownload },
   { id: 'github', label: 'GitHub', icon: GitBranch },
   { id: 'claude', label: 'Claude', icon: Bot },
+  { id: 'chatgpt', label: 'ChatGPT', icon: MessageCircle },
   { id: 'team', label: 'Team', icon: Users },
   { id: 'about', label: 'About', icon: Info },
 ]
@@ -108,6 +110,7 @@ export function SettingsPanel() {
     editorFontSize, editorFontFamily, editorLineHeight, editorWidth,
     setEditorSettings,
     vimModeEnabled, setVimModeEnabled,
+    toolbarVisible, setToolbarVisible, toolbarPosition, setToolbarPosition,
     defaultEditorMode, setDefaultEditorMode,
     sidebarGlass, setSidebarGlass,
     bodyGlass, setBodyGlass,
@@ -411,6 +414,31 @@ export function SettingsPanel() {
               </div>
             </SettingRow>
 
+            <SettingRow label="Formatting toolbar" description="The floating bar of formatting buttons in the editor — also toggled from its ⋯ menu or the shortcut">
+              <ToggleSwitch checked={toolbarVisible} onChange={setToolbarVisible} />
+            </SettingRow>
+
+            {toolbarVisible && (
+              <SettingRow label="Toolbar position" description="Which edge of the editor the formatting bar floats on">
+                <div className="flex items-center gap-1">
+                  {TOOLBAR_POSITIONS.map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setToolbarPosition(p)}
+                      className={cn(
+                        'px-2.5 py-1 rounded-md text-xs border transition-colors capitalize',
+                        toolbarPosition === p
+                          ? 'bg-accent text-accent-foreground border-accent'
+                          : 'border-border text-muted-foreground hover:text-foreground hover:bg-surface',
+                      )}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+              </SettingRow>
+            )}
+
             <SettingRow label="Vim mode" description="Edit notes with Vim keybindings (modal editing, motions, : commands)">
               <ToggleSwitch checked={vimModeEnabled} onChange={setVimModeEnabled} />
             </SettingRow>
@@ -532,6 +560,11 @@ export function SettingsPanel() {
         {/* ── Claude Desktop (MCP) ── */}
         {section === 'claude' && (
           <ClaudeSection />
+        )}
+
+        {/* ── ChatGPT (MCP over HTTP) ── */}
+        {section === 'chatgpt' && (
+          <ChatgptSection />
         )}
 
         {/* ── Sync (git) ── */}
@@ -710,20 +743,32 @@ function ShortcutsSection() {
       if (e.key === 'Escape') { setRecordingId(null); return }
       if (['Control', 'Meta', 'Shift', 'Alt'].includes(e.key)) return // wait for the real key
 
-      const combo = eventToCombo(e)
+      const isGlobal = GLOBAL_SHORTCUT_DEFS.some(d => d.id === recordingId)
+      const combo = isGlobal ? eventToGlobalCombo(e) : eventToCombo(e)
+      // A system-wide Shift+letter would hijack typing in every app.
+      if (isGlobal && !/(^|\+)(mod|alt)\+/.test(combo)) {
+        setError('A global shortcut must include ⌘/Ctrl or Alt.')
+        return
+      }
       if (!hasModifier(combo)) {
         setError("Shortcut must include ⌘/Ctrl, Shift, or Alt so it doesn't fire while typing.")
         return
       }
       const conflict = Object.entries(shortcuts).find(([id, c]) => id !== recordingId && c === combo)
       if (conflict) {
-        const label = SHORTCUT_DEFS.find(d => d.id === conflict[0])?.label ?? conflict[0]
+        const label = [...SHORTCUT_DEFS, ...GLOBAL_SHORTCUT_DEFS].find(d => d.id === conflict[0])?.label ?? conflict[0]
         setError(`${formatCombo(combo)} is already used by "${label}".`)
         return
       }
-      setShortcut(recordingId, combo)
+      const id = recordingId
       setRecordingId(null)
       setError(null)
+      if (!isGlobal) { setShortcut(id, combo); return }
+      // Only keep the new combo once the OS accepted it.
+      applyWidgetShortcut(combo).then(err => {
+        if (err) setError(err)
+        else setShortcut(id, combo)
+      })
     }
     window.addEventListener('keydown', handler, true)
     return () => {
@@ -732,12 +777,40 @@ function ShortcutsSection() {
     }
   }, [recordingId, shortcuts, setShortcut])
 
+  const renderRow = (def: ShortcutDef) => {
+    const combo = shortcuts[def.id] ?? def.defaultCombo
+    const recording = recordingId === def.id
+    return (
+      <div key={def.id} className="flex items-center justify-between gap-4 px-3 py-2.5">
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-foreground">{def.label}</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">{def.description}</p>
+        </div>
+        <button
+          onClick={() => { setRecordingId(def.id); setError(null) }}
+          className={cn(
+            'shrink-0 min-w-[92px] px-2.5 py-1.5 rounded-md text-xs font-mono text-center border transition-colors',
+            recording
+              ? 'border-accent text-accent bg-accent/10'
+              : 'border-border text-foreground hover:border-accent/50',
+          )}
+        >
+          {recording ? 'Press keys…' : formatCombo(combo)}
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between mb-2">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">In-app shortcuts</p>
         <button
-          onClick={() => { resetShortcuts(); setRecordingId(null); setError(null) }}
+          onClick={() => {
+            resetShortcuts(); setRecordingId(null); setError(null)
+            const def = GLOBAL_SHORTCUT_DEFS.find(d => d.id === 'quickWidget')!
+            applyWidgetShortcut(def.defaultCombo).then(err => err && setError(err))
+          }}
           className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
         >
           <RotateCcw className="w-3 h-3" />
@@ -746,29 +819,12 @@ function ShortcutsSection() {
       </div>
 
       <div className="rounded-lg border border-border divide-y divide-border overflow-hidden">
-        {SHORTCUT_DEFS.map(def => {
-          const combo = shortcuts[def.id] ?? def.defaultCombo
-          const recording = recordingId === def.id
-          return (
-            <div key={def.id} className="flex items-center justify-between gap-4 px-3 py-2.5">
-              <div className="min-w-0">
-                <p className="text-xs font-medium text-foreground">{def.label}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{def.description}</p>
-              </div>
-              <button
-                onClick={() => { setRecordingId(def.id); setError(null) }}
-                className={cn(
-                  'shrink-0 min-w-[92px] px-2.5 py-1.5 rounded-md text-xs font-mono text-center border transition-colors',
-                  recording
-                    ? 'border-accent text-accent bg-accent/10'
-                    : 'border-border text-foreground hover:border-accent/50',
-                )}
-              >
-                {recording ? 'Press keys…' : formatCombo(combo)}
-              </button>
-            </div>
-          )
-        })}
+        {SHORTCUT_DEFS.map(renderRow)}
+      </div>
+
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary pt-4 pb-1">Global shortcuts</p>
+      <div className="rounded-lg border border-border divide-y divide-border overflow-hidden">
+        {GLOBAL_SHORTCUT_DEFS.map(renderRow)}
       </div>
 
       {error && (
@@ -1258,6 +1314,128 @@ function ClaudeSection() {
 
       <div className="space-y-1">
         <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Tools Claude gets</p>
+        <p className="text-xs text-muted-foreground font-mono">
+          get_vault_info, list_notes, read_note, create_note, update_note, search_notes,
+          list_calendar_events, create_calendar_event, update_calendar_event, delete_calendar_event
+        </p>
+      </div>
+    </div>
+  )
+}
+
+interface ChatgptMcpStatus {
+  enabled: boolean
+  running: boolean
+  port: number
+  url: string
+}
+
+function ChatgptSection() {
+  const [status, setStatus] = useState<ChatgptMcpStatus | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [reveal, setReveal] = useState(false)
+  const [copied, setCopied] = useState(false)
+
+  useEffect(() => {
+    invoke<ChatgptMcpStatus>('chatgpt_mcp_status').then(setStatus).catch((e) => setError(String(e)))
+  }, [])
+
+  const run = async (cmd: string, args?: Record<string, unknown>) => {
+    setBusy(true)
+    setError(null)
+    try {
+      setStatus(await invoke<ChatgptMcpStatus>(cmd, args))
+    } catch (e) {
+      setError(String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const on = !!status?.enabled && status.running
+  const shown = status ? (reveal ? status.url : status.url.replace(/\/mcp\/.*$/, '/mcp/••••••••')) : ''
+
+  const copy = async () => {
+    if (!status) return
+    try {
+      await navigator.clipboard.writeText(status.url)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      setError('Could not copy to the clipboard.')
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <p className="text-xs text-muted-foreground">
+        Let ChatGPT read, search and write the notes in your open vault, and manage your calendar. ChatGPT can only connect
+        to a public HTTPS address, so inkwell runs a local server and you expose it with a tunnel. Anyone with the URL below
+        can edit your notes — keep it secret.
+      </p>
+
+      <SettingRow
+        label="Run the ChatGPT server"
+        description={on ? `Listening on 127.0.0.1:${status?.port} while inkwell is open.` : 'Starts a local MCP server inside inkwell.'}
+      >
+        <div className={cn(busy && 'opacity-50 pointer-events-none')}>
+          <ToggleSwitch checked={on} onChange={(v) => run('chatgpt_mcp_set_enabled', { enabled: v })} />
+        </div>
+      </SettingRow>
+
+      {error && (
+        <p className="text-xs text-red-500 flex items-start gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 mt-px shrink-0" />
+          {error}
+        </p>
+      )}
+
+      {on && status && (
+        <>
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Local URL</p>
+            <div className="flex items-center gap-2">
+              <p className="text-xs text-muted-foreground font-mono break-all flex-1">{shown}</p>
+              <button onClick={() => setReveal((r) => !r)} className="text-muted-foreground hover:text-foreground" title={reveal ? 'Hide' : 'Show'}>
+                {reveal ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+              <button onClick={copy} className="text-muted-foreground hover:text-foreground" title="Copy">
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Connect ChatGPT</p>
+            <ol className="text-xs text-muted-foreground list-decimal pl-4 space-y-1">
+              <li>
+                Expose the port, e.g. <span className="font-mono">cloudflared tunnel --url http://127.0.0.1:{status.port}</span>
+              </li>
+              <li>
+                In ChatGPT, enable Developer mode (Settings → Apps → Advanced), then create a connector.
+              </li>
+              <li>
+                Use the tunnel's https address followed by the path from the URL above (<span className="font-mono">/mcp/…</span>),
+                with no authentication.
+              </li>
+            </ol>
+          </div>
+
+          <SettingRow label="Reset secret" description="Generates a new token and invalidates the current URL.">
+            <button
+              onClick={() => run('chatgpt_mcp_regenerate_token')}
+              className="px-2.5 py-1 text-xs rounded-md border border-border hover:bg-accent"
+              disabled={busy}
+            >
+              Regenerate
+            </button>
+          </SettingRow>
+        </>
+      )}
+
+      <div className="space-y-1">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-tertiary">Tools ChatGPT gets</p>
         <p className="text-xs text-muted-foreground font-mono">
           get_vault_info, list_notes, read_note, create_note, update_note, search_notes,
           list_calendar_events, create_calendar_event, update_calendar_event, delete_calendar_event

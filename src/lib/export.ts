@@ -4,6 +4,7 @@ import { writeTextFile } from '@tauri-apps/plugin-fs'
 // their layout outside the app. Font files are referenced by URL and won't
 // resolve in a standalone file — KaTeX's MathML fallback keeps math legible.
 import katexCss from 'katex/dist/katex.min.css?inline'
+import { ALERT_CSS } from './alerts'
 
 // ─── Theme vars ───────────────────────────────────────────────────────────────
 
@@ -119,6 +120,9 @@ ${katexCss}
     color: var(--muted);
     font-style: italic;
   }
+
+  /* ── Alerts (> [!NOTE] …) ───────────────────────────────────── */
+  ${ALERT_CSS}
 
   /* ── Lists ──────────────────────────────────────────────────── */
   ul, ol { margin: 0 0 1rem; padding-left: 1.5rem; }

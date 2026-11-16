@@ -178,6 +178,7 @@ export function installTauriMock({ vaultPath, files, platform, portableRoot, ope
     'plugin:app|version': () => '0.0.0-e2e',
     'plugin:updater|check': () => null,
     claude_mcp_status: () => ({ enabled: false }),
+    chatgpt_mcp_status: () => ({ enabled: false, running: false, port: 8765, url: '' }),
     is_portable: () => false,
     list_system_fonts: () => ['Zapfino Test'],
   }

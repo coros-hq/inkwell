@@ -6,6 +6,7 @@ export const VAULT = '/home/e2e/vault'
 export const SEED_FILES: Record<string, string> = {
   [`${VAULT}/Welcome.md`]: '# Welcome\n\nHello from the e2e vault.\n',
   [`${VAULT}/Groceries.md`]: '# Groceries\n\n- milk\n- eggs\n',
+  [`${VAULT}/Alerts.md`]: '# Alerts\n\n> [!WARNING] Heads up\n> Back up first.\n\n> [!TIP]\n> Use the slash menu.\n\n> Just a quote.\n',
   [`${VAULT}/Projects/Roadmap.md`]: '# Roadmap\n\nShip the e2e suite.\n',
   [`${VAULT}/.inkwell/boards.json`]: JSON.stringify({
     version: 1,

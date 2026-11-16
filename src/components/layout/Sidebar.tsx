@@ -373,6 +373,7 @@ function FolderRow({
   const allFolderMeta = useAppStore((s) => s.folderMeta);
   const tagDefs = useAppStore((s) => s.tagDefs);
   const isTicked = useAppStore((s) => s.selectedFolderIds.includes(folder.id));
+  const isScoped = useAppStore((s) => s.selectedFolderId === folder.id);
   const isRevealed = useAppStore((s) => s.revealedFolderId === folder.id);
   const [collapsedTags, setCollapsedTags] = useState<Set<string>>(new Set());
   const [tagMenu, setTagMenu] = useState<{ x: number; y: number } | null>(null);
@@ -515,7 +516,7 @@ function FolderRow({
           className={cn(
             treeRowClass,
             "relative cursor-pointer transition-colors duration-500",
-            !dropInto && !isTicked && "hover:bg-surface",
+            !dropInto && !isTicked && (isScoped ? "bg-surface" : "hover:bg-surface"),
             isTicked && !dropInto && "bg-active",
             isRevealed && !dropInto && "bg-accent/20 ring-1 ring-accent/60",
             dropInto && "ring-2 ring-accent bg-accent/15",
@@ -534,9 +535,10 @@ function FolderRow({
               return;
             }
             if (useAppStore.getState().selectedFolderIds.length) useAppStore.getState().clearSelectedFolders();
-            // Folders aren't selectable — a click only expands/collapses,
-            // leaving the active note untouched.
+            // A click expands/collapses and scopes the note list to this
+            // folder, leaving the active note untouched.
             toggleFolder(folder.id);
+            useAppStore.setState({ selectedFolderId: folder.id });
             if (activeView !== 'notes') setActiveView('notes');
           }}
           onDoubleClick={(e) => { e.stopPropagation(); onStartRename(folder.id); }}
@@ -1316,8 +1318,10 @@ export function Sidebar() {
           </div>
         )}
 
-        <div className="flex-1 overflow-y-auto px-2 space-y-5">
-          <div>
+        {/* The sidebar itself never scrolls: quick links stay put and each list
+            below scrolls inside its own box. */}
+        <div className="flex-1 min-h-0 flex flex-col gap-5 px-2 overflow-hidden">
+          <div className="shrink-0">
             <p className={sectionHeading}>Quick links</p>
             <QuickLink icon={FileText} label="Notes" active={activeView === "notes"} onClick={() => { clearFolderSelection(); setActiveView("notes"); }} />
             <QuickLink icon={LayoutGrid} label="Board" active={activeView === "board"} onClick={() => setActiveView("board")} />
@@ -1333,7 +1337,7 @@ export function Sidebar() {
             <QuickLink icon={Trash2} label="Trash" active={activeView === "trash"} onClick={() => setActiveView("trash")} />
           </div>
 
-          <div className="max-h-[42vh] overflow-y-auto space-y-4 -mx-1 px-1" data-nav-list="sidebar" onKeyDown={handleListKeyNav}>
+          <div className="flex-1 min-h-[120px] overflow-y-auto space-y-4 -mx-1 px-1" data-nav-list="sidebar" onKeyDown={handleListKeyNav}>
           {activeTag && (
             <TagFolderResults
               tag={activeTag}
@@ -1458,10 +1462,12 @@ export function Sidebar() {
 
           </div>
 
-          <TagsSection active={activeTag} onSelect={setActiveTag} />
+          <div className="shrink-0">
+            <TagsSection active={activeTag} onSelect={setActiveTag} />
+          </div>
 
           {externalNotes.length > 0 && (
-            <div>
+            <div className="shrink-0 max-h-[20vh] overflow-y-auto -mx-1 px-1">
               <p className={sectionHeading}>
                 Open Files
               </p>

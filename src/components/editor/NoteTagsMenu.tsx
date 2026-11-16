@@ -28,8 +28,9 @@ export function NoteTagsMenu({ noteId, tags }: { noteId: string; tags: string[] 
   }, [open]);
 
   return (
-    // Same column as the editor text (see .cm-content in MarkdownEditor).
-    <div className="shrink-0 px-10 pt-4 -mb-10 relative z-10" style={{ maxWidth: editorWidth, marginLeft: "auto", marginRight: "auto", width: "100%" }}>
+    // Same column as the editor text (see .cm-content in MarkdownEditor). Sits
+    // above the scroller in normal flow, so it stays fixed while the note scrolls.
+    <div className="shrink-0 px-10 pt-4 pb-1 relative z-10" style={{ maxWidth: editorWidth, marginLeft: "auto", marginRight: "auto", width: "100%" }}>
       <div ref={ref} className="relative flex flex-wrap items-center gap-1.5">
         {tags.map((t) => {
           const color = tagDefs.find((d) => d.name === t)?.color ?? "hsl(var(--accent))";

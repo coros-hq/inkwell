@@ -20,7 +20,7 @@ import { confirmDeleteNote, confirmDeleteSelectedNotes, confirmDeleteFolderById 
 import { onWriteError } from '../../lib/safeFs'
 import { readVaultFS, writeAppData, readAppData, addRecentVault, getLastVaultPath } from '../../lib/vault'
 import type { AppData } from '../../lib/vault'
-import { comboMatches } from '../../lib/shortcuts'
+import { comboMatches, applyWidgetShortcut, DEFAULT_SHORTCUTS } from '../../lib/shortcuts'
 import { focusFileNav, focusNavList } from '../../lib/listKeyNav'
 import { startVaultSync, stopVaultSync } from '../../lib/sync/vaultSession'
 import { onAuthStateChange } from '../../lib/auth'
@@ -39,6 +39,15 @@ export function AppShell() {
   const { activeView, setActiveView, setSearchOpen, vaultPath, openVault, toggleSidebar, sidebarOpen, focusMode, noteSidebarMode, sidebarGlass, bodyGlass, openExternalNote, createNote, createFolder, openPrompt, checkForUpdates } = useAppStore()
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const autoCommitTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // The OS binding starts at the default (see src-tauri/src/lib.rs); re-apply the
+  // user's choice from Settings → Shortcuts.
+  useEffect(() => {
+    const combo = useAppStore.getState().shortcuts.quickWidget
+    if (combo && combo !== DEFAULT_SHORTCUTS.quickWidget) {
+      applyWidgetShortcut(combo).then(err => err && console.warn('[inkwell] widget shortcut:', err))
+    }
+  }, [])
 
   // Restore theme from localStorage on mount
   useEffect(() => {
@@ -263,6 +272,12 @@ export function AppShell() {
         const s = useAppStore.getState()
         const id = s.lastSelectedNoteId ?? s.selectedNoteIds[0]
         if (s.activeView === 'notes' && id) s.setNoteEditorMode(id, s.getEditorMode(id) === 'markdown' ? 'normal' : 'markdown')
+        return
+      }
+      if (comboMatches(e, shortcuts.toggleToolbar)) {
+        e.preventDefault()
+        const s = useAppStore.getState()
+        s.setToolbarVisible(!s.toolbarVisible)
         return
       }
       if (comboMatches(e, shortcuts.toggleViewMode)) {

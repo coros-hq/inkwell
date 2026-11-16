@@ -4,7 +4,7 @@ resolver = "2"
 
 [package]
 name = "inkwell"
-version = "2.3.0"
+version = "2.4.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -31,6 +31,7 @@ serde_json = { version = "1", features = ["preserve_order"] }
 inkwell-mcp = { path = "mcp-server" }
 time = "=0.3.36"
 fontdb = "0.23"
+getrandom = "0.3"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 block2 = "0.6"

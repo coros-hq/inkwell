@@ -2,6 +2,7 @@
 use window_vibrancy::{apply_vibrancy, clear_vibrancy, NSVisualEffectMaterial, NSVisualEffectState};
 
 mod claude_mcp;
+mod chatgpt_mcp;
 mod mac_calendar;
 
 use std::path::{Path, PathBuf};
@@ -203,6 +204,21 @@ fn claude_mcp_set_enabled(enabled: bool) -> Result<claude_mcp::ClaudeMcpStatus, 
     claude_mcp::set_enabled(enabled)
 }
 
+#[tauri::command]
+fn chatgpt_mcp_status() -> Result<chatgpt_mcp::ChatgptMcpStatus, String> {
+    chatgpt_mcp::status()
+}
+
+#[tauri::command]
+fn chatgpt_mcp_set_enabled(enabled: bool) -> Result<chatgpt_mcp::ChatgptMcpStatus, String> {
+    chatgpt_mcp::set_enabled(enabled)
+}
+
+#[tauri::command]
+fn chatgpt_mcp_regenerate_token() -> Result<chatgpt_mcp::ChatgptMcpStatus, String> {
+    chatgpt_mcp::regenerate_token()
+}
+
 /// Serve inkwell's MCP tools over stdio (launched by Claude Desktop as `inkwell --mcp`).
 pub fn run_mcp() {
     // Let the MCP server find the same files as the app (it only knows the OS locations).
@@ -210,6 +226,54 @@ pub fn run_mcp() {
         std::env::set_var("INKWELL_DATA_DIR", root);
     }
     inkwell_mcp::run()
+}
+
+/// The global shortcut currently bound to the quick-actions widget. User-editable
+/// from Settings → Shortcuts; see `set_widget_shortcut`.
+#[cfg(desktop)]
+struct WidgetShortcut(std::sync::Mutex<tauri_plugin_global_shortcut::Shortcut>);
+
+/// Cmd+N (macOS) / Ctrl+N elsewhere — reserved for quick-note capture.
+#[cfg(desktop)]
+fn quick_note_shortcut() -> tauri_plugin_global_shortcut::Shortcut {
+    use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut};
+    #[cfg(target_os = "macos")]
+    let modifier = Modifiers::SUPER;
+    #[cfg(not(target_os = "macos"))]
+    let modifier = Modifiers::CONTROL;
+    Shortcut::new(Some(modifier), Code::KeyN)
+}
+
+/// Rebind the quick-actions widget's global shortcut. `accelerator` uses the
+/// global-hotkey syntax, e.g. "CommandOrControl+Shift+Space". On failure the
+/// previous binding stays registered and the error is returned.
+#[tauri::command]
+fn set_widget_shortcut(app: tauri::AppHandle, accelerator: String) -> Result<(), String> {
+    #[cfg(desktop)]
+    {
+        use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+        let next: Shortcut = accelerator
+            .parse()
+            .map_err(|e| format!("Invalid shortcut \"{accelerator}\": {e}"))?;
+        if next == quick_note_shortcut() {
+            return Err("That shortcut is reserved for quick-note capture.".into());
+        }
+        let state = app.state::<WidgetShortcut>();
+        let mut current = state.0.lock().map_err(|e| e.to_string())?;
+        if *current == next {
+            return Ok(());
+        }
+        let gs = app.global_shortcut();
+        let _ = gs.unregister(*current);
+        if let Err(e) = gs.register(next) {
+            let _ = gs.register(*current);
+            return Err(format!("Couldn't register {accelerator} (it may be taken by another app): {e}"));
+        }
+        *current = next;
+    }
+    #[cfg(not(desktop))]
+    let _ = (app, accelerator);
+    Ok(())
 }
 
 /// Open the quick-note popup (the widget's "Note" petal).
@@ -386,20 +450,19 @@ pub fn run() {
         builder = builder.plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(|app, shortcut, event| {
-                    use tauri_plugin_global_shortcut::{Code, Modifiers, Shortcut, ShortcutState};
+                    use tauri_plugin_global_shortcut::ShortcutState;
 
                     if event.state() != ShortcutState::Pressed {
                         return;
                     }
 
-                    #[cfg(target_os = "macos")]
-                    let modifier = Modifiers::SUPER;
-                    #[cfg(not(target_os = "macos"))]
-                    let modifier = Modifiers::CONTROL;
-
-                    if shortcut == &Shortcut::new(Some(modifier), Code::KeyN) {
+                    let is_widget = app
+                        .try_state::<WidgetShortcut>()
+                        .and_then(|s| s.0.lock().ok().map(|c| *c == *shortcut))
+                        .unwrap_or(false);
+                    if shortcut == &quick_note_shortcut() {
                         show_quick_note_window(app);
-                    } else if shortcut == &Shortcut::new(Some(modifier | Modifiers::SHIFT), Code::Space) {
+                    } else if is_widget {
                         toggle_widget(app);
                     }
                 })
@@ -408,13 +471,14 @@ pub fn run() {
     }
 
     builder
-        .invoke_handler(tauri::generate_handler![open_settings_window, open_quick_note, data_root_path, set_vibrancy, list_system_fonts, is_portable, claude_mcp_status, claude_mcp_set_enabled, mac_calendar::mac_calendar_status, mac_calendar::mac_calendar_request_access, mac_calendar::mac_calendar_list, mac_calendar::mac_calendar_ensure_inkwell, mac_calendar::mac_calendar_fetch, mac_calendar::mac_calendar_upsert, mac_calendar::mac_calendar_delete])
+        .invoke_handler(tauri::generate_handler![open_settings_window, open_quick_note, set_widget_shortcut, data_root_path, set_vibrancy, list_system_fonts, is_portable, claude_mcp_status, claude_mcp_set_enabled, chatgpt_mcp_status, chatgpt_mcp_set_enabled, chatgpt_mcp_regenerate_token, mac_calendar::mac_calendar_status, mac_calendar::mac_calendar_request_access, mac_calendar::mac_calendar_list, mac_calendar::mac_calendar_ensure_inkwell, mac_calendar::mac_calendar_fetch, mac_calendar::mac_calendar_upsert, mac_calendar::mac_calendar_delete])
         .setup(|app| {
             // A portable copy must not write into Claude Desktop's config (outside its folder)
             // unprompted; the Claude settings toggle still works if the user wants it.
             if data_root().is_none() {
                 claude_mcp::sync_on_startup();
             }
+            chatgpt_mcp::start_on_launch();
 
             // Windows' config sets `create: false` for the main window so it can be built here
             // with the portable profile folder (config can't express an absolute path).
@@ -441,19 +505,16 @@ pub fn run() {
                 let modifier = Modifiers::SUPER;
                 #[cfg(not(target_os = "macos"))]
                 let modifier = Modifiers::CONTROL;
-                if let Err(e) = app
-                    .global_shortcut()
-                    .register(Shortcut::new(Some(modifier), Code::KeyN))
-                {
+                if let Err(e) = app.global_shortcut().register(quick_note_shortcut()) {
                     eprintln!("[inkwell] failed to register global shortcut: {e}");
                 }
-                // Cmd+Shift+Space (Ctrl+Shift+Space elsewhere): the quick-actions widget.
-                if let Err(e) = app
-                    .global_shortcut()
-                    .register(Shortcut::new(Some(modifier | Modifiers::SHIFT), Code::Space))
-                {
+                // Default Cmd+Shift+Space (Ctrl+Shift+Space elsewhere): the quick-actions
+                // widget. The main window re-applies the user's choice at launch.
+                let widget_shortcut = Shortcut::new(Some(modifier | Modifiers::SHIFT), Code::Space);
+                if let Err(e) = app.global_shortcut().register(widget_shortcut) {
                     eprintln!("[inkwell] failed to register widget shortcut: {e}");
                 }
+                app.manage(WidgetShortcut(std::sync::Mutex::new(widget_shortcut)));
                 build_widget_window(app.handle());
 
                 // Menu bar tray icon — keeps inkwell reachable (and the

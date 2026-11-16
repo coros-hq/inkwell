@@ -194,6 +194,9 @@ import {
   clearCustomThemeVars,
 } from "../lib/themeUtils";
 
+export const TOOLBAR_POSITIONS = ["bottom", "top", "left", "right"] as const;
+export type ToolbarPosition = (typeof TOOLBAR_POSITIONS)[number];
+
 export interface NamePromptConfig {
   title: string;
   description?: string;
@@ -309,6 +312,11 @@ interface AppState {
       editorWidth: string;
     }>,
   ) => void;
+  /** The floating formatting toolbar in the editor. */
+  toolbarVisible: boolean;
+  setToolbarVisible: (visible: boolean) => void;
+  toolbarPosition: ToolbarPosition;
+  setToolbarPosition: (position: ToolbarPosition) => void;
   sidebarGlass: boolean;
   setSidebarGlass: (enabled: boolean) => void;
   bodyGlass: boolean;
@@ -1057,6 +1065,10 @@ export const useAppStore = create<AppState>((set, get) => ({
   editorFontFamily: savedAppFont(),
   editorLineHeight: localStorage.getItem("inkwell-editor-lineHeight") ?? "1.7",
   editorWidth: localStorage.getItem("inkwell-editor-width") ?? "740px",
+  toolbarVisible: localStorage.getItem("inkwell-toolbar-visible") !== "false",
+  toolbarPosition: (TOOLBAR_POSITIONS as readonly string[]).includes(localStorage.getItem("inkwell-toolbar-position") ?? "")
+    ? (localStorage.getItem("inkwell-toolbar-position") as ToolbarPosition)
+    : "bottom",
   sidebarGlass: localStorage.getItem("inkwell-sidebar-glass") === "true",
   bodyGlass: localStorage.getItem("inkwell-body-glass") === "true",
   glassOpacity: Number(localStorage.getItem("inkwell-glass-opacity") ?? 70),
@@ -1484,6 +1496,16 @@ export const useAppStore = create<AppState>((set, get) => ({
     if (settings.editorWidth)
       localStorage.setItem("inkwell-editor-width", settings.editorWidth);
     set(settings);
+  },
+
+  setToolbarVisible: (visible) => {
+    localStorage.setItem("inkwell-toolbar-visible", String(visible));
+    set({ toolbarVisible: visible });
+  },
+
+  setToolbarPosition: (position) => {
+    localStorage.setItem("inkwell-toolbar-position", position);
+    set({ toolbarPosition: position });
   },
 
   setSidebarGlass: (enabled) => {

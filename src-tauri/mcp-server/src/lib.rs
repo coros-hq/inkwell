@@ -24,6 +24,7 @@
 //! existing frontmatter when updating notes.
 mod boards;
 mod calendar;
+pub mod http;
 
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -579,16 +580,37 @@ fn handle(request: Request, fallback_vault: Option<&PathBuf>) -> Option<Response
 
 // ── Entry point ───────────────────────────────────────────────────────────────
 
+/// Optional static fallback — used only when ~/.inkwell/active-vault doesn't exist.
+/// If neither is set the server still starts; it will return a clear error on
+/// tool calls until the user opens a vault in the app.
+fn fallback_vault() -> Option<PathBuf> {
+    std::env::var("INKWELL_VAULT_PATH")
+        .ok()
+        .map(PathBuf::from)
+        .filter(|p| p.exists())
+}
+
+/// Handle one decoded JSON-RPC message (any transport). Returns None for notifications.
+/// Serialised by a lock so concurrent HTTP clients can't interleave note writes.
+pub fn handle_message(msg: Value) -> Option<Value> {
+    static LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let _guard = LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    let request: Request = match serde_json::from_value(msg) {
+        Ok(r) => r,
+        Err(e) => {
+            return Some(json!({
+                "jsonrpc": "2.0", "id": Value::Null,
+                "error": { "code": -32600, "message": format!("Invalid request: {e}") }
+            }));
+        }
+    };
+    handle(request, fallback_vault().as_ref()).and_then(|r| serde_json::to_value(r).ok())
+}
+
 /// Run the stdio server until stdin closes. Called by the standalone
 /// `inkwell-mcp` binary and by the app itself when launched with `--mcp`.
 pub fn run() {
-    // Optional static fallback — used only when ~/.inkwell/active-vault doesn't exist.
-    // If neither is set the server still starts; it will return a clear error on
-    // tool calls until the user opens a vault in the app.
-    let fallback_vault: Option<PathBuf> = std::env::var("INKWELL_VAULT_PATH")
-        .ok()
-        .map(PathBuf::from)
-        .filter(|p| p.exists());
+    let fallback_vault = fallback_vault();
 
     eprintln!(
         "[inkwell-mcp] started — fallback vault: {}",

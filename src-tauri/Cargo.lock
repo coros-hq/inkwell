@@ -1903,10 +1903,11 @@ dependencies = [
 
 [[package]]
 name = "inkwell"
-version = "2.3.0"
+version = "2.4.0"
 dependencies = [
  "block2",
  "fontdb",
+ "getrandom 0.3.4",
  "inkwell-mcp",
  "objc2",
  "objc2-app-kit",
