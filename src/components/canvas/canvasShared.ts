@@ -32,8 +32,13 @@ export function adaptShape(sh: Shape, darkBg: boolean, ink: string): Shape {
     const bc = adaptInk(sh.boundText.color, darkBg, ink)
     if (bc !== sh.boundText.color) boundText = { ...sh.boundText, color: bc }
   }
-  if (color === sh.color && fill === sh.fill && !boundText) return sh
-  return { ...sh, color, fill, ...(boundText ? { boundText } : {}) } as Shape
+  let label: BoundText | undefined
+  if (sh.type === 'arrow' && sh.label) {
+    const lc = adaptInk(sh.label.color, darkBg, ink)
+    if (lc !== sh.label.color) label = { ...sh.label, color: lc }
+  }
+  if (color === sh.color && fill === sh.fill && !boundText && !label) return sh
+  return { ...sh, color, fill, ...(boundText ? { boundText } : {}), ...(label ? { label } : {}) } as Shape
 }
 
 export function ctxFont(t: TextShape): string {
@@ -55,9 +60,10 @@ export function roughOptions(s: Shape) {
     fillStyle: 'hachure' as const,
     roughness: 1,
     seed: seedFromId(s.id),
-    // A single clean stroke per edge — roughjs's default second overlapping
-    // pass is what creates the gap/overshoot look at corners.
-    disableMultiStroke: true,
+    // Hand-drawn like Excalidraw: each edge is drawn twice with a slightly
+    // different wobble, so outlines double up and overshoot at the corners.
+    // Fills stay single-pass so hachure doesn't turn muddy.
+    disableMultiStroke: false,
     disableMultiStrokeFill: true,
   }
 }

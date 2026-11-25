@@ -1,4 +1,5 @@
 import rough from 'roughjs'
+import { arrowEnds, headGeometry, startHeadOf, endHeadOf } from './canvasBindings'
 import type { Options } from 'roughjs/bin/core'
 import { FONT_HAND } from './CanvasToolbar'
 import { shapeBounds } from './canvasTypes'
@@ -143,16 +144,26 @@ function shapeToSvg(s: Shape, sketchy: boolean, defs: Set<string>): string {
       const a = s as ArrowShape
       if (Math.hypot(a.x2 - a.x1, a.y2 - a.y1) < 1) return ''
       const cpx = a.cpx ?? (a.x1 + a.x2) / 2, cpy = a.cpy ?? (a.y1 + a.y2) / 2
-      const angle = Math.atan2(a.y2 - cpy, a.x2 - cpx)
-      const H = Math.max(14, a.width * 5)
-      const h1: [number, number] = [a.x2 - H * Math.cos(angle - Math.PI / 7), a.y2 - H * Math.sin(angle - Math.PI / 7)]
-      const h2: [number, number] = [a.x2 - H * Math.cos(angle + Math.PI / 7), a.y2 - H * Math.sin(angle + Math.PI / 7)]
+      const ends = arrowEnds(a)
+      const heads = [
+        headGeometry(startHeadOf(a), ends.start.p, ends.start.ang, a.width),
+        headGeometry(endHeadOf(a), ends.end.p, ends.end.ang, a.width),
+      ]
       if (sketchy) {
         const o = { ...ro(), fill: undefined }
         out = roughPaths(gen.path(`M ${a.x1} ${a.y1} Q ${cpx} ${cpy}, ${a.x2} ${a.y2}`, o))
-            + roughPaths(gen.linearPath([h1, [a.x2, a.y2], h2], o))
+          + heads.map(h => h.lines.map(l => roughPaths(gen.linearPath(l, o))).join('') + h.circles.map(c => roughPaths(gen.circle(c.x, c.y, c.r * 2, o))).join('')).join('')
       } else {
-        out = `<path d="M ${num(a.x1)} ${num(a.y1)} Q ${num(cpx)} ${num(cpy)} ${num(a.x2)} ${num(a.y2)} M ${num(h1[0])} ${num(h1[1])} L ${num(a.x2)} ${num(a.y2)} L ${num(h2[0])} ${num(h2[1])}" fill="none" ${stroke}/>`
+        const d = `M ${num(a.x1)} ${num(a.y1)} Q ${num(cpx)} ${num(cpy)} ${num(a.x2)} ${num(a.y2)}`
+          + heads.map(h => h.lines.map(l => l.map(([x, y], i) => `${i ? 'L' : 'M'} ${num(x)} ${num(y)}`).join(' ')).join(' ')).join(' ')
+        out = `<path d="${d}" fill="none" ${stroke}/>`
+          + heads.flatMap(h => h.circles).map(c => `<circle cx="${num(c.x)}" cy="${num(c.y)}" r="${num(c.r)}" fill="none" ${stroke}/>`).join('')
+      }
+      if (a.label?.text) {
+        const bt = a.label, lineH = bt.size * 1.25, lines = bt.text.split('\n')
+        const y0 = ends.mid.y - (lines.length * lineH) / 2 + lineH / 2
+        out += `<text x="${num(ends.mid.x)}" font-family="${esc(bt.fontFamily ?? FONT_HAND)}" font-size="${bt.size}" fill="${esc(bt.color)}" text-anchor="middle" dominant-baseline="central">`
+          + lines.map((l, i) => `<tspan x="${num(ends.mid.x)}" y="${num(y0 + i * lineH)}">${esc(l)}</tspan>`).join('') + '</text>'
       }
       break
     }

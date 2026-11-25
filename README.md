@@ -4,7 +4,7 @@
   <h1>inkwell</h1>
   <p>A focused, beautiful markdown note-taking app.</p>
 
-  ![Version](https://img.shields.io/badge/version-2.3.2-orange?style=flat-square)
+  ![Version](https://img.shields.io/badge/version-2.3.3-orange?style=flat-square)
   ![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-black?style=flat-square)
   ![License](https://img.shields.io/badge/license-MIT-orange?style=flat-square&color=c47d2e)
 </div>

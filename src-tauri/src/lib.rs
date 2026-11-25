@@ -277,8 +277,12 @@ fn set_widget_shortcut(app: tauri::AppHandle, accelerator: String) -> Result<(),
 }
 
 /// Open the quick-note popup (the widget's "Note" petal).
+///
+/// Async on purpose: a *sync* command that builds a window deadlocks on Windows
+/// (WebView2 needs the main thread the sync handler is holding; tauri/wry#583),
+/// leaving a blank white window that can't be closed.
 #[tauri::command]
-fn open_quick_note(app: tauri::AppHandle) {
+async fn open_quick_note(app: tauri::AppHandle) {
     show_quick_note_window(&app);
 }
 
@@ -384,8 +388,11 @@ fn show_quick_note_window(app: &tauri::AppHandle) {
 /// the existing one to the front. The window loads the same frontend with
 /// `?settings=1`; it mirrors the main window's state over events (see
 /// src/lib/settingsSync.ts), so there is only ever one source of truth.
+///
+/// Must stay `async`: building a window from a sync command deadlocks on Windows
+/// (blank white Settings window that never loads or closes; tauri/wry#583).
 #[tauri::command]
-fn open_settings_window(app: tauri::AppHandle) {
+async fn open_settings_window(app: tauri::AppHandle) {
     if let Some(win) = app.get_webview_window(SETTINGS_LABEL) {
         let _ = win.show();
         let _ = win.unminimize();

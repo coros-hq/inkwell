@@ -19,7 +19,22 @@ export interface PathShape    extends Base { type: 'path';    pts: Point[] }
 export interface RectShape    extends Base { type: 'rect';    x: number; y: number; w: number; h: number; radius: number; boundText?: BoundText }
 export interface EllipseShape extends Base { type: 'ellipse'; cx: number; cy: number; rx: number; ry: number; boundText?: BoundText }
 export interface LineShape    extends Base { type: 'line';    x1: number; y1: number; x2: number; y2: number }
-export interface ArrowShape   extends Base { type: 'arrow';   x1: number; y1: number; x2: number; y2: number; cpx?: number; cpy?: number }
+/** An arrow end attached to a shape. fx/fy pin it to a spot (fractions of the shape's bounds); without them it floats along the outline. */
+export interface ArrowBinding { id: string; fx?: number; fy?: number }
+/** End decoration: plain arrowhead, nothing, or ER crow's-foot cardinalities. */
+export type ArrowHead = 'arrow' | 'none' | 'one' | 'zeroOne' | 'many' | 'zeroMany'
+export interface ArrowShape   extends Base {
+  type: 'arrow'
+  x1: number; y1: number; x2: number; y2: number
+  cpx?: number; cpy?: number
+  start?: ArrowBinding; end?: ArrowBinding
+  /** Defaults: no head at the start, an arrowhead at the end. */
+  startHead?: ArrowHead; endHead?: ArrowHead
+  /** Text riding on the arrow's midpoint. */
+  label?: BoundText
+  /** false once the user bends the arrow by hand: bindings then keep their curve. */
+  autoBend?: boolean
+}
 export interface TextShape    extends Base {
   type: 'text'
   x: number; y: number

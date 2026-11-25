@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react'
-import { ChevronDown, ChevronRight, FileImage, FolderOpen, MoreHorizontal, Plus, Search, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, FileImage, FolderOpen, MoreHorizontal, PanelLeftClose, PanelTop, Plus, Search, X } from 'lucide-react'
 import { useAppStore } from '../../store/useAppStore'
 import { useDrawingsStore } from '../../store/useDrawingsStore'
 import type { DrawingMeta } from '../../lib/drawings'
@@ -11,6 +11,10 @@ import { cn } from '../../lib/utils'
 interface Props {
   /** Called after the drawing has been made active; the parent opens the export dialog once it is loaded. */
   onExport: (id: string) => void
+  /** Switch to the compact tab strip along the top of the canvas. */
+  onTabs: () => void
+  /** Hide the drawings list. */
+  onHide: () => void
 }
 
 const UNFILED = '__unfiled__'
@@ -35,7 +39,7 @@ type Menu =
   | { kind: 'folders'; id: string; x: number; y: number }
   | { kind: 'tags'; id: string; x: number; y: number }
 
-export function DrawingsPanel({ onExport }: Props) {
+export function DrawingsPanel({ onExport, onTabs, onHide }: Props) {
   const drawings = useDrawingsStore(s => s.drawings)
   const activeId = useDrawingsStore(s => s.activeId)
   const { setActive, create, rename, remove, duplicate, setFolder, setTag } = useDrawingsStore.getState()
@@ -114,8 +118,24 @@ export function DrawingsPanel({ onExport }: Props) {
 
   return (
     <div className="w-56 shrink-0 h-full flex flex-col border-r border-border bg-panel/60 select-none">
-      <div className="flex items-center justify-between px-3 pt-9 pb-2">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Drawings</span>
+      <div className="flex items-center gap-0.5 px-3 pt-9 pb-2">
+        <span className="flex-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">Drawings</span>
+        <button
+          type="button"
+          title="Show as tabs along the top"
+          onClick={onTabs}
+          className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+        >
+          <PanelTop className="w-3.5 h-3.5" />
+        </button>
+        <button
+          type="button"
+          title="Hide drawings list"
+          onClick={onHide}
+          className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
+        >
+          <PanelLeftClose className="w-3.5 h-3.5" />
+        </button>
         <button
           type="button"
           title="New drawing"

@@ -10,6 +10,8 @@ import { cn, glassBg } from '../../lib/utils'
 import { CanvasToolbar, FONT_HAND } from './CanvasToolbar'
 import { CanvasNotesSheet } from './CanvasNotesSheet'
 import { DrawingsPanel } from './DrawingsPanel'
+import { DrawingsTabs } from './DrawingsTabs'
+import { extractMermaid, mermaidToShapes } from './mermaidImport'
 import { CanvasExportDialog } from './CanvasExportDialog'
 import { useDrawingsStore } from '../../store/useDrawingsStore'
 import { loadDrawing, saveDrawing } from '../../lib/drawings'
@@ -20,7 +22,11 @@ import {
   adaptShape, ctxFont, roughOptions, wrapCanvasText, getMeasureCtx, boundFont, containerTextBox,
   STICKY_TEXT_COLOR, TEXT_PAD, ELLIPSE_TEXT_RATIO, BOUND_LINE_HEIGHT,
 } from './canvasShared'
-import { uid, hitTest, hitTopmost, shapeBounds, recolorTemplateShapes, unrotatePoint } from './canvasTypes'
+import { uid, hitTopmost, shapeBounds, recolorTemplateShapes, unrotatePoint } from './canvasTypes'
+import {
+  arrowEnds, headGeometry, startHeadOf, endHeadOf, resolveBindings, releaseDetached, remapBindings,
+  bindingAt, connectionDots, resolveArrow, SIDE_POINTS,
+} from './canvasBindings'
 import type { Shape, Tool, Point, PathShape, RectShape, EllipseShape, LineShape, ArrowShape, TextShape, BoundText, StickyShape, ImageShape } from './canvasTypes'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
@@ -242,23 +248,31 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | n
       if (Math.hypot(a.x2 - a.x1, a.y2 - a.y1) < 1) break
       const cpx = a.cpx ?? (a.x1 + a.x2) / 2
       const cpy = a.cpy ?? (a.y1 + a.y2) / 2
-      // Tangent at endpoint = direction from CP → endpoint
-      const angle = Math.atan2(a.y2 - cpy, a.x2 - cpx)
-      const H = Math.max(14, a.width * 5)
-      const headP1: [number, number] = [a.x2 - H * Math.cos(angle - Math.PI / 7), a.y2 - H * Math.sin(angle - Math.PI / 7)]
-      const headP2: [number, number] = [a.x2 - H * Math.cos(angle + Math.PI / 7), a.y2 - H * Math.sin(angle + Math.PI / 7)]
-      // Open "V" head like Excalidraw: shaft runs to the tip, two strokes form the head
+      const ends = arrowEnds(a)
+      const heads = [
+        headGeometry(startHeadOf(a), ends.start.p, ends.start.ang, a.width),
+        headGeometry(endHeadOf(a), ends.end.p, ends.end.ang, a.width),
+      ]
+      // Open heads like Excalidraw: the shaft runs to the tip and the head is drawn in strokes
       if (useRough) {
         cachedRoughDraw(rc, roughCache, s, () => [
           rc.generator.path(`M ${a.x1} ${a.y1} Q ${cpx} ${cpy}, ${a.x2} ${a.y2}`, { ...roughOptions(s), fill: undefined }),
-          rc.generator.linearPath([headP1, [a.x2, a.y2], headP2], { ...roughOptions(s), fill: undefined }),
+          ...heads.flatMap(h => [
+            ...h.lines.map(l => rc.generator.linearPath(l, { ...roughOptions(s), fill: undefined })),
+            ...h.circles.map(c => rc.generator.circle(c.x, c.y, c.r * 2, { ...roughOptions(s), fill: undefined })),
+          ]),
         ])
-        break
+      } else {
+        ctx.beginPath(); ctx.moveTo(a.x1, a.y1)
+        ctx.quadraticCurveTo(cpx, cpy, a.x2, a.y2)
+        for (const h of heads) {
+          for (const l of h.lines) { ctx.moveTo(l[0][0], l[0][1]); for (const [x, y] of l.slice(1)) ctx.lineTo(x, y) }
+          for (const c of h.circles) { ctx.moveTo(c.x + c.r, c.y); ctx.arc(c.x, c.y, c.r, 0, Math.PI * 2) }
+        }
+        ctx.stroke()
       }
-      ctx.beginPath(); ctx.moveTo(a.x1, a.y1)
-      ctx.quadraticCurveTo(cpx, cpy, a.x2, a.y2)
-      ctx.moveTo(headP1[0], headP1[1]); ctx.lineTo(a.x2, a.y2); ctx.lineTo(headP2[0], headP2[1])
-      ctx.stroke(); break
+      if (a.label?.text) drawArrowLabel(ctx, a, ends.mid)
+      break
     }
     case 'text': {
       const t = s as TextShape; ctx.font = ctxFont(t); ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y); break
@@ -323,6 +337,25 @@ function drawBoundText(ctx: CanvasRenderingContext2D, s: RectShape | EllipseShap
   const lineH  = bt.size * BOUND_LINE_HEIGHT
   let y = box.y + box.h / 2 - (lines.length * lineH) / 2 + lineH / 2
   for (const line of lines) { ctx.fillText(line, box.x + box.w / 2, y); y += lineH }
+  ctx.restore()
+}
+
+/** Arrow label on the curve's midpoint, on a patch of background so the line breaks around it. */
+function drawArrowLabel(ctx: CanvasRenderingContext2D, a: ArrowShape, mid: Point) {
+  const bt = a.label!
+  ctx.save()
+  ctx.font = boundFont(bt)
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+  const lines = bt.text.split('\n')
+  const lineH = bt.size * BOUND_LINE_HEIGHT
+  const w = Math.max(...lines.map(l => ctx.measureText(l).width)) + 8, h = lines.length * lineH + 4
+  if (!useAppStore.getState().bodyGlass) {
+    ctx.fillStyle = getCSSColor('--background', '#111')
+    ctx.fillRect(mid.x - w / 2, mid.y - h / 2, w, h)
+  }
+  ctx.fillStyle = bt.color
+  let y = mid.y - (lines.length * lineH) / 2 + lineH / 2
+  for (const line of lines) { ctx.fillText(line, mid.x, y); y += lineH }
   ctx.restore()
 }
 
@@ -521,7 +554,7 @@ const SHORTCUT_GROUPS: { title: string; items: [string, string][] }[] = [
     items: [
       ['⌘/Ctrl + A', 'Select all'], ['⇧ + click', 'Add/remove from selection'],
       ['Delete / Backspace', 'Delete selected'], ['Arrow keys', 'Nudge (⇧ for 10px)'],
-      ['⌘/Ctrl + D', 'Duplicate'], ['⌘/Ctrl + C / X / V', 'Copy / cut / paste (images and Excalidraw too)'],
+      ['⌘/Ctrl + D', 'Duplicate'], ['⌘/Ctrl + C / X / V', 'Copy / cut / paste (images, Excalidraw and Mermaid code too)'],
       ['⌘/Ctrl + G', 'Group'], ['⌘/Ctrl + ⇧ + G', 'Ungroup'],
       ['⌘/Ctrl + ⇧ + ]', 'Bring to front'], ['⌘/Ctrl + ⇧ + [', 'Send to back'],
     ],
@@ -582,6 +615,11 @@ export function CanvasView() {
   const [showDrawings,      setShowDrawings]      = useState(() => {
     try { return localStorage.getItem('inkwell-drawings-panel') !== 'false' } catch { return true }
   })
+  // Where the drawings list lives: a left column, or a tab strip along the top of the canvas.
+  const [drawingsLayout,    setDrawingsLayout]    = useState<'sidebar' | 'tabs'>(() => {
+    try { return localStorage.getItem('inkwell-drawings-layout') === 'sidebar' ? 'sidebar' : 'tabs' } catch { return 'tabs' }
+  })
+  const [importError,       setImportError]       = useState<string | null>(null)
 
   // ── Canvas content refs ──────────────────────────────────────────────────────
   const shapesRef       = useRef<Shape[]>([])
@@ -663,6 +701,12 @@ export function CanvasView() {
   // Clipboard (in-app only) + last known mouse world position (for paste placement)
   const clipboardRef      = useRef<Shape[] | null>(null)
   const lastMouseWorldRef = useRef<Point>({ x: 0, y: 0 })
+
+  // Arrow binding: the shape showing connection dots under the pointer, the shape an arrow
+  // end would attach to right now (highlighted), and a dragged endpoint of a selected arrow.
+  const bindHoverRef     = useRef<string | null>(null)
+  const bindPreviewRef   = useRef<string | null>(null)
+  const endpointDragRef  = useRef<{ id: string; which: 'start' | 'end'; pre: Shape[] } | null>(null)
 
   // Keyboard nudge (arrow keys) — coalesced into one undo step per burst
   const nudgePreRef = useRef<Shape[] | null>(null)
@@ -795,11 +839,16 @@ export function CanvasView() {
     ctx.translate(panRef.current.x, panRef.current.y)
     ctx.scale(zoomRef.current, zoomRef.current)
 
+    // Bound arrows follow their shapes, whatever moved them (drag, resize, undo, load…).
+    shapesRef.current = resolveBindings(shapesRef.current)
+
     const darkBg = useAppStore.getState().theme === 'dark'
     const ink = darkBg ? DEFAULT_COLOR_DARK : DEFAULT_COLOR_LIGHT
     for (const raw of shapesRef.current) {
       if (editingIdRef.current && raw.id === editingIdRef.current) continue
-      const s = adaptShape(raw, darkBg, ink)
+      // The label being edited is drawn by the editor overlay instead.
+      const shown = raw.type === 'arrow' && raw.label && editingContainerIdRef.current === raw.id ? { ...raw, label: undefined } : raw
+      const s = adaptShape(shown, darkBg, ink)
       ctx.save()
       applyRotation(ctx, s)
       drawShape(ctx, s, rc, sketchyRef.current, roughCacheRef.current)
@@ -842,10 +891,54 @@ export function CanvasView() {
       ctx.restore()
     })
 
+    // Arrow binding: highlight the shape an arrow end is about to attach to, and show
+    // connection dots on the hovered shape (hidden while something is being dragged).
+    {
+      const z = zoomRef.current
+      const accent = getCSSColor('--accent', '#a78bfa')
+      const preview = bindPreviewRef.current ? shapesRef.current.find(s => s.id === bindPreviewRef.current) : undefined
+      if (preview) {
+        const b = shapeBounds(preview), pad = 5 / z
+        ctx.save()
+        applyRotation(ctx, preview)
+        ctx.strokeStyle = accent; ctx.globalAlpha = 0.55; ctx.lineWidth = 3 / z
+        if (preview.type === 'ellipse') { ctx.beginPath(); ctx.ellipse(preview.cx, preview.cy, Math.abs(preview.rx) + pad, Math.abs(preview.ry) + pad, 0, 0, Math.PI * 2); ctx.stroke() }
+        else { ctx.beginPath(); ctx.roundRect(b.x - pad, b.y - pad, b.w + pad * 2, b.h + pad * 2, 6 / z); ctx.stroke() }
+        ctx.restore()
+      }
+      const busy = isDraggingRef.current || resizingRef.current || rotatingRef.current || isRubberBandRef.current || isBendingRef.current
+      // Not on a selected shape: its own handles (rotate, resize) sit in the same spots.
+      const dotsOn = preview ?? (!busy && bindHoverRef.current && !selectedIdsRef.current.has(bindHoverRef.current)
+        ? shapesRef.current.find(s => s.id === bindHoverRef.current) : undefined)
+      if (dotsOn) {
+        const mouse = lastMouseWorldRef.current
+        ctx.save()
+        ctx.lineWidth = 1.5 / z; ctx.strokeStyle = accent
+        for (const d of connectionDots(dotsOn, z)) {
+          const near = Math.hypot(d.x - mouse.x, d.y - mouse.y) < 10 / z
+          ctx.fillStyle = near ? accent : getCSSColor('--background', '#111')
+          ctx.beginPath(); ctx.arc(d.x, d.y, (near ? 5.5 : 4) / z, 0, Math.PI * 2); ctx.fill(); ctx.stroke()
+        }
+        ctx.restore()
+      }
+    }
+
     // Selection overlay
     const selShapes = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
     if (selShapes.length === 1) {
       drawSingleSelection(ctx, selShapes[0], zoomRef.current)
+      // Endpoint handles: drag one onto a shape to attach it, or off to detach
+      if (selShapes[0].type === 'arrow') {
+        const a = selShapes[0] as ArrowShape, z = zoomRef.current
+        ctx.save()
+        ctx.lineWidth = 1.5 / z
+        for (const [x, y, bound] of [[a.x1, a.y1, !!a.start], [a.x2, a.y2, !!a.end]] as const) {
+          ctx.strokeStyle = getCSSColor('--accent', '#a78bfa')
+          ctx.fillStyle = bound ? getCSSColor('--accent', '#a78bfa') : '#ffffff'
+          ctx.beginPath(); ctx.arc(x, y, 5 / z, 0, Math.PI * 2); ctx.fill(); ctx.stroke()
+        }
+        ctx.restore()
+      }
       // Bend handle for selected arrows
       if (selShapes[0].type === 'arrow') {
         const a = selShapes[0] as ArrowShape
@@ -1237,6 +1330,7 @@ export function CanvasView() {
           const hp = rotateHandlePos(shapeBounds(rs), rs.rotation ?? 0, zoomRef.current)
           if (Math.hypot(wp.x - hp.x, wp.y - hp.y) <= 10 / zoomRef.current) {
             rotatingRef.current = rs.id; rotatePreRef.current = [...shapesRef.current]
+            shapesRef.current = releaseDetached(shapesRef.current, selectedIdsRef.current)
             updateCursor('grabbing'); return
           }
         }
@@ -1254,6 +1348,7 @@ export function CanvasView() {
             resizeStartBoundsRef.current = bounds
             resizeStartPtRef.current     = wp
             resizePreRef.current         = [...shapesRef.current]
+            shapesRef.current            = releaseDetached(shapesRef.current, selectedIdsRef.current)
             updateCursor(handle === 'tl' || handle === 'br' ? 'nwse-resize' : 'nesw-resize')
             return
           }
@@ -1272,6 +1367,33 @@ export function CanvasView() {
             isBendingRef.current = true; bendPreRef.current = [...shapesRef.current]
             updateCursor('crosshair'); render(); return
           }
+        }
+      }
+
+      // 2b. Endpoint of the selected arrow: drag to re-attach / detach
+      if (selectedIdsRef.current.size === 1) {
+        const [aid] = [...selectedIdsRef.current]
+        const a = shapesRef.current.find(s => s.id === aid)
+        if (a && a.type === 'arrow') {
+          const r = 9 / zoomRef.current
+          const which = Math.hypot(wp.x - a.x2, wp.y - a.y2) < r ? 'end' : Math.hypot(wp.x - a.x1, wp.y - a.y1) < r ? 'start' : null
+          if (which) { endpointDragRef.current = { id: a.id, which, pre: [...shapesRef.current] }; updateCursor('crosshair'); return }
+        }
+      }
+
+      // 2c. Connection dot of the hovered shape: pull a new arrow out of it
+      const dotHost = bindHoverRef.current && !selectedIdsRef.current.has(bindHoverRef.current)
+        ? shapesRef.current.find(s => s.id === bindHoverRef.current) : undefined
+      if (dotHost) {
+        const di = connectionDots(dotHost, zoomRef.current).findIndex(d => Math.hypot(d.x - wp.x, d.y - wp.y) < 10 / zoomRef.current)
+        if (di >= 0) {
+          isDrawingRef.current = true; startPtRef.current = wp
+          drawingRef.current = {
+            id: uid(), color: colorRef.current, fill: 'none', width: widthRef.current, type: 'arrow',
+            x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y, start: { id: dotHost.id, ...SIDE_POINTS[di] },
+          }
+          setTool('arrow'); toolRef.current = 'arrow'
+          render(); return
         }
       }
 
@@ -1336,7 +1458,12 @@ export function CanvasView() {
       case 'rect':    drawingRef.current = { ...base, type: 'rect',    x: wp.x, y: wp.y, w: 0, h: 0, radius: radiusRef.current }; break
       case 'ellipse': drawingRef.current = { ...base, type: 'ellipse', cx: wp.x, cy: wp.y, rx: 0, ry: 0 }; break
       case 'line':    drawingRef.current = { ...base, type: 'line',    x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y }; break
-      case 'arrow':   drawingRef.current = { ...base, type: 'arrow',   x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y }; break
+      case 'arrow': {
+        // Starting on (or next to) a shape attaches the arrow's tail to it
+        const cand = bindingAt(shapesRef.current, wp, zoomRef.current)
+        drawingRef.current = { ...base, fill: 'none', type: 'arrow', x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y, ...(cand ? { start: cand.bind } : {}) }
+        break
+      }
     }
   }, [toWorld, render, setSelection, clearSelection, updateCursor, openShapeNote])
 
@@ -1363,6 +1490,21 @@ export function CanvasView() {
         render()
       }
       return
+    }
+
+    // Drag an arrow endpoint: attach to whatever bindable shape is under it
+    if (endpointDragRef.current) {
+      const { id, which } = endpointDragRef.current
+      const a = shapesRef.current.find(s => s.id === id)
+      if (a && a.type === 'arrow') {
+        const other = which === 'end' ? { x: a.x1, y: a.y1 } : { x: a.x2, y: a.y2 }
+        const cand = bindingAt(shapesRef.current, wp, zoomRef.current, new Set([id]), other)
+        bindPreviewRef.current = cand?.target.id ?? null
+        const next: ArrowShape = which === 'end' ? { ...a, x2: wp.x, y2: wp.y } : { ...a, x1: wp.x, y1: wp.y }
+        if (cand) next[which] = cand.bind; else delete next[which]
+        shapesRef.current = shapesRef.current.map(s => s.id === id ? next : s)
+      }
+      render(); return
     }
 
     // Resize (single shape, or proportional group-resize for a multi-selection)
@@ -1414,7 +1556,7 @@ export function CanvasView() {
     if (isBendingRef.current && selectedIdsRef.current.size === 1) {
       const [bid] = [...selectedIdsRef.current]
       shapesRef.current = shapesRef.current.map(s =>
-        s.id === bid && s.type === 'arrow' ? { ...s, cpx: wp.x, cpy: wp.y } as Shape : s
+        s.id === bid && s.type === 'arrow' ? { ...s, cpx: wp.x, cpy: wp.y, autoBend: false } as Shape : s
       )
       render(); return
     }
@@ -1432,7 +1574,8 @@ export function CanvasView() {
         const snapped = snapDrag(unionBounds(pre.filter(s => ids.has(s.id))), pre.filter(s => !ids.has(s.id)), dx, dy, 6 / zoomRef.current)
         dx = snapped.dx; dy = snapped.dy; guidesRef.current = snapped.guides
       }
-      shapesRef.current = pre.map(s => ids.has(s.id) ? offsetShape(s, dx, dy) as Shape : s)
+      // An arrow dragged without its shapes lets go of them
+      shapesRef.current = releaseDetached(pre, ids).map(s => ids.has(s.id) ? offsetShape(s, dx, dy) as Shape : s)
       render(); return
     }
 
@@ -1471,10 +1614,36 @@ export function CanvasView() {
           let x2 = wp.x, y2 = wp.y
           if (sh) { const dx = wp.x - sp.x, dy = wp.y - sp.y, snap = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4), dist = Math.hypot(dx, dy); x2 = sp.x + dist * Math.cos(snap); y2 = sp.y + dist * Math.sin(snap) }
           ;(d as LineShape).x2 = x2; (d as LineShape).y2 = y2
+          if (d.type === 'arrow') {
+            // Hovering a shape with the arrow's head attaches it (highlighted), and snaps the ends
+            const ar = d as ArrowShape
+            const cand = bindingAt(shapesRef.current, wp, zoomRef.current, new Set(ar.start ? [ar.start.id] : []), { x: ar.x1, y: ar.y1 })
+            bindPreviewRef.current = cand?.target.id ?? null
+            if (cand) ar.end = cand.bind; else delete ar.end
+            drawingRef.current = resolveArrow(ar, new Map(shapesRef.current.map(sh => [sh.id, sh])))
+          }
           break
         }
       }
       render(); return
+    }
+
+    // Connection dots: show them on the bindable shape under the pointer (select & arrow tools)
+    if (toolRef.current === 'select' || toolRef.current === 'arrow') {
+      const host = bindingAt(shapesRef.current, wp, zoomRef.current)?.target
+      // Keep the dots up while the pointer travels from the shape out to a dot
+      const keep = bindHoverRef.current && !host
+        ? shapesRef.current.find(s => s.id === bindHoverRef.current && connectionDots(s, zoomRef.current).some(d => Math.hypot(d.x - wp.x, d.y - wp.y) < 14 / zoomRef.current))
+        : undefined
+      const next = host?.id ?? keep?.id ?? null
+      const prev = bindHoverRef.current
+      bindHoverRef.current = next
+      const onDot = next && !selectedIdsRef.current.has(next) ? connectionDots(shapesRef.current.find(s => s.id === next)!, zoomRef.current).some(d => Math.hypot(d.x - wp.x, d.y - wp.y) < 10 / zoomRef.current) : false
+      // Repaint only while dots are (or just stopped being) on screen
+      if (next || prev) render()
+      if (onDot && toolRef.current === 'select') { updateCursor('crosshair'); return }
+    } else if (bindHoverRef.current) {
+      bindHoverRef.current = null; render()
     }
 
     // Cursor: handle hover for the current selection (single shape or multi-selection bounds)
@@ -1510,6 +1679,16 @@ export function CanvasView() {
 
   const onMouseUp = useCallback(() => {
     if (isPanningRef.current) { isPanningRef.current = false; return }
+
+    // Finish dragging an arrow endpoint
+    if (endpointDragRef.current) {
+      const { pre } = endpointDragRef.current
+      endpointDragRef.current = null; bindPreviewRef.current = null
+      historyRef.current = [...historyRef.current, pre]
+      futureRef.current = []
+      setCanUndo(true); setCanRedo(false); scheduleSave(); updateCursor('default'); render()
+      return
+    }
 
     // Finish bend
     if (isBendingRef.current) {
@@ -1590,6 +1769,7 @@ export function CanvasView() {
     // Finish drawing
     if (!isDrawingRef.current || !drawingRef.current) return
     isDrawingRef.current = false
+    bindPreviewRef.current = null
     const shape = drawingRef.current; drawingRef.current = null
     if (shape.type === 'path') {
       if (shape.pts.length < 2) { render(); return }
@@ -1602,7 +1782,11 @@ export function CanvasView() {
       const c = startPtRef.current
       if (shape.type === 'rect')         final = { ...shape, x: c.x - 70, y: c.y - 45, w: 140, h: 90 }
       else if (shape.type === 'ellipse') final = { ...shape, cx: c.x, cy: c.y, rx: 70, ry: 45 }
-      else { render(); return }
+      else {
+        // A click on a connection dot that never became a drag: back to selecting
+        if (shape.type === 'arrow' && shape.start) { setTool('select'); toolRef.current = 'select' }
+        render(); return
+      }
     }
     commit([...shapesRef.current, final])
     // Like Excalidraw: after placing a shape, hand control back to the select tool with the shape selected
@@ -1634,6 +1818,20 @@ export function CanvasView() {
       setTextInput({
         sx: b.x * zoom + pan.x, sy: b.y * zoom + pan.y, wx: b.x, wy: b.y,
         stickyId: shape.id, boxW: b.w * zoom, boxH: b.h * zoom, initialValue: shape.text,
+      })
+      return
+    }
+    if (shape.type === 'arrow') {
+      const bt = shape.label
+      setFontSize(bt?.size ?? 14);                fontSizeRef.current   = bt?.size ?? 14
+      setFontFamily(bt?.fontFamily ?? FONT_HAND); fontFamilyRef.current = bt?.fontFamily ?? FONT_HAND
+      setBold(bt?.bold ?? false);                 boldRef.current       = bt?.bold ?? false
+      setItalic(bt?.italic ?? false);             italicRef.current     = bt?.italic ?? false
+      const mid = arrowEnds(shape).mid
+      const w = 180, h = (bt?.size ?? 14) * BOUND_LINE_HEIGHT * Math.max(1, (bt?.text ?? '').split('\n').length) + 10
+      setTextInput({
+        sx: (mid.x - w / 2) * zoom + pan.x, sy: (mid.y - h / 2) * zoom + pan.y, wx: mid.x - w / 2, wy: mid.y - h / 2,
+        containerId: shape.id, boxW: w * zoom, boxH: h * zoom, initialValue: bt?.text ?? '',
       })
       return
     }
@@ -1691,7 +1889,8 @@ export function CanvasView() {
 
     // Double-click a bent arrow → straighten it
     const hitArrow = [...shapesRef.current].reverse().find(
-      s => s.type === 'arrow' && (s as ArrowShape).cpx !== undefined && hitTest(s, wp.x, wp.y)
+      s => s.type === 'arrow' && (s as ArrowShape).cpx !== undefined
+        && Math.hypot(wp.x - (s as ArrowShape).cpx!, wp.y - (s as ArrowShape).cpy!) < 10 / zoomRef.current
     ) as ArrowShape | undefined
     if (hitArrow) {
       e.preventDefault()
@@ -1702,7 +1901,7 @@ export function CanvasView() {
     }
 
     const hit = hitTopmost(shapesRef.current, wp.x, wp.y)
-    if (hit && (hit.type === 'text' || hit.type === 'sticky' || hit.type === 'rect' || hit.type === 'ellipse')) {
+    if (hit && (hit.type === 'text' || hit.type === 'sticky' || hit.type === 'rect' || hit.type === 'ellipse' || hit.type === 'arrow')) {
       e.preventDefault()
       setSelection(new Set([hit.id]))
       startEdit(hit)
@@ -1793,7 +1992,9 @@ export function CanvasView() {
     const b  = unionBounds(clipboardRef.current)
     const target = lastMouseWorldRef.current
     const dx = target.x - (b.x + b.w / 2), dy = target.y - (b.y + b.h / 2)
-    const copies = offsetShapes(clipboardRef.current.map(s => ({ ...s, id: uid() })), dx, dy)
+    const idMap = new Map<string, string>()
+    const fresh = clipboardRef.current.map(s => { const id = uid(); idMap.set(s.id, id); return { ...s, id } })
+    const copies = offsetShapes(remapBindings(fresh, idMap), dx, dy)
     commit([...shapesRef.current, ...copies])
     setSelection(new Set(copies.map(c => c.id)))
   }, [commit, setSelection])
@@ -1812,12 +2013,14 @@ export function CanvasView() {
   }, [])
 
   /** Inserts already-built shapes so their bounding box is centered on `center`, and selects them. */
-  const insertShapesAt = useCallback((shapes: Shape[], center: Point) => {
+  const insertShapesAt = useCallback((shapes: Shape[], center: Point, select = true) => {
     if (!shapes.length) return
     const b = unionBounds(shapes)
     const placed = offsetShapes(shapes, center.x - (b.x + b.w / 2), center.y - (b.y + b.h / 2))
     commit([...shapesRef.current, ...placed])
-    setSelection(new Set(placed.map(s => s.id)))
+    // A pasted diagram lands unselected, so it reads as separate tables/nodes and links
+    // rather than one block; click any of them to pick it up.
+    setSelection(select ? new Set(placed.map(s => s.id)) : new Set())
     setTool('select')
   }, [commit, setSelection])
 
@@ -1838,14 +2041,33 @@ export function CanvasView() {
     return true
   }, [insertShapesAt, viewCenter])
 
+  /** Mermaid diagram code (bare or in a ```mermaid fence). Returns false if it isn't Mermaid. */
+  const importMermaidText = useCallback((text: string, at?: Point): boolean => {
+    const src = extractMermaid(text)
+    if (!src) return false
+    const center = at ?? viewCenter()
+    mermaidToShapes(src, fontFamilyRef.current)
+      .then(shapes => { setImportError(null); insertShapesAt(recolorTemplateShapes(shapes, defaultColor), center, false) })
+      .catch(e => {
+        const msg = e instanceof Error ? e.message : String(e)
+        setImportError(msg)
+        setTimeout(() => setImportError(cur => (cur === msg ? null : cur)), 6000)
+      })
+    return true
+  }, [insertShapesAt, viewCenter, defaultColor])
+
   /** Files from the upload button: pictures, plus .excalidraw / .json scenes. */
   const addFiles = useCallback(async (files: File[]) => {
     const images = files.filter(f => f.type.startsWith('image/'))
     for (const f of files.filter(f => /\.(excalidraw|json)$/i.test(f.name))) {
       if (!importExcalidrawText(await f.text())) console.warn('[canvas] not an Excalidraw file:', f.name)
     }
+    for (const f of files.filter(f => /\.(mmd|mermaid)$/i.test(f.name))) {
+      const text = await f.text()
+      if (!importMermaidText(extractMermaid(text) ? text : `flowchart TD\n${text}`)) console.warn('[canvas] not a Mermaid file:', f.name)
+    }
     if (images.length) await addImageFiles(images)
-  }, [addImageFiles, importExcalidrawText])
+  }, [addImageFiles, importExcalidrawText, importMermaidText])
 
   // Repaint when a freshly added/loaded picture finishes decoding.
   useEffect(() => {
@@ -1906,7 +2128,7 @@ export function CanvasView() {
                        : ev.key === 'ArrowLeft' ? [-step, 0]
                        : [step, 0]
         if (!nudgePreRef.current) nudgePreRef.current = [...shapesRef.current]
-        shapesRef.current = shapesRef.current.map(s => selectedIdsRef.current.has(s.id) ? offsetShape(s, dx, dy) as Shape : s)
+        shapesRef.current = releaseDetached(shapesRef.current, selectedIdsRef.current).map(s => selectedIdsRef.current.has(s.id) ? offsetShape(s, dx, dy) as Shape : s)
         render()
       }
 
@@ -1929,7 +2151,8 @@ export function CanvasView() {
           ev.preventDefault()
           if (selectedIdsRef.current.size > 0) {
             const sel   = shapesRef.current.filter(s => selectedIdsRef.current.has(s.id))
-            const copies = sel.map(duplicateShape)
+            const idMap = new Map<string, string>()
+            const copies = remapBindings(sel.map(sh => { const c = duplicateShape(sh); idMap.set(sh.id, c.id); return c }), idMap)
             commit([...shapesRef.current, ...copies])
             setSelection(new Set(copies.map(c => c.id)))
           }
@@ -1976,13 +2199,14 @@ export function CanvasView() {
       // Excalidraw puts its scene on the clipboard as JSON text; prefer it over any image.
       const text = ev.clipboardData?.getData('text/plain') ?? ''
       if (text.length > 20 && importExcalidrawText(text, lastMouseWorldRef.current)) { ev.preventDefault(); return }
+      if (text && importMermaidText(text, lastMouseWorldRef.current)) { ev.preventDefault(); return }
       const images = [...(ev.clipboardData?.files ?? [])].filter(f => f.type.startsWith('image/'))
       if (images.length) { ev.preventDefault(); void addImageFiles(images, lastMouseWorldRef.current); return }
       if (clipboardRef.current?.length) { ev.preventDefault(); pasteClipboard() }
     }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('paste', paste)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('paste', paste) }
-  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor, groupSelected, ungroupSelected, bringToFront, sendToBack, copySelected, pasteClipboard, addImageFiles, importExcalidrawText, zoomToFit, resetZoom, scheduleSave, startEdit])
+  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor, groupSelected, ungroupSelected, bringToFront, sendToBack, copySelected, pasteClipboard, addImageFiles, importExcalidrawText, importMermaidText, zoomToFit, resetZoom, scheduleSave, startEdit])
 
   // Sync editingIdRef/editingContainerIdRef so render can skip the shape/text being edited
   useEffect(() => {
@@ -2087,6 +2311,15 @@ export function CanvasView() {
       }
       return
     }
+    if (containerId && shapesRef.current.find(s => s.id === containerId)?.type === 'arrow') {
+      commit(shapesRef.current.map(s => {
+        if (s.id !== containerId || s.type !== 'arrow') return s
+        if (!val) { const { label: _l, ...rest } = s; void _l; return rest as Shape }
+        const label: BoundText = { text: val, size, fontFamily: fontFamilyRef.current, bold: boldRef.current, italic: italicRef.current, color: s.color }
+        return { ...s, label }
+      }))
+      return
+    }
     if (containerId) {
       if (!val) {
         // Empty → strip bound text from the container
@@ -2168,6 +2401,19 @@ export function CanvasView() {
   const handleBold       = useCallback((b: boolean) => { setBold(b); boldRef.current = b; applyFontPatch({ bold: b }) }, [applyFontPatch])
   const handleItalic     = useCallback((i: boolean) => { setItalic(i); italicRef.current = i; applyFontPatch({ italic: i }) }, [applyFontPatch])
 
+  const setDrawingsVisible = (v: boolean) => {
+    setShowDrawings(v)
+    try { localStorage.setItem('inkwell-drawings-panel', String(v)) } catch { /* ignore */ }
+  }
+  const setDrawingsLayoutPersist = (l: 'sidebar' | 'tabs') => {
+    setDrawingsLayout(l)
+    try { localStorage.setItem('inkwell-drawings-layout', l) } catch { /* ignore */ }
+  }
+  const exportDrawing = (id: string) => {
+    if (id === useDrawingsStore.getState().activeId && loadedIdRef.current === id) setShowExport(true)
+    else exportAfterLoadRef.current = id
+  }
+
   // ── JSX ──────────────────────────────────────────────────────────────────────
 
   if (!vaultPath) return (
@@ -2193,15 +2439,29 @@ export function CanvasView() {
       style={bodyGlass ? glassBg('background', glassOpacity, theme, 'card') : undefined}
     >
 
-      {showDrawings && <DrawingsPanel onExport={id => {
-        if (id === useDrawingsStore.getState().activeId && loadedIdRef.current === id) setShowExport(true)
-        else exportAfterLoadRef.current = id
-      }} />}
+      {showDrawings && drawingsLayout === 'sidebar' && (
+        <DrawingsPanel onExport={exportDrawing} onTabs={() => setDrawingsLayoutPersist('tabs')} onHide={() => setDrawingsVisible(false)} />
+      )}
 
       {/* ── Canvas area ── */}
       <div ref={containerRef} className="relative h-full overflow-hidden flex-1">
         {/* Window drag strip — sits above canvas (z-10) but below toolbar buttons (z-20) */}
         <div className="absolute top-0 left-0 right-0 h-8 z-10" data-tauri-drag-region />
+
+        {showDrawings && drawingsLayout === 'tabs' && (
+          <DrawingsTabs onExport={exportDrawing} onSidebar={() => setDrawingsLayoutPersist('sidebar')} onHide={() => setDrawingsVisible(false)} />
+        )}
+
+        {importError && (
+          <div
+            role="alert"
+            onClick={() => setImportError(null)}
+            className="absolute top-14 left-1/2 -translate-x-1/2 z-30 max-w-md px-3 py-2 rounded-lg border border-border bg-surface shadow-lg text-xs text-foreground cursor-pointer"
+          >
+            <span className="font-semibold">Couldn’t read that Mermaid diagram.</span>
+            <span className="block mt-0.5 text-muted-foreground whitespace-pre-wrap line-clamp-3">{importError}</span>
+          </div>
+        )}
         <canvas
           ref={canvasRef}
           className="absolute inset-0 touch-none"
@@ -2230,7 +2490,7 @@ export function CanvasView() {
           sketchy={sketchy} onSketchy={() => setSketchy(v => !v)}
           showGrid={showGrid} onToggleGrid={() => setShowGrid(v => !v)}
           showDrawings={showDrawings}
-          onToggleDrawings={() => setShowDrawings(v => { try { localStorage.setItem('inkwell-drawings-panel', String(!v)) } catch { /* ignore */ } return !v })}
+          onToggleDrawings={() => setDrawingsVisible(!showDrawings)}
           onExport={() => setShowExport(true)}
           canAddNote={canAddNote} hasNote={hasNoteOnSelection} canPromoteSticky={canPromoteSticky}
           onAddNote={addNoteToSelection} onPromoteSticky={promoteStickyToNote}
@@ -2239,7 +2499,7 @@ export function CanvasView() {
         <input
           ref={imageInputRef}
           type="file"
-          accept="image/*,.excalidraw,.json"
+          accept="image/*,.excalidraw,.json,.mmd,.mermaid"
           multiple
           className="hidden"
           onChange={e => {

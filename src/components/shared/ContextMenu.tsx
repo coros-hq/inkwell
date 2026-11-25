@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '../../lib/utils'
 
 export interface ContextMenuItem {
@@ -93,13 +94,23 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
     )
   }
 
-  return (
+  // Portaled to <body>: rendered inline, a menu opened inside anything that forms its own
+  // stacking context (a blurred/glass board column, a transformed card) gets painted over
+  // by that thing's later siblings, and `fixed` would even resolve against it.
+  return createPortal(
     <div
       ref={ref}
       className="fixed z-50 min-w-[140px] max-h-[calc(100vh-16px)] overflow-y-auto py-1 bg-panel border border-border rounded-md shadow-lg"
       style={pos}
+      // React still bubbles portal events to the opener's tree; keep clicks here from
+      // reaching drag handles or click handlers underneath (e.g. a draggable column).
+      onMouseDown={e => e.stopPropagation()}
+      onPointerDown={e => e.stopPropagation()}
+      onClick={e => e.stopPropagation()}
+      onContextMenu={e => { e.preventDefault(); e.stopPropagation() }}
     >
       {rows}
-    </div>
+    </div>,
+    document.body,
   )
 }
