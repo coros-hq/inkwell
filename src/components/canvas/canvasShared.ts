@@ -1,5 +1,6 @@
 import { FONT_HAND } from './CanvasToolbar'
 import { shapeBounds } from './canvasTypes'
+import { nodeGeometry } from './canvasNodeShapes'
 import type { Shape, TextShape, BoundText, RectShape, EllipseShape } from './canvasTypes'
 
 // Pure drawing helpers shared by the live canvas (CanvasView) and the exporters.
@@ -109,6 +110,7 @@ export function containerTextBox(s: RectShape | EllipseShape) {
     const w = b.w * ELLIPSE_TEXT_RATIO, h = b.h * ELLIPSE_TEXT_RATIO
     return { x: b.x + (b.w - w) / 2, y: b.y + (b.h - h) / 2, w, h }
   }
+  if (s.kind || s.icon) return nodeGeometry(s.kind, s.icon, b, s.radius ?? 0).textBox
   return { x: b.x + TEXT_PAD, y: b.y + TEXT_PAD, w: Math.max(b.w - TEXT_PAD * 2, 10), h: Math.max(b.h - TEXT_PAD * 2, 10) }
 }
 

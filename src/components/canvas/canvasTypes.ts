@@ -1,4 +1,4 @@
-export type Tool = 'select' | 'pen' | 'rect' | 'ellipse' | 'line' | 'arrow' | 'text' | 'sticky'
+export type Tool = 'select' | 'pen' | 'rect' | 'ellipse' | 'line' | 'arrow' | 'text' | 'sticky' | 'frame'
 
 export interface Point { x: number; y: number }
 
@@ -13,10 +13,24 @@ interface Base {
   noteShared?: boolean // true if `note` is replicated across every member of groupId
 }
 
-export interface BoundText { text: string; size: number; fontFamily: string; bold: boolean; italic: boolean; color: string }
+export type TextAlign = 'left' | 'center' | 'right'
+
+/** Text inside a rect/ellipse or on an arrow. `align` defaults to center. */
+export interface BoundText { text: string; size: number; fontFamily: string; bold: boolean; italic: boolean; color: string; align?: TextAlign }
+
+import type { NodeKind, NodeIcon } from './canvasNodeShapes'
+import { isFrame, frameTitleBox } from './canvasFrames'
 
 export interface PathShape    extends Base { type: 'path';    pts: Point[] }
-export interface RectShape    extends Base { type: 'rect';    x: number; y: number; w: number; h: number; radius: number; boundText?: BoundText }
+export interface RectShape    extends Base {
+  type: 'rect'; x: number; y: number; w: number; h: number; radius: number; boundText?: BoundText
+  /** Diagram node outline (database cylinder, decision diamond…); plain rectangle when absent. */
+  kind?: NodeKind
+  /** Technical glyph drawn at the node's left (search, cache bolt, lock…). */
+  icon?: NodeIcon
+  /** Frame title (kind 'frame' only), shown above the top-left corner. */
+  title?: string
+}
 export interface EllipseShape extends Base { type: 'ellipse'; cx: number; cy: number; rx: number; ry: number; boundText?: BoundText }
 export interface LineShape    extends Base { type: 'line';    x1: number; y1: number; x2: number; y2: number }
 /** An arrow end attached to a shape. fx/fy pin it to a spot (fractions of the shape's bounds); without them it floats along the outline. */
@@ -43,6 +57,8 @@ export interface TextShape    extends Base {
   fontFamily: string
   bold: boolean
   italic: boolean
+  /** Lines are aligned within the block; x stays the block's left edge. Defaults to left. */
+  align?: TextAlign
 }
 export interface StickyShape  extends Base { type: 'sticky';  x: number; y: number; w: number; h: number; text: string }
 
@@ -50,6 +66,14 @@ export interface StickyShape  extends Base { type: 'sticky';  x: number; y: numb
 export interface ImageShape   extends Base { type: 'image';   x: number; y: number; w: number; h: number; src: string }
 
 export type Shape = PathShape | RectShape | EllipseShape | LineShape | ArrowShape | TextShape | StickyShape | ImageShape
+
+/** Line spacing for multi-line standalone text, as a multiple of the font size. */
+export const TEXT_LINE_HEIGHT = 1.25
+
+/** Horizontal offset of a line of width `lw` inside a block of width `w`. */
+export function alignOffset(align: TextAlign | undefined, w: number, lw: number): number {
+  return align === 'center' ? (w - lw) / 2 : align === 'right' ? w - lw : 0
+}
 
 export function uid(): string {
   return Math.random().toString(36).slice(2, 9)
@@ -90,8 +114,11 @@ export function shapeBounds(s: Shape): { x: number; y: number; w: number; h: num
       const x = Math.min(...xs), y = Math.min(...ys)
       return { x, y, w: Math.max(...xs) - x || 1, h: Math.max(...ys) - y || 1 }
     }
-    case 'text':
-      return { x: s.x, y: s.y - s.size, w: Math.max(s.text.length * s.size * 0.55, 20), h: s.size * 1.3 }
+    case 'text': {
+      const lines = s.text.split('\n')
+      const longest = Math.max(...lines.map(l => l.length))
+      return { x: s.x, y: s.y - s.size, w: Math.max(longest * s.size * 0.55, 20), h: s.size * 1.3 + (lines.length - 1) * s.size * TEXT_LINE_HEIGHT }
+    }
   }
 }
 
@@ -120,6 +147,10 @@ function distToPolyline(px: number, py: number, pts: Point[]): number {
 /** Precise hit test: strokes hit near the line, ellipses use the real curve, boxes use their bounds. */
 export function hitTest(s: Shape, px: number, py: number): boolean {
   if (s.rotation) { const q = unrotatePoint(s, px, py); px = q.x; py = q.y }
+  if (isFrame(s)) {
+    const t = frameTitleBox(s)
+    if (px >= t.x && px <= t.x + t.w && py >= t.y && py <= t.y + t.h + 6) return true
+  }
   const tol = Math.max(8, s.width * 2)
   switch (s.type) {
     case 'path':

@@ -211,11 +211,9 @@ function flowchartShapes(svg: SVGSVGElement, font: string): Shape[] {
     const points = tag === 'polygon' ? (shapeEl as SVGPolygonElement).points.numberOfItems : 0
     if (tag === 'circle' || tag === 'ellipse') {
       push(n, { id: uid(), type: 'ellipse', ...ink, fill: 'none', cx, cy, rx: b.w / 2, ry: b.h / 2, ...(bound(lines) ? { boundText: bound(lines) } : {}) })
-    } else if (points === 4) {
-      // Decision diamond: outline as a closed path, label as free text.
-      const top = { x: cx, y: b.y }, right = { x: b.x + b.w, y: cy }, bottom = { x: cx, y: b.y + b.h }, left = { x: b.x, y: cy }
-      push(n, { id: uid(), type: 'path', ...ink, fill: 'none', pts: [top, right, bottom, left, top] })
-      push(n, ...centeredText(lines, cx, cy, font))
+    } else if (points === 4 || points === 6) {
+      // Decision diamond / hexagon: an exact node outline with its label bound inside.
+      push(n, { id: uid(), type: 'rect', ...ink, fill: 'none', x: b.x, y: b.y, w: b.w, h: b.h, radius: 0, kind: points === 4 ? 'diamond' : 'hexagon', ...(bound(lines) ? { boundText: bound(lines) } : {}) })
     } else {
       const rx = Number(shapeEl.getAttribute('rx')) || 0
       const rounded = rx > 0 || /round|stadium/.test(n.getAttribute('class') ?? '')

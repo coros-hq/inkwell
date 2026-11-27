@@ -146,18 +146,15 @@
   "144": "description",
   "145": "ShellScopeEntryAllowedArg",
   "146": "drawings.ts",
-  "147": "noteReferences.tsx",
+  "147": "searchHighlightExtension.ts",
   "148": "MermaidWidget",
   "149": "SearchOverlay.tsx",
-  "150": "FontPicker.tsx",
-  "151": "HorizontalRuleWidget",
   "152": "widget.json",
   "153": "package.json",
-  "154": "readCalendarFile",
+  "154": "CanvasNotesSheet.tsx",
   "155": "tauri.windows.conf.json",
-  "156": "MarkdownChart",
   "157": "playwright.config.ts",
-  "158": "ShellScopeEntryAllowedArgs",
-  "161": ".bindNote",
-  "162": "ShellScopeEntryAllowedArg"
+  "159": "HorizontalRuleWidget",
+  "163": "remarkChartCodeBlocks",
+  "165": "ShellScopeEntryAllowedArg"
 }

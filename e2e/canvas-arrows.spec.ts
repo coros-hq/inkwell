@@ -12,7 +12,7 @@ async function openCanvas(app: Page) {
   await app.evaluate(() => localStorage.setItem('inkwell-canvas-enabled', 'true'))
   await app.reload()
   await app.getByText('Draw', { exact: true }).first().click()
-  await expect(app.locator('canvas')).toBeVisible()
+  await expect(app.locator('canvas').first()).toBeVisible()
   await app.waitForTimeout(400)
 }
 

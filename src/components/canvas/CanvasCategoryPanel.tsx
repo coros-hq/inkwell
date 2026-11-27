@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { CATEGORY_ELEMENTS, type CategoryElement } from './canvasCategoryElements'
+import { CATEGORY_ELEMENTS, elementPreview, type CategoryElement } from './canvasCategoryElements'
 import { TEMPLATE_CATEGORIES, type TemplateCategory } from './canvasTemplates'
 import type { Shape } from './canvasTypes'
 import { cn } from '../../lib/utils'
@@ -41,7 +41,7 @@ function ElementCard({
         )}
         style={{ height: 52 }}
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: el.preview }}
+        dangerouslySetInnerHTML={{ __html: elementPreview(el) }}
       />
       {/* Label */}
       <div className="px-0.5">

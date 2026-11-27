@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { StickyNote, Keyboard, X } from 'lucide-react'
+import { StickyNote, Keyboard, X, Search } from 'lucide-react'
 import { imageFilesToShapes } from './canvasImages'
 import { parseExcalidraw, excalidrawToShapes } from './excalidrawImport'
 import rough from 'roughjs'
@@ -17,17 +17,20 @@ import { useDrawingsStore } from '../../store/useDrawingsStore'
 import { loadDrawing, saveDrawing } from '../../lib/drawings'
 import { CanvasTemplatesPicker } from './CanvasTemplatesPicker'
 import { CanvasCategoryPanel } from './CanvasCategoryPanel'
+import { CanvasMinimap, type MinimapView } from './CanvasMinimap'
+import { nodeGeometry } from './canvasNodeShapes'
+import { isFrame, drawFrame, frameTitleBox, withFrameContents, FRAME_TITLE_SIZE } from './canvasFrames'
 import type { DiagramTemplate, TemplateCategory } from './canvasTemplates'
 import {
   adaptShape, ctxFont, roughOptions, wrapCanvasText, getMeasureCtx, boundFont, containerTextBox,
   STICKY_TEXT_COLOR, TEXT_PAD, ELLIPSE_TEXT_RATIO, BOUND_LINE_HEIGHT,
 } from './canvasShared'
-import { uid, hitTopmost, shapeBounds, recolorTemplateShapes, unrotatePoint } from './canvasTypes'
+import { uid, hitTopmost, shapeBounds, recolorTemplateShapes, unrotatePoint, alignOffset, TEXT_LINE_HEIGHT } from './canvasTypes'
 import {
   arrowEnds, headGeometry, startHeadOf, endHeadOf, resolveBindings, releaseDetached, remapBindings,
   bindingAt, connectionDots, resolveArrow, SIDE_POINTS,
 } from './canvasBindings'
-import type { Shape, Tool, Point, PathShape, RectShape, EllipseShape, LineShape, ArrowShape, TextShape, BoundText, StickyShape, ImageShape } from './canvasTypes'
+import type { Shape, Tool, Point, PathShape, RectShape, EllipseShape, LineShape, ArrowShape, TextShape, BoundText, StickyShape, ImageShape, TextAlign } from './canvasTypes'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -35,6 +38,13 @@ type ResizeHandle = 'tl' | 'tr' | 'bl' | 'br'
 type NotesTarget = 'global' | { kind: 'shape'; id: string } | { kind: 'group'; groupId: string }
 
 // ── Pure helpers ───────────────────────────────────────────────────────────────
+
+/** Grow a no-wrap textarea to fit its content in both directions. */
+function autosizeTextarea(el: HTMLTextAreaElement) {
+  el.style.width = '0px'; el.style.height = '0px'
+  el.style.width  = `${Math.max(80, el.scrollWidth + 4)}px`
+  el.style.height = `${el.scrollHeight}px`
+}
 
 function getCSSColor(varName: string, fallback: string): string {
   const raw = getComputedStyle(document.documentElement).getPropertyValue(varName).trim()
@@ -219,12 +229,36 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | n
     }
     case 'rect': {
       const r = s as RectShape
+      if (isFrame(r)) { drawFrame(ctx, r); break }
+      const sharp = !r.kind && !r.icon && !(r.radius > 0)
       if (useRough) {
-        cachedRoughDraw(rc, roughCache, s, () => [rc.generator.rectangle(r.x, r.y, r.w, r.h, roughOptions(s))])
+        // Sharp boxes keep roughjs's native rectangle; anything with a real outline
+        // (rounded corners, cylinder, diamond…) is roughened along its exact path.
+        cachedRoughDraw(rc, roughCache, s, () => {
+          if (sharp) return [rc.generator.rectangle(r.x, r.y, r.w, r.h, roughOptions(s))]
+          const g = nodeGeometry(r.kind, r.icon, shapeBounds(r), r.radius ?? 0)
+          const o = roughOptions(s), line = { ...o, fill: undefined }
+          const glyph = { ...line, roughness: 0.4, disableMultiStroke: true, strokeWidth: Math.min(s.width, 1.75) }
+          return [
+            rc.generator.path(g.outline, { ...o, preserveVertices: true }),
+            ...g.details.map(d => rc.generator.path(d, { ...line, preserveVertices: true })),
+            ...g.icon.map(d => rc.generator.path(d, glyph)),
+          ]
+        })
         break
       }
-      ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, r.radius ?? 3)
-      if (s.fill !== 'none') ctx.fill(); ctx.stroke(); break
+      if (!r.kind && !r.icon) {
+        ctx.beginPath(); ctx.roundRect(r.x, r.y, r.w, r.h, Math.min(r.radius ?? 3, Math.abs(r.w) / 2, Math.abs(r.h) / 2))
+        if (s.fill !== 'none') ctx.fill(); ctx.stroke(); break
+      }
+      const g = nodeGeometry(r.kind, r.icon, shapeBounds(r), r.radius ?? 0)
+      const outline = new Path2D(g.outline)
+      if (s.fill !== 'none') ctx.fill(outline)
+      ctx.stroke(outline)
+      for (const d of g.details) ctx.stroke(new Path2D(d))
+      ctx.lineWidth = Math.min(s.width, 1.75)
+      for (const d of g.icon) ctx.stroke(new Path2D(d))
+      break
     }
     case 'ellipse': {
       const e = s as EllipseShape
@@ -275,7 +309,12 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | n
       break
     }
     case 'text': {
-      const t = s as TextShape; ctx.font = ctxFont(t); ctx.fillStyle = t.color; ctx.fillText(t.text, t.x, t.y); break
+      const t = s as TextShape
+      ctx.font = ctxFont(t); ctx.fillStyle = t.color; ctx.textAlign = 'left'
+      const lines = t.text.split('\n')
+      const widths = lines.map(l => ctx.measureText(l).width), blockW = Math.max(...widths)
+      lines.forEach((l, i) => ctx.fillText(l, t.x + alignOffset(t.align, blockW, widths[i]), t.y + i * t.size * TEXT_LINE_HEIGHT))
+      break
     }
     case 'image': drawImageShape(ctx, s as ImageShape); break
     case 'sticky': {
@@ -307,6 +346,7 @@ function drawShape(ctx: CanvasRenderingContext2D, s: Shape, rc?: RoughCanvas | n
 
 /** Shape height needed so `bt.text`, wrapped to width `w`, fits inside the container */
 function containerNeededH(s: RectShape | EllipseShape, bt: BoundText, w: number): number {
+  if (s.type === 'rect' && (s.kind || s.icon)) return nodeNeededH(s, bt, w)
   const ctx = getMeasureCtx()
   ctx.save(); ctx.font = boundFont(bt)
   const innerW = s.type === 'ellipse' ? w * ELLIPSE_TEXT_RATIO : w - TEXT_PAD * 2
@@ -314,6 +354,22 @@ function containerNeededH(s: RectShape | EllipseShape, bt: BoundText, w: number)
   ctx.restore()
   const textH = lines.length * bt.size * BOUND_LINE_HEIGHT
   return s.type === 'ellipse' ? textH / ELLIPSE_TEXT_RATIO + 4 : textH + TEXT_PAD * 2
+}
+
+/** Node outlines carve their text box differently (cylinder caps, diamond insets…): grow until the label fits. */
+function nodeNeededH(s: RectShape, bt: BoundText, w: number): number {
+  const ctx = getMeasureCtx()
+  ctx.save(); ctx.font = boundFont(bt)
+  const b = shapeBounds(s)
+  let h = b.h
+  for (let i = 0; i < 8; i++) {
+    const box = nodeGeometry(s.kind, s.icon, { x: b.x, y: b.y, w, h }, s.radius ?? 0).textBox
+    const textH = wrapCanvasText(ctx, bt.text, box.w).length * bt.size * BOUND_LINE_HEIGHT
+    if (box.h >= textH - 0.5) break
+    h += (textH - box.h) * Math.max(1, h / Math.max(box.h, 1))
+  }
+  ctx.restore()
+  return h
 }
 
 /** Grow a labeled rect/ellipse just enough that its text never spills out of it */
@@ -324,7 +380,7 @@ function fitContainer(s: Shape): Shape {
   return needed > b.h ? applyBoundsToShape(s, { ...b, h: needed }) : s
 }
 
-/** Text bound to a rect/ellipse container: centered, wrapped inside the container's text box */
+/** Text bound to a rect/ellipse container: wrapped inside the container's text box, vertically centered */
 function drawBoundText(ctx: CanvasRenderingContext2D, s: RectShape | EllipseShape) {
   const bt = s.boundText
   if (!bt) return
@@ -332,11 +388,13 @@ function drawBoundText(ctx: CanvasRenderingContext2D, s: RectShape | EllipseShap
   ctx.save()
   ctx.font = boundFont(bt)
   ctx.fillStyle = bt.color
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle'
+  const align = bt.align ?? 'center'
+  ctx.textAlign = align; ctx.textBaseline = 'middle'
   const lines  = wrapCanvasText(ctx, bt.text, box.w)
   const lineH  = bt.size * BOUND_LINE_HEIGHT
+  const x = align === 'left' ? box.x : align === 'right' ? box.x + box.w : box.x + box.w / 2
   let y = box.y + box.h / 2 - (lines.length * lineH) / 2 + lineH / 2
-  for (const line of lines) { ctx.fillText(line, box.x + box.w / 2, y); y += lineH }
+  for (const line of lines) { ctx.fillText(line, x, y); y += lineH }
   ctx.restore()
 }
 
@@ -533,12 +591,15 @@ const DEFAULT_COLOR_LIGHT = '#1e1b18'
 const DEFAULT_WIDTH  = 2
 const DEFAULT_RADIUS = 8
 
+const NOTES_DEFAULT_W = 380
+const NOTES_MIN_W     = 280
+
 const SHORTCUT_GROUPS: { title: string; items: [string, string][] }[] = [
   {
     title: 'Tools',
     items: [
       ['V', 'Select'], ['P', 'Pen'], ['R', 'Rectangle'], ['E', 'Ellipse'],
-      ['L', 'Line'], ['A', 'Arrow'], ['T', 'Text'], ['Esc', 'Back to select'],
+      ['L', 'Line'], ['A', 'Arrow'], ['T', 'Text'], ['F', 'Frame (moves its contents as one block)'], ['Esc', 'Back to select'],
     ],
   },
   {
@@ -546,7 +607,17 @@ const SHORTCUT_GROUPS: { title: string; items: [string, string][] }[] = [
     items: [
       ['Space + drag', 'Pan'], ['⌘/Ctrl + scroll', 'Zoom'],
       ['⇧1', 'Zoom to fit all'], ['⇧2', 'Zoom to fit selection'], ['⇧0', 'Reset zoom'],
+      ['⇧M', 'Toggle minimap'],
+    ],
+  },
+  {
+    title: 'Text',
+    items: [
       ['Double-click', 'Edit text (standalone or inside a shape)'],
+      ['⇧ + Enter', 'New line in standalone text'],
+      ['Enter', 'Finish standalone text'],
+      ['⌘/Ctrl + Enter', 'Finish text inside a shape'],
+      ['Esc', 'Finish editing'],
     ],
   },
   {
@@ -566,6 +637,108 @@ const SHORTCUT_GROUPS: { title: string; items: [string, string][] }[] = [
     ],
   },
 ]
+
+// Parts of a shortcut that describe a mouse action rather than a key to press.
+const MOUSE_ACTIONS = new Set(['drag', 'scroll', 'click', 'Double-click'])
+
+/** A shortcut as separate keycaps: "⌘/Ctrl + ⇧ + Z" → [⌘/Ctrl] + [⇧] + [Z]. */
+function ShortcutKeys({ keys }: { keys: string }) {
+  const parts = keys.split(' + ')
+  return (
+    <span className="shrink-0 flex items-center gap-1">
+      {parts.map((part, i) => (
+        <span key={i} className="flex items-center gap-1">
+          {i > 0 && <span className="text-[10px] text-muted-foreground">+</span>}
+          {MOUSE_ACTIONS.has(part)
+            ? <span className="text-[11px] text-foreground/80">{part}</span>
+            : (
+              <kbd className="min-w-[22px] h-[22px] px-1.5 inline-flex items-center justify-center rounded-md border border-foreground/20 border-b-2 bg-foreground/10 text-foreground font-sans font-medium text-[11px] leading-none whitespace-nowrap">
+                {part}
+              </kbd>
+            )}
+        </span>
+      ))}
+    </span>
+  )
+}
+
+/** Keyboard shortcuts popover, filtered by a search over labels and keys. */
+function ShortcutsPanel({ onClose }: { onClose: () => void }) {
+  const [query, setQuery] = useState('')
+  const q = query.trim().toLowerCase()
+  const groups = SHORTCUT_GROUPS
+    .map(g => ({
+      ...g,
+      // A group-title match keeps the whole group; otherwise match each row's label or keys.
+      items: !q || g.title.toLowerCase().includes(q)
+        ? g.items
+        : g.items.filter(([keys, label]) => label.toLowerCase().includes(q) || keys.toLowerCase().includes(q)),
+    }))
+    .filter(g => g.items.length)
+
+  return (
+    <>
+      {/* Click-outside backdrop */}
+      <div className="fixed inset-0 z-20" onClick={onClose} />
+      <div className="absolute top-14 right-14 z-30 w-80 max-h-[70vh] flex flex-col bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-2 flex-shrink-0">
+          <p className="text-sm font-semibold text-foreground">Keyboard shortcuts</p>
+          <button
+            onClick={onClose}
+            className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
+            <X size={13} />
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="px-4 pb-3 flex-shrink-0 border-b border-border">
+          <div className="flex items-center gap-2 h-8 px-2.5 rounded-lg border border-border bg-muted/50 focus-within:border-accent transition-colors">
+            <Search size={13} className="text-muted-foreground shrink-0" />
+            <input
+              autoFocus
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              onKeyDown={e => {
+                // Esc clears the search first, then closes the panel.
+                if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); if (query) setQuery(''); else onClose() }
+              }}
+              placeholder="Search shortcuts"
+              aria-label="Search shortcuts"
+              className="flex-1 min-w-0 bg-transparent outline-none text-[12px] text-foreground placeholder:text-muted-foreground"
+            />
+            {query && (
+              <button onClick={() => setQuery('')} title="Clear search" className="text-muted-foreground hover:text-foreground">
+                <X size={12} />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Groups — scrollable */}
+        <div className="overflow-y-auto px-4 py-3">
+          {groups.length === 0 && (
+            <p className="text-[12px] text-muted-foreground text-center py-6">No shortcuts match “{query.trim()}”</p>
+          )}
+          {groups.map(group => (
+            <div key={group.title} className="mb-4 last:mb-0">
+              <div className="text-[10px] font-semibold text-accent tracking-wider uppercase mb-2">{group.title}</div>
+              <div className="flex flex-col gap-2">
+                {group.items.map(([keys, label]) => (
+                  <div key={label} className="flex items-center justify-between gap-3 min-h-[22px]">
+                    <span className="text-[12px] text-foreground/90">{label}</span>
+                    <ShortcutKeys keys={keys} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
 
 export function CanvasView() {
   const { vaultPath, theme, canvasLinkedVaultPath, bodyGlass, glassOpacity } = useAppStore()
@@ -592,6 +765,7 @@ export function CanvasView() {
   const [fontFamily,        setFontFamily]        = useState(FONT_HAND)
   const [bold,              setBold]              = useState(false)
   const [italic,            setItalic]            = useState(false)
+  const [textAlign,         setTextAlign]         = useState<TextAlign>('left')
   const [zoom,              setZoomState]         = useState(1)
   const [canUndo,           setCanUndo]           = useState(false)
   const [canRedo,           setCanRedo]           = useState(false)
@@ -599,6 +773,8 @@ export function CanvasView() {
   const [selectedIds,       setSelectedIds]       = useState<Set<string>>(new Set())
   const [selectedShapeType, setSelectedShapeType] = useState<string | null>(null)
   const [selectionHasBoundText, setSelectionHasBoundText] = useState(false)
+  /** Frame whose title is being renamed, with the editor's screen position. */
+  const [frameEdit,         setFrameEdit]         = useState<{ id: string; sx: number; sy: number; w: number; fontPx: number; value: string } | null>(null)
   const [textInput,         setTextInput]         = useState<{ sx: number; sy: number; wx: number; wy: number; editingId?: string; containerId?: string; stickyId?: string; isNewSticky?: boolean; boxW?: number; boxH?: number; initialValue?: string } | null>(null)
   const [spacePan,          setSpacePan]          = useState(false)
   const [cursor,            setCursorState]       = useState<string>('crosshair')
@@ -620,6 +796,18 @@ export function CanvasView() {
     try { return localStorage.getItem('inkwell-drawings-layout') === 'sidebar' ? 'sidebar' : 'tabs' } catch { return 'tabs' }
   })
   const [importError,       setImportError]       = useState<string | null>(null)
+  const [showMinimap,       setShowMinimap]       = useState(() => {
+    try { return localStorage.getItem('inkwell-canvas-minimap') !== 'false' } catch { return true }
+  })
+  const minimapDrawRef = useRef<(() => void) | null>(null)
+  const [notesWidth,        setNotesWidth]        = useState(() => {
+    let saved = 0
+    try { saved = Number(localStorage.getItem('inkwell-canvas-notes-width')) } catch { /* ignore */ }
+    return saved >= NOTES_MIN_W ? saved : NOTES_DEFAULT_W
+  })
+  const [notesResizing,     setNotesResizing]     = useState(false)
+  // Below this canvas width the centered toolbar would reach under the minimap.
+  const [canvasNarrow,      setCanvasNarrow]      = useState(false)
 
   // ── Canvas content refs ──────────────────────────────────────────────────────
   const shapesRef       = useRef<Shape[]>([])
@@ -645,6 +833,7 @@ export function CanvasView() {
   const fontSizeRef    = useRef(16)
   const fontFamilyRef  = useRef(FONT_HAND)
   const boldRef        = useRef(false)
+  const textAlignRef   = useRef<TextAlign>('left')
   const italicRef      = useRef(false)
 
   // ── Interaction refs ─────────────────────────────────────────────────────────
@@ -777,6 +966,7 @@ export function CanvasView() {
       const ff = t.fontFamily ?? FONT_HAND; setFontFamily(ff); fontFamilyRef.current = ff
       const b  = t.bold ?? false;           setBold(b);        boldRef.current       = b
       const it = t.italic ?? false;         setItalic(it);     italicRef.current     = it
+      const al = t.align ?? 'left';         setTextAlign(al);  textAlignRef.current  = al
     }
     if ((shape.type === 'rect' || shape.type === 'ellipse') && shape.boundText) {
       const bt = shape.boundText
@@ -785,6 +975,7 @@ export function CanvasView() {
       setFontFamily(bt.fontFamily); fontFamilyRef.current = bt.fontFamily
       setBold(bt.bold);           boldRef.current       = bt.bold
       setItalic(bt.italic);       italicRef.current     = bt.italic
+      const al = bt.align ?? 'center'; setTextAlign(al); textAlignRef.current = al
     } else {
       setSelectionHasBoundText(false)
     }
@@ -978,6 +1169,7 @@ export function CanvasView() {
     }
 
     ctx.restore()
+    minimapDrawRef.current?.()
   }, [])
 
   useEffect(() => { render() }, [theme, bodyGlass, render])
@@ -1009,6 +1201,7 @@ export function CanvasView() {
       const { width: w, height: h } = container.getBoundingClientRect()
       canvas.width = w * DPR; canvas.height = h * DPR
       canvas.style.width = `${w}px`; canvas.style.height = `${h}px`
+      setCanvasNarrow(w < 1080)
       render()
     })
     obs.observe(container)
@@ -1456,6 +1649,11 @@ export function CanvasView() {
     switch (toolRef.current) {
       case 'pen':     drawingRef.current = { ...base, type: 'path',    pts: [wp] }; break
       case 'rect':    drawingRef.current = { ...base, type: 'rect',    x: wp.x, y: wp.y, w: 0, h: 0, radius: radiusRef.current }; break
+      case 'frame': {
+        const n = shapesRef.current.filter(isFrame).length + 1
+        drawingRef.current = { ...base, fill: 'none', width: 1.5, type: 'rect', kind: 'frame', title: `Frame ${n}`, x: wp.x, y: wp.y, w: 0, h: 0, radius: 8 }
+        break
+      }
       case 'ellipse': drawingRef.current = { ...base, type: 'ellipse', cx: wp.x, cy: wp.y, rx: 0, ry: 0 }; break
       case 'line':    drawingRef.current = { ...base, type: 'line',    x1: wp.x, y1: wp.y, x2: wp.x, y2: wp.y }; break
       case 'arrow': {
@@ -1568,7 +1766,8 @@ export function CanvasView() {
       if (!dragMovedRef.current && Math.hypot(dx, dy) * zoomRef.current < 3) return
       dragMovedRef.current = true
       const pre = preDragRef.current
-      const ids = selectedIdsRef.current
+      // A selected frame carries everything inside it
+      const ids = withFrameContents(selectedIdsRef.current, pre)
       guidesRef.current = []
       if (!e.altKey) {
         const snapped = snapDrag(unionBounds(pre.filter(s => ids.has(s.id))), pre.filter(s => !ids.has(s.id)), dx, dy, 6 / zoomRef.current)
@@ -1780,7 +1979,8 @@ export function CanvasView() {
     if (b.w < 8 / zoomRef.current && b.h < 8 / zoomRef.current) {
       // A plain click drops a ready-made default-size shape centered on the cursor
       const c = startPtRef.current
-      if (shape.type === 'rect')         final = { ...shape, x: c.x - 70, y: c.y - 45, w: 140, h: 90 }
+      if (isFrame(shape))                final = { ...shape, x: c.x - 200, y: c.y - 140, w: 400, h: 280 }
+      else if (shape.type === 'rect')    final = { ...shape, x: c.x - 70, y: c.y - 45, w: 140, h: 90 }
       else if (shape.type === 'ellipse') final = { ...shape, cx: c.x, cy: c.y, rx: 70, ry: 45 }
       else {
         // A click on a connection dot that never became a drag: back to selecting
@@ -1788,7 +1988,8 @@ export function CanvasView() {
         render(); return
       }
     }
-    commit([...shapesRef.current, final])
+    // A frame goes underneath everything so the shapes it wraps stay on top and clickable
+    commit(isFrame(final) ? [final, ...shapesRef.current] : [...shapesRef.current, final])
     // Like Excalidraw: after placing a shape, hand control back to the select tool with the shape selected
     setSelection(new Set([final.id]))
     setTool('select'); toolRef.current = 'select'
@@ -1804,6 +2005,7 @@ export function CanvasView() {
       setFontFamily(shape.fontFamily ?? FONT_HAND); fontFamilyRef.current = shape.fontFamily ?? FONT_HAND
       setBold(shape.bold ?? false);                 boldRef.current       = shape.bold ?? false
       setItalic(shape.italic ?? false);             italicRef.current     = shape.italic ?? false
+      setTextAlign(shape.align ?? 'left');          textAlignRef.current  = shape.align ?? 'left'
       setColor(shape.color);                        colorRef.current      = shape.color
       // shape.y is the baseline; position the input so its visual baseline lines up
       const sx = shape.x * zoom + pan.x
@@ -1841,6 +2043,7 @@ export function CanvasView() {
       setFontFamily(bt?.fontFamily ?? FONT_HAND); fontFamilyRef.current = bt?.fontFamily ?? FONT_HAND
       setBold(bt?.bold ?? false);                 boldRef.current       = bt?.bold ?? false
       setItalic(bt?.italic ?? false);             italicRef.current     = bt?.italic ?? false
+      setTextAlign(bt?.align ?? 'center');        textAlignRef.current  = bt?.align ?? 'center'
       const box = containerTextBox(shape)
       editPreRef.current = shapesRef.current
       setTextInput({
@@ -1882,6 +2085,27 @@ export function CanvasView() {
     }
   }, [textInput, render])
 
+  // ── Frame titles ─────────────────────────────────────────────────────────────
+
+  const startFrameTitleEdit = useCallback((f: RectShape) => {
+    const zoom = zoomRef.current, pan = panRef.current, t = frameTitleBox(f)
+    setFrameEdit({
+      id: f.id, value: f.title ?? '',
+      sx: t.x * zoom + pan.x, sy: t.y * zoom + pan.y,
+      w: Math.max(160, f.w * zoom * 0.6), fontPx: Math.max(11, FRAME_TITLE_SIZE * zoom),
+    })
+  }, [])
+
+  const commitFrameTitle = useCallback((value: string | null) => {
+    const ed = frameEdit
+    setFrameEdit(null)
+    if (!ed || value === null) return
+    const title = value.trim() || 'Frame'
+    const cur = shapesRef.current.find(s => s.id === ed.id)
+    if (!cur || !isFrame(cur) || cur.title === title) return
+    commit(shapesRef.current.map(s => s.id === ed.id ? { ...s, title } as Shape : s))
+  }, [frameEdit, commit])
+
   // ── Double-click: edit text / labels, straighten arrows, or drop new text ────
 
   const onDoubleClick = useCallback((e: React.MouseEvent) => {
@@ -1901,6 +2125,12 @@ export function CanvasView() {
     }
 
     const hit = hitTopmost(shapesRef.current, wp.x, wp.y)
+    if (hit && isFrame(hit)) {
+      e.preventDefault()
+      setSelection(new Set([hit.id]))
+      startFrameTitleEdit(hit)
+      return
+    }
     if (hit && (hit.type === 'text' || hit.type === 'sticky' || hit.type === 'rect' || hit.type === 'ellipse' || hit.type === 'arrow')) {
       e.preventDefault()
       setSelection(new Set([hit.id]))
@@ -1914,7 +2144,7 @@ export function CanvasView() {
       const rect = containerRef.current!.getBoundingClientRect()
       setTextInput({ sx: e.clientX - rect.left, sy: e.clientY - rect.top, wx: wp.x, wy: wp.y })
     }
-  }, [toWorld, setSelection, startEdit, commit])
+  }, [toWorld, setSelection, startEdit, startFrameTitleEdit, commit])
 
   // ── Wheel ────────────────────────────────────────────────────────────────────
 
@@ -1950,6 +2180,66 @@ export function CanvasView() {
     const newZoom = Math.max(0.1, Math.min((cssW - pad * 2) / b.w, (cssH - pad * 2) / b.h, maxZoom))
     zoomRef.current = newZoom; setZoomState(newZoom)
     panRef.current = { x: cssW / 2 - (b.x + b.w / 2) * newZoom, y: cssH / 2 - (b.y + b.h / 2) * newZoom }
+    render()
+  }, [render])
+
+  // ── Notes sheet width ────────────────────────────────────────────────────────
+
+  const setNotesWidthPersist = useCallback((w: number) => {
+    setNotesWidth(w)
+    try { localStorage.setItem('inkwell-canvas-notes-width', String(Math.round(w))) } catch { /* ignore */ }
+  }, [])
+
+  const startNotesResize = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    const startX = e.clientX, startW = notesWidth
+    // Leave the canvas at least ~40% of the window.
+    const maxW = Math.max(NOTES_MIN_W, window.innerWidth * 0.6)
+    let w = startW
+    setNotesResizing(true)
+    const move = (ev: MouseEvent) => {
+      w = Math.min(maxW, Math.max(NOTES_MIN_W, startW + (startX - ev.clientX)))
+      setNotesWidth(w)
+    }
+    const up = () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', up)
+      document.body.style.cursor = ''
+      setNotesResizing(false)
+      setNotesWidthPersist(w)
+    }
+    document.body.style.cursor = 'col-resize'
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', up)
+  }, [notesWidth, setNotesWidthPersist])
+
+  // ── Minimap ──────────────────────────────────────────────────────────────────
+
+  const toggleMinimap = useCallback(() => {
+    setShowMinimap(v => {
+      try { localStorage.setItem('inkwell-canvas-minimap', String(!v)) } catch { /* ignore */ }
+      return !v
+    })
+  }, [])
+
+  const getMinimapView = useCallback((): MinimapView | null => {
+    const canvas = canvasRef.current
+    if (!canvas) return null
+    const DPR = window.devicePixelRatio || 1
+    const darkBg = useAppStore.getState().theme === 'dark'
+    return {
+      shapes: shapesRef.current, pan: panRef.current, zoom: zoomRef.current,
+      w: canvas.width / DPR, h: canvas.height / DPR,
+      darkBg, ink: darkBg ? DEFAULT_COLOR_DARK : DEFAULT_COLOR_LIGHT,
+    }
+  }, [])
+
+  const centerViewOn = useCallback((p: Point) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const DPR = window.devicePixelRatio || 1
+    const z = zoomRef.current
+    panRef.current = { x: canvas.width / DPR / 2 - p.x * z, y: canvas.height / DPR / 2 - p.y * z }
     render()
   }, [render])
 
@@ -2078,7 +2368,7 @@ export function CanvasView() {
   // ── Keyboard ─────────────────────────────────────────────────────────────────
 
   useEffect(() => {
-    const TOOL_KEYS: Record<string, Tool> = { v: 'select', p: 'pen', r: 'rect', e: 'ellipse', l: 'line', a: 'arrow', t: 'text', s: 'sticky' }
+    const TOOL_KEYS: Record<string, Tool> = { v: 'select', p: 'pen', r: 'rect', e: 'ellipse', l: 'line', a: 'arrow', t: 'text', s: 'sticky', f: 'frame' }
     const down = (ev: KeyboardEvent) => {
       shiftRef.current = ev.shiftKey
       const inInput = (ev.target as Element).closest('input, textarea, .cm-editor, [contenteditable="true"]')
@@ -2118,6 +2408,7 @@ export function CanvasView() {
         zoomToFit(sel.length ? sel : undefined)
       }
       if (!inInput && ev.shiftKey && !ev.metaKey && !ev.ctrlKey && ev.key === '0') { ev.preventDefault(); resetZoom() }
+      if (!inInput && ev.shiftKey && !ev.metaKey && !ev.ctrlKey && ev.code === 'KeyM') { ev.preventDefault(); toggleMinimap() }
 
       // Arrow-key nudge (coalesced into one undo step per burst, finalized on keyup)
       if (!inInput && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown' || ev.key === 'ArrowLeft' || ev.key === 'ArrowRight') && selectedIdsRef.current.size > 0) {
@@ -2128,7 +2419,8 @@ export function CanvasView() {
                        : ev.key === 'ArrowLeft' ? [-step, 0]
                        : [step, 0]
         if (!nudgePreRef.current) nudgePreRef.current = [...shapesRef.current]
-        shapesRef.current = releaseDetached(shapesRef.current, selectedIdsRef.current).map(s => selectedIdsRef.current.has(s.id) ? offsetShape(s, dx, dy) as Shape : s)
+        const moving = withFrameContents(selectedIdsRef.current, shapesRef.current)
+        shapesRef.current = releaseDetached(shapesRef.current, moving).map(s => moving.has(s.id) ? offsetShape(s, dx, dy) as Shape : s)
         render()
       }
 
@@ -2171,6 +2463,7 @@ export function CanvasView() {
         // Enter → edit the selected shape's text (or label)
         if (ev.key === 'Enter' && !ev.metaKey && !ev.ctrlKey && selectedIdsRef.current.size === 1) {
           const sh = shapesRef.current.find(x => selectedIdsRef.current.has(x.id))
+          if (sh && isFrame(sh)) { ev.preventDefault(); startFrameTitleEdit(sh); return }
           if (sh && (sh.type === 'text' || sh.type === 'sticky' || sh.type === 'rect' || sh.type === 'ellipse')) {
             ev.preventDefault(); startEdit(sh); return
           }
@@ -2206,7 +2499,7 @@ export function CanvasView() {
     }
     window.addEventListener('keydown', down); window.addEventListener('keyup', up); window.addEventListener('paste', paste)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); window.removeEventListener('paste', paste) }
-  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor, groupSelected, ungroupSelected, bringToFront, sendToBack, copySelected, pasteClipboard, addImageFiles, importExcalidrawText, importMermaidText, zoomToFit, resetZoom, scheduleSave, startEdit])
+  }, [undo, redo, commit, render, clearSelection, setSelection, updateCursor, groupSelected, ungroupSelected, bringToFront, sendToBack, copySelected, pasteClipboard, addImageFiles, importExcalidrawText, importMermaidText, zoomToFit, resetZoom, toggleMinimap, scheduleSave, startEdit])
 
   // Sync editingIdRef/editingContainerIdRef so render can skip the shape/text being edited
   useEffect(() => {
@@ -2270,7 +2563,7 @@ export function CanvasView() {
     const isDivMode = !!(containerId || stickyId || isNewSticky)
     const rawVal = isDivMode
       ? (textRef.current as HTMLDivElement | null)?.innerText
-      : (textRef.current as HTMLInputElement | null)?.value
+      : (textRef.current as HTMLTextAreaElement | null)?.value
     // Strip the zero-width space the focus effect seeds into empty contentEditable
     // divs so the browser has a caret to draw — never part of the real content.
     const val = rawVal?.replace(/​/g, '').trim()
@@ -2335,10 +2628,13 @@ export function CanvasView() {
           const boundText: BoundText = {
             text: val, size, fontFamily: fontFamilyRef.current,
             bold: boldRef.current, italic: italicRef.current, color: colorRef.current,
+            ...(textAlignRef.current !== 'center' ? { align: textAlignRef.current } : {}),
           }
           return fitContainer({ ...s, boundText } as RectShape | EllipseShape)
         }))
       }
+      // The selection didn't change, so refresh whether it now carries text (shows the text controls).
+      if (selectedIdsRef.current.has(containerId)) setSelectionHasBoundText(!!val)
       return
     }
     if (editingId) {
@@ -2349,7 +2645,7 @@ export function CanvasView() {
       } else {
         commit(shapesRef.current.map(s =>
           s.id === editingId
-            ? { ...s, text: val, size, fontFamily: fontFamilyRef.current, bold: boldRef.current, italic: italicRef.current, color: colorRef.current } as Shape
+            ? { ...s, text: val, size, fontFamily: fontFamilyRef.current, bold: boldRef.current, italic: italicRef.current, color: colorRef.current, align: textAlignRef.current } as Shape
             : s
         ))
       }
@@ -2361,7 +2657,7 @@ export function CanvasView() {
         id, type: 'text',
         x: textInput.wx, y: textInput.wy + size,
         text: val, size, fontFamily: fontFamilyRef.current,
-        bold: boldRef.current, italic: italicRef.current,
+        bold: boldRef.current, italic: italicRef.current, align: textAlignRef.current,
         color: colorRef.current, fill: 'none', width: 1,
       } as TextShape])
       setSelection(new Set([id]))
@@ -2382,7 +2678,7 @@ export function CanvasView() {
   // Font patches: TextShapes get top-level fields; rect/ellipse containers with
   // bound text get their boundText sub-object patched instead (top-level
   // fontFamily/size/bold/italic don't mean anything on those shapes).
-  const applyFontPatch = useCallback((patch: Partial<Pick<BoundText, 'size' | 'fontFamily' | 'bold' | 'italic'>>) => {
+  const applyFontPatch = useCallback((patch: Partial<Pick<BoundText, 'size' | 'fontFamily' | 'bold' | 'italic' | 'align'>>) => {
     if (selectedIdsRef.current.size === 0) return
     commit(shapesRef.current.map(s => {
       if (!selectedIdsRef.current.has(s.id)) return s
@@ -2400,6 +2696,7 @@ export function CanvasView() {
   const handleFontFamily = useCallback((f: string) => { setFontFamily(f); fontFamilyRef.current = f; applyFontPatch({ fontFamily: f }) }, [applyFontPatch])
   const handleBold       = useCallback((b: boolean) => { setBold(b); boldRef.current = b; applyFontPatch({ bold: b }) }, [applyFontPatch])
   const handleItalic     = useCallback((i: boolean) => { setItalic(i); italicRef.current = i; applyFontPatch({ italic: i }) }, [applyFontPatch])
+  const handleTextAlign  = useCallback((a: TextAlign) => { setTextAlign(a); textAlignRef.current = a; applyFontPatch({ align: a }) }, [applyFontPatch])
 
   const setDrawingsVisible = (v: boolean) => {
     setShowDrawings(v)
@@ -2426,6 +2723,8 @@ export function CanvasView() {
   const canAddNote       = selShapesForToolbar.length > 0
   const hasNoteOnSelection = selShapesForToolbar.some(s => s.note)
   const canPromoteSticky = selShapesForToolbar.length === 1 && selShapesForToolbar[0].type === 'sticky' && !selShapesForToolbar[0].note
+
+  const editingArrowLabel = !!textInput?.containerId && shapesRef.current.find(s => s.id === textInput.containerId)?.type === 'arrow'
 
   const notesPanelTitle = notesTarget === 'global'
     ? 'Diagram Notes'
@@ -2477,18 +2776,20 @@ export function CanvasView() {
         <CanvasToolbar
           tool={tool} color={color} fill={fill} strokeWidth={strokeWidth}
           zoom={zoom} canUndo={canUndo} canRedo={canRedo}
-          radius={radius} fontSize={fontSize} fontFamily={fontFamily} bold={bold} italic={italic}
+          radius={radius} fontSize={fontSize} fontFamily={fontFamily} bold={bold} italic={italic} textAlign={textAlign}
           selectedShapeType={selectedShapeType}
           hasBoundText={selectionHasBoundText || !!textInput?.containerId}
           onTool={setTool} onColor={handleColor} onFill={handleFill} onWidth={handleWidth}
           onRadius={handleRadius} onFontSize={handleFontSize} onFontFamily={handleFontFamily}
-          onBold={handleBold} onItalic={handleItalic}
+          onBold={handleBold} onItalic={handleItalic} onTextAlign={handleTextAlign}
           onUndo={undo} onRedo={redo} onZoom={handleZoom}
+          onZoomFit={() => zoomToFit()} onZoomReset={resetZoom}
           onTemplates={() => setShowTemplates(v => !v)}
           onImage={() => imageInputRef.current?.click()}
           showTemplates={showTemplates}
           sketchy={sketchy} onSketchy={() => setSketchy(v => !v)}
           showGrid={showGrid} onToggleGrid={() => setShowGrid(v => !v)}
+          showMinimap={showMinimap} onToggleMinimap={toggleMinimap}
           showDrawings={showDrawings}
           onToggleDrawings={() => setDrawingsVisible(!showDrawings)}
           onExport={() => setShowExport(true)}
@@ -2551,41 +2852,7 @@ export function CanvasView() {
         >
           <Keyboard size={14} />
         </button>
-        {showShortcuts && (
-          <>
-            {/* Click-outside backdrop */}
-            <div className="fixed inset-0 z-20" onClick={() => setShowShortcuts(false)} />
-            <div className="absolute top-14 right-14 z-30 w-80 max-h-[70vh] flex flex-col bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0 border-b border-border">
-                <p className="text-sm font-semibold text-foreground">Keyboard shortcuts</p>
-                <button
-                  onClick={() => setShowShortcuts(false)}
-                  className="w-6 h-6 flex items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                >
-                  <X size={13} />
-                </button>
-              </div>
-
-              {/* Groups — scrollable */}
-              <div className="overflow-y-auto px-4 py-3">
-                {SHORTCUT_GROUPS.map(group => (
-                  <div key={group.title} className="mb-4 last:mb-0">
-                    <div className="text-[10px] font-semibold text-accent tracking-wider uppercase mb-2">{group.title}</div>
-                    <div className="flex flex-col gap-1.5">
-                      {group.items.map(([keys, label]) => (
-                        <div key={label} className="flex items-center justify-between gap-3">
-                          <span className="text-[12px] text-foreground/90">{label}</span>
-                          <kbd className="shrink-0 px-1.5 py-0.5 rounded-md border border-border bg-muted text-foreground/70 font-mono text-[10px] shadow-sm">{keys}</kbd>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+        {showShortcuts && <ShortcutsPanel onClose={() => setShowShortcuts(false)} />}
 
         {/* Notes toggle button — top-right of canvas area */}
         <button
@@ -2600,6 +2867,15 @@ export function CanvasView() {
           <StickyNote size={14} />
         </button>
 
+        <CanvasMinimap
+          open={showMinimap}
+          raised={canvasNarrow}
+          onToggle={toggleMinimap}
+          getView={getMinimapView}
+          onCenter={centerViewOn}
+          drawRef={minimapDrawRef}
+        />
+
         {/* Text input overlay */}
         {textInput && textInput.containerId ? (
           // contentEditable (not textarea) so flexbox can center the text both
@@ -2608,7 +2884,11 @@ export function CanvasView() {
             ref={textRef as React.RefObject<HTMLDivElement>}
             contentEditable
             suppressContentEditableWarning
-            className="absolute bg-transparent outline-none pointer-events-auto overflow-hidden flex items-center justify-center text-center"
+            className={cn(
+              'absolute bg-transparent outline-none pointer-events-auto overflow-hidden flex items-center',
+              editingArrowLabel || textAlign === 'center' ? 'justify-center text-center'
+                : textAlign === 'right' ? 'justify-end text-right' : 'justify-start text-left',
+            )}
             style={{
               left: textInput.sx, top: textInput.sy,
               width: textInput.boxW, height: textInput.boxH,
@@ -2652,31 +2932,64 @@ export function CanvasView() {
           >
             {textInput.initialValue ?? ''}
           </div>
-        ) : textInput && (
+        ) : null}
+        {frameEdit && (
           <input
-            ref={textRef as React.RefObject<HTMLInputElement>}
-            className="absolute bg-transparent outline-none pointer-events-auto"
+            autoFocus
+            className="absolute bg-background/90 outline-none pointer-events-auto rounded px-1 border border-accent/50 text-foreground"
+            style={{ left: frameEdit.sx - 2, top: frameEdit.sy - 2, width: frameEdit.w, fontSize: frameEdit.fontPx, fontWeight: 500, zIndex: 50 }}
+            defaultValue={frameEdit.value}
+            onFocus={e => e.currentTarget.select()}
+            onKeyDown={e => {
+              e.stopPropagation()
+              if (e.key === 'Enter') { e.preventDefault(); commitFrameTitle(e.currentTarget.value) }
+              if (e.key === 'Escape') { e.preventDefault(); commitFrameTitle(null) }
+            }}
+            onBlur={e => commitFrameTitle(e.currentTarget.value)}
+          />
+        )}
+        {!textInput?.containerId && !(textInput?.stickyId || textInput?.isNewSticky) && textInput && (
+          // Textarea so text can span lines: Enter commits, Shift+Enter adds a line.
+          <textarea
+            ref={textRef as React.RefObject<HTMLTextAreaElement>}
+            className="absolute bg-transparent outline-none pointer-events-auto resize-none overflow-hidden p-0 border-0"
+            rows={1}
+            wrap="off"
             style={{
               left: textInput.sx, top: textInput.sy - Math.min(fontSize, 32),
-              fontSize: Math.min(Math.max(14, fontSize), 32),
+              fontSize: Math.min(Math.max(14, fontSize), 32), lineHeight: TEXT_LINE_HEIGHT,
               fontFamily, fontWeight: bold ? 'bold' : 'normal', fontStyle: italic ? 'italic' : 'normal',
-              color, caretColor: color, minWidth: 80, zIndex: 50,
+              textAlign, color, caretColor: color, minWidth: 80, zIndex: 50,
             }}
             defaultValue={textInput?.initialValue ?? ''}
-            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); commitText() }; if (e.key === 'Escape') { e.preventDefault(); commitText() } }}
+            onFocus={e => autosizeTextarea(e.currentTarget)}
+            onInput={e => autosizeTextarea(e.currentTarget)}
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); commitText() }
+              if (e.key === 'Escape') { e.preventDefault(); commitText() }
+            }}
             onBlur={commitText}
           />
         )}
       </div>
 
-      {/* ── Notes sheet — slides in from right ── */}
+      {/* ── Notes sheet — slides in from right, drag its left edge to resize ── */}
       <div
-        className="h-full overflow-hidden transition-all duration-300 ease-out shrink-0"
-        style={{ width: showNotes ? '50%' : 0 }}
+        className={cn('relative h-full overflow-hidden shrink-0', !notesResizing && 'transition-[width] duration-300 ease-out')}
+        style={{ width: showNotes ? notesWidth : 0 }}
       >
+        {showNotes && (
+          <div
+            onMouseDown={startNotesResize}
+            onDoubleClick={() => setNotesWidthPersist(NOTES_DEFAULT_W)}
+            title="Drag to resize · double-click to reset"
+            className="absolute left-0 top-0 bottom-0 w-1.5 -ml-0.5 z-10 cursor-col-resize hover:bg-accent/40 transition-colors"
+          />
+        )}
         {/* Keep mounted so CodeMirror state isn't lost when toggling */}
-        <div className="h-full" style={{ width: '100%', visibility: showNotes ? 'visible' : 'hidden' }}>
+        <div className="h-full" style={{ width: notesWidth, visibility: showNotes ? 'visible' : 'hidden' }}>
           <CanvasNotesSheet
+            open={showNotes}
             title={notesPanelTitle}
             content={notesTarget === 'global' ? notesContent : shapeNoteDraft}
             onChange={notesTarget === 'global' ? handleNotesChange : handleShapeNoteChange}

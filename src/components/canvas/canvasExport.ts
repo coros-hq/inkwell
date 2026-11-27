@@ -2,7 +2,9 @@ import rough from 'roughjs'
 import { arrowEnds, headGeometry, startHeadOf, endHeadOf } from './canvasBindings'
 import type { Options } from 'roughjs/bin/core'
 import { FONT_HAND } from './CanvasToolbar'
-import { shapeBounds } from './canvasTypes'
+import { shapeBounds, alignOffset, TEXT_LINE_HEIGHT } from './canvasTypes'
+import { nodeGeometry, roundedRectPath } from './canvasNodeShapes'
+import { isFrame, frameToSvg } from './canvasFrames'
 import type { Shape, ArrowShape } from './canvasTypes'
 import {
   adaptShape, boundFont, containerTextBox, ctxFont, getMeasureCtx, roughOptions, wrapCanvasText,
@@ -123,9 +125,25 @@ function shapeToSvg(s: Shape, sketchy: boolean, defs: Set<string>): string {
     }
     case 'rect': {
       const b = shapeBounds(s)
-      out = sketchy
-        ? roughPaths(gen.rectangle(s.x, s.y, s.w, s.h, ro()))
-        : `<rect x="${num(b.x)}" y="${num(b.y)}" width="${num(b.w)}" height="${num(b.h)}" rx="${s.radius ?? 3}" fill="${esc(fill)}" ${stroke}/>`
+      if (isFrame(s)) { out = frameToSvg(s, esc, num); break }
+      if (!s.kind && !s.icon) {
+        out = sketchy
+          ? (s.radius > 0 ? roughPaths(gen.path(roundedRectPath(b.x, b.y, b.w, b.h, s.radius), { ...ro(), preserveVertices: true })) : roughPaths(gen.rectangle(s.x, s.y, s.w, s.h, ro())))
+          : `<rect x="${num(b.x)}" y="${num(b.y)}" width="${num(b.w)}" height="${num(b.h)}" rx="${num(Math.min(s.radius ?? 3, b.w / 2, b.h / 2))}" fill="${esc(fill)}" ${stroke}/>`
+        break
+      }
+      const g = nodeGeometry(s.kind, s.icon, b, s.radius ?? 0)
+      const glyphW = Math.min(s.width, 1.75)
+      if (sketchy) {
+        const line = { ...ro(), fill: undefined, preserveVertices: true }
+        out = roughPaths(gen.path(g.outline, { ...ro(), preserveVertices: true }))
+          + g.details.map(d => roughPaths(gen.path(d, line))).join('')
+          + g.icon.map(d => roughPaths(gen.path(d, { ...line, roughness: 0.4, disableMultiStroke: true, strokeWidth: glyphW }))).join('')
+      } else {
+        out = `<path d="${esc(g.outline)}" fill="${esc(fill)}" ${stroke}/>`
+          + g.details.map(d => `<path d="${esc(d)}" fill="none" ${stroke}/>`).join('')
+          + g.icon.map(d => `<path d="${esc(d)}" fill="none" stroke="${esc(s.color)}" stroke-width="${glyphW}" stroke-linecap="round" stroke-linejoin="round"/>`).join('')
+      }
       break
     }
     case 'ellipse': {
@@ -168,8 +186,15 @@ function shapeToSvg(s: Shape, sketchy: boolean, defs: Set<string>): string {
       break
     }
     case 'text': {
-      out = `<text x="${num(s.x)}" y="${num(s.y)}" font-family="${esc(s.fontFamily ?? FONT_HAND)}" font-size="${s.size}"`
-        + `${s.bold ? ' font-weight="bold"' : ''}${s.italic ? ' font-style="italic"' : ''} fill="${esc(s.color)}" xml:space="preserve">${esc(s.text)}</text>`
+      const ctx = getMeasureCtx()
+      ctx.save(); ctx.font = ctxFont(s)
+      const lines = s.text.split('\n')
+      const widths = lines.map(l => ctx.measureText(l).width), blockW = Math.max(...widths)
+      ctx.restore()
+      out = lines.map((l, i) =>
+        `<text x="${num(s.x + alignOffset(s.align, blockW, widths[i]))}" y="${num(s.y + i * s.size * TEXT_LINE_HEIGHT)}" font-family="${esc(s.fontFamily ?? FONT_HAND)}" font-size="${s.size}"`
+        + `${s.bold ? ' font-weight="bold"' : ''}${s.italic ? ' font-style="italic"' : ''} fill="${esc(s.color)}" xml:space="preserve">${esc(l)}</text>`,
+      ).join('')
       break
     }
     case 'sticky': {
@@ -201,9 +226,12 @@ function shapeToSvg(s: Shape, sketchy: boolean, defs: Set<string>): string {
     const lines = wrapCanvasText(ctx, bt.text, box.w)
     ctx.restore()
     const lineH = bt.size * BOUND_LINE_HEIGHT
+    const align = bt.align ?? 'center'
+    const x = align === 'left' ? box.x : align === 'right' ? box.x + box.w : box.x + box.w / 2
+    const anchor = align === 'left' ? 'start' : align === 'right' ? 'end' : 'middle'
     let y = box.y + box.h / 2 - (lines.length * lineH) / 2 + lineH / 2
     for (const l of lines) {
-      out += `<text x="${num(box.x + box.w / 2)}" y="${num(y)}" text-anchor="middle" dominant-baseline="central" font-family="${esc(bt.fontFamily)}" font-size="${bt.size}"`
+      out += `<text x="${num(x)}" y="${num(y)}" text-anchor="${anchor}" dominant-baseline="central" font-family="${esc(bt.fontFamily)}" font-size="${bt.size}"`
         + `${bt.bold ? ' font-weight="bold"' : ''}${bt.italic ? ' font-style="italic"' : ''} fill="${esc(bt.color)}" xml:space="preserve">${esc(l)}</text>`
       y += lineH
     }

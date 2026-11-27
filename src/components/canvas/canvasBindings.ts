@@ -1,4 +1,5 @@
 import { shapeBounds, unrotatePoint } from './canvasTypes'
+import { kindPolygon } from './canvasNodeShapes'
 import type { Shape, Point, ArrowShape, ArrowBinding, ArrowHead } from './canvasTypes'
 
 // Arrows that stay attached to shapes, like Excalidraw's bound arrows.
@@ -54,7 +55,15 @@ export function anchor(s: Shape, bind: { fx?: number; fy?: number }, toward: Poi
   }
   if (!d.x && !d.y) d = { x: 1, y: 0 }
   let local: Point, n: Point
-  if (s.type === 'ellipse') {
+  const polygon = s.type === 'rect' ? kindPolygon(s.kind, b.w, b.h) : null
+  const hit = polygon && rayPolygon(d, polygon.map(([px, py]) => ({ x: px - rx, y: py - ry })))
+  if (hit) {
+    local = { x: c.x + hit.p.x, y: c.y + hit.p.y }
+    // Pinned side points often land on a vertex (diamond tips): leave squarely along the axis there.
+    n = bind.fx !== undefined
+      ? (Math.abs(d.x / rx) > Math.abs(d.y / ry) ? { x: Math.sign(d.x), y: 0 } : { x: 0, y: Math.sign(d.y) })
+      : hit.n
+  } else if (s.type === 'ellipse' || (s.type === 'rect' && s.kind === 'cloud')) {
     const k = 1 / Math.sqrt((d.x / rx) ** 2 + (d.y / ry) ** 2)
     local = { x: c.x + d.x * k, y: c.y + d.y * k }
     n = norm({ x: (local.x - c.x) / (rx * rx), y: (local.y - c.y) / (ry * ry) })
@@ -67,6 +76,24 @@ export function anchor(s: Shape, bind: { fx?: number; fy?: number }, toward: Poi
   }
   const p = rotateAround({ x: local.x + n.x * gap, y: local.y + n.y * gap }, c, rot)
   return { p, n: rotateVec(n, rot) }
+}
+
+/** Where a ray from the origin along `d` leaves a convex polygon (centred on the origin), with that edge's outward normal. */
+function rayPolygon(d: Point, pts: Point[]): { p: Point; n: Point } | null {
+  let best: { t: number; a: Point; b: Point } | null = null
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length]
+    const ex = b.x - a.x, ey = b.y - a.y
+    const den = d.x * ey - d.y * ex
+    if (Math.abs(den) < 1e-9) continue
+    const t = (a.x * ey - a.y * ex) / den        // distance along d
+    const u = (a.x * d.y - a.y * d.x) / den      // position along the edge
+    if (t > 0 && u >= -1e-6 && u <= 1 + 1e-6 && (!best || t < best.t)) best = { t, a, b }
+  }
+  if (!best) return null
+  const nrm = norm({ x: best.b.y - best.a.y, y: -(best.b.x - best.a.x) })
+  const mid = { x: (best.a.x + best.b.x) / 2, y: (best.a.y + best.b.y) / 2 }
+  return { p: { x: d.x * best.t, y: d.y * best.t }, n: nrm.x * mid.x + nrm.y * mid.y < 0 ? { x: -nrm.x, y: -nrm.y } : nrm }
 }
 
 /** Fractions of the target's bounds for a world point (used to pin imported arrows where they were). */

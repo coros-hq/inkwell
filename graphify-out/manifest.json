@@ -10,8 +10,8 @@
     "semantic_hash": "a4038619f5414c01f04abbbdd4730820"
   },
   "package.json": {
-    "mtime": 1795444187.5586588,
-    "ast_hash": "40cd09d80a8f1410a8d22e95f71265a8",
+    "mtime": 1795609071.607745,
+    "ast_hash": "e017fb7dbd411f9b02427652d2f271ba",
     "semantic_hash": ""
   },
   "postcss.config.js": {
@@ -75,8 +75,8 @@
     "semantic_hash": ""
   },
   "src-tauri/tauri.conf.json": {
-    "mtime": 1795444187.559053,
-    "ast_hash": "4c0720abd263b792f4b7e6a4566e99bf",
+    "mtime": 1795609071.608111,
+    "ast_hash": "e6181173e53a3ec10dcf1db1d471c4a1",
     "semantic_hash": ""
   },
   "src/App.tsx": {
@@ -105,13 +105,13 @@
     "semantic_hash": ""
   },
   "src/components/canvas/CanvasCategoryPanel.tsx": {
-    "mtime": 1782980448.8102612,
-    "ast_hash": "e403436c7d75d25060793823e6eacf0d",
-    "semantic_hash": "e403436c7d75d25060793823e6eacf0d"
+    "mtime": 1795769874.810845,
+    "ast_hash": "7ed653953658dbaefb686b570e65c78e",
+    "semantic_hash": ""
   },
   "src/components/canvas/CanvasNotesSheet.tsx": {
-    "mtime": 1789654149.852226,
-    "ast_hash": "cf3e4fc49ab94c927d9373b29c12dd86",
+    "mtime": 1795770533.332127,
+    "ast_hash": "3b736b9acd70c250695aa0da01125aa5",
     "semantic_hash": ""
   },
   "src/components/canvas/CanvasTemplatesPicker.tsx": {
@@ -120,18 +120,18 @@
     "semantic_hash": ""
   },
   "src/components/canvas/CanvasToolbar.tsx": {
-    "mtime": 1794178880.3739412,
-    "ast_hash": "11ca280d9fd0eb7d24f19e74d3e2bebf",
+    "mtime": 1795769874.8110142,
+    "ast_hash": "5235838b58a967041450def58192724b",
     "semantic_hash": ""
   },
   "src/components/canvas/CanvasView.tsx": {
-    "mtime": 1795607379.373799,
-    "ast_hash": "d859b867827719d862f4e60b05ae312a",
+    "mtime": 1795770550.6184022,
+    "ast_hash": "9e91c243b2914d46419bb6b489a4c94a",
     "semantic_hash": ""
   },
   "src/components/canvas/canvasCategoryElements.ts": {
-    "mtime": 1792407258.0821748,
-    "ast_hash": "666d546194a8f0af7a680d4ff550f72c",
+    "mtime": 1795769874.8117003,
+    "ast_hash": "648a0bdb88c56438eb471e0da1840544",
     "semantic_hash": ""
   },
   "src/components/canvas/canvasTemplates.ts": {
@@ -140,8 +140,8 @@
     "semantic_hash": ""
   },
   "src/components/canvas/canvasTypes.ts": {
-    "mtime": 1795607379.3745835,
-    "ast_hash": "1a730e6d23129deaf7828de0395f547b",
+    "mtime": 1795769874.8122072,
+    "ast_hash": "ef67ca6f0e692b789fa84e5ddec95cf4",
     "semantic_hash": ""
   },
   "src/components/editor/AttachmentsBar.tsx": {
@@ -165,8 +165,8 @@
     "semantic_hash": "3395185c59d4b925e2b7d609379130d3"
   },
   "src/components/editor/MarkdownEditor.tsx": {
-    "mtime": 1794846561.661579,
-    "ast_hash": "ddddd42bb5eb02a5d87f2eab7c023818",
+    "mtime": 1795770512.8280325,
+    "ast_hash": "3b8b8e2266616543f73e3d76b2692e37",
     "semantic_hash": ""
   },
   "src/components/editor/MediaPanel.tsx": {
@@ -405,8 +405,8 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1795444187.5620143,
-    "ast_hash": "7881808bbbd755160131f7dea763b3b3",
+    "mtime": 1795609071.612257,
+    "ast_hash": "110b9a1dcd394187a564cabb205425d3",
     "semantic_hash": ""
   },
   "canvas-feature-design.md": {
@@ -1200,13 +1200,13 @@
     "semantic_hash": ""
   },
   "src/components/canvas/canvasExport.ts": {
-    "mtime": 1795607379.37424,
-    "ast_hash": "4b46a257e7eab8c74fab4f555ade2bbc",
+    "mtime": 1795769874.811874,
+    "ast_hash": "04d1eeea3838e4d39a8c26a79c8acaea",
     "semantic_hash": ""
   },
   "src/components/canvas/canvasShared.ts": {
-    "mtime": 1795607567.512239,
-    "ast_hash": "37efe50ecff6633d52776486a150f08c",
+    "mtime": 1795769874.8120127,
+    "ast_hash": "700de4dbcb75567ae605f9793a0b5627",
     "semantic_hash": ""
   },
   "src/components/editor/MermaidBlock.tsx": {
@@ -1320,23 +1320,68 @@
     "semantic_hash": ""
   },
   "src/components/canvas/mermaidImport.ts": {
-    "mtime": 1795607379.3911307,
-    "ast_hash": "874ccafc64f2251c2a986bc1eab774aa",
+    "mtime": 1795769874.812378,
+    "ast_hash": "588f681e7bab6a0313ffa2fe79f54557",
     "semantic_hash": ""
   },
   "e2e/canvas-arrows.spec.ts": {
-    "mtime": 1795607379.3874552,
-    "ast_hash": "6818bde4b74332e44d49bdccaedebfd0",
+    "mtime": 1795769124.5400558,
+    "ast_hash": "3ee6fc8ad463094e176d1a5fabc4d24c",
     "semantic_hash": ""
   },
   "src/components/canvas/canvasBindings.ts": {
-    "mtime": 1795607379.3909905,
-    "ast_hash": "7266076d2646d67f92f1abb208fe17eb",
+    "mtime": 1795769874.811554,
+    "ast_hash": "cf5513d5b715a8d8aa5978694e69aee4",
     "semantic_hash": ""
   },
   "e2e/board-menu.spec.ts": {
     "mtime": 1795608747.5469508,
     "ast_hash": "27091e675574e54f5f1b50c36aa15bc4",
+    "semantic_hash": ""
+  },
+  "src/components/canvas/canvasNodeShapes.ts": {
+    "mtime": 1795695027.3422608,
+    "ast_hash": "ae92bf00dc5f3ab5609de96994bb05bd",
+    "semantic_hash": ""
+  },
+  "e2e/canvas-frames.spec.ts": {
+    "mtime": 1795769124.5396416,
+    "ast_hash": "fc989729bfbc45be489a5627071cda2c",
+    "semantic_hash": ""
+  },
+  "src/components/canvas/canvasFrames.ts": {
+    "mtime": 1795695063.1008902,
+    "ast_hash": "e0385fd288463c046d243322d3b3d75c",
+    "semantic_hash": ""
+  },
+  "e2e/canvas-minimap.spec.ts": {
+    "mtime": 1795769687.53011,
+    "ast_hash": "dbb63404e491c3d5713dab7757a40f18",
+    "semantic_hash": ""
+  },
+  "src/components/canvas/CanvasMinimap.tsx": {
+    "mtime": 1795769665.052736,
+    "ast_hash": "5bb10b843ed074f020867faf681cceac",
+    "semantic_hash": ""
+  },
+  "e2e/canvas-text-align.spec.ts": {
+    "mtime": 1795769726.9149451,
+    "ast_hash": "0f7966cf4838a59413f3808058795629",
+    "semantic_hash": ""
+  },
+  "e2e/canvas-shortcuts.spec.ts": {
+    "mtime": 1795770097.5076723,
+    "ast_hash": "7e878c03c6e92cad5da425a4e4a720a3",
+    "semantic_hash": ""
+  },
+  "e2e/canvas-notes.spec.ts": {
+    "mtime": 1795770550.6213658,
+    "ast_hash": "275a90f4a8d5338c4355b17722afc434",
+    "semantic_hash": ""
+  },
+  "src/components/editor/markdownEditorTheme.ts": {
+    "mtime": 1795770489.8674088,
+    "ast_hash": "099968b55ab54817b403abe683aceba9",
     "semantic_hash": ""
   }
 }
